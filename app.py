@@ -27,7 +27,7 @@
 ■ 파일 구성 (모듈 분리) ───────────────────────────────────────────
    app.py          화면 라우팅과 UI (이 파일)           ← streamlit run app.py
    config.py       전역 CSS, LLM 설정, 선임비/평판/랭크 정책, 화면 문구
-   characters.py   캐릭터(서판결·차냉정·우기기) 설정, 말투 규칙, 프롬프트
+   characters.py   캐릭터(서판결·차냉정·한유리) 설정·외모 데이터, 말투 규칙, 프롬프트
    utils.py        평판·랭크 계산, 선임비 충전, 기록 저장 등 게임 로직
    templates.py    재판/스토리 연출 HTML·JS 템플릿 (카메라 무빙, 사운드, 픽셀 디자인)
    llm_handler.py  OpenRouter 통신, 모델 폴백·재시도, JSON 파싱, 응답 검증
@@ -76,6 +76,7 @@ from openai import (
     AuthenticationError,
 )
 
+from characters import display_name
 from config import (
     APP_CSS,
     FEE_MAX,
@@ -255,7 +256,7 @@ def shop_dialog():
     eta = fee_eta()
     st.caption("⏳ 자동 충전: 10분마다 +1" + (f" (다음 +1까지 {eta // 60}:{eta % 60:02d})" if eta is not None else ""))
     if full:
-        st.info("선임비가 가득 찼습니다. 우기기 변호사가 의욕 만렙입니다!")
+        st.info(f"선임비가 가득 찼습니다. {display_name('LAWYER')}가 여유 만렙입니다!")
     st.markdown("**📺 광고 보고 충전 (+1)**")
     st.caption("연출용 가상 광고입니다. 4초 뒤 선임비가 충전됩니다.")
     if st.button("광고 보기", key="shop_ad", disabled=full, use_container_width=True):
@@ -375,7 +376,7 @@ elif stage == "LOBBY":
         eta = fee_eta() or 0
         st.markdown(
             '<div class="loading" style="color:#ff9b9b">💸 변호사 선임비가 바닥났습니다!'
-            '<small>우기기 변호사가 "선임비 없으면 억지도 없다"며 퇴장했습니다 · '
+            f'<small>{display_name("LAWYER")}가 "선임비 없으면 변론도 없어요~"라며 손을 흔들었습니다 · '
             f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
             unsafe_allow_html=True,
         )
