@@ -15,6 +15,9 @@ import streamlit.components.v1 as components
 
 from characters import sprite_payload
 
+# 스프라이트 그리기 엔진의 버전. characters.py 의 SPRITE_DATA_VERSION 과 같아야 합니다.
+SPRITE_ENGINE_VERSION = 3
+
 
 # =================================================================
 # HTML 조각
