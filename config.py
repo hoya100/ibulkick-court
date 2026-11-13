@@ -277,6 +277,17 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .st-key-lobby_stage .st-key-lobby_main{ width:70%; }
   .st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:72px; font-size:20px; }
 }
+/* ============ '오늘의 법정' 상태 패널 (프로필 모달 안에서만 표시) ============ */
+.court-panel{ background:#10162e; color:#fff; padding:14px 16px; margin:6px 5px 14px;
+  box-shadow:0 -4px 0 var(--ink),0 4px 0 var(--ink),-4px 0 0 var(--ink),4px 0 0 var(--ink),inset 0 4px 0 #3b4a9a,0 10px 0 0 #0008; }
+.court-panel .cp-t{ font-size:12px; color:#9fe8ff; letter-spacing:2px; }
+.court-panel .cp-r{ font-size:24px; font-weight:900; color:#ffe066; margin:4px 0 8px; text-shadow:2px 2px 0 #000; }
+.court-panel .cp-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px; margin:6px 0; }
+.court-panel .cp-row b{ color:#fff; font-size:16px; }
+.court-panel .cp-gauge{ height:14px; border:3px solid var(--ink); background:#050510; margin:6px 0 2px; overflow:hidden; }
+.court-panel .cp-gauge i{ display:block; height:100%; background:repeating-linear-gradient(45deg,#59f08a 0 8px,#2fbf63 8px 16px); }
+.court-panel .cp-sub{ font-size:12px; color:#b8c4e8; }
+.court-panel .cp-pips{ display:inline-flex; gap:4px; align-items:center; }
 """
 
 # =================================================================
