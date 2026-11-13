@@ -572,26 +572,15 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #sign{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:#ffd23f;font-size:13px;font-weight:700;padding:6px 14px;letter-spacing:1px;box-shadow:0 0 0 3px #ffd23f,0 6px 0 3px #0008;white-space:nowrap}
 #sign b{color:#59f08a;animation:blink 1.4s steps(2) infinite}
 @keyframes blink{50%{opacity:.35}}
-#cw{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);cursor:pointer}
+#cw{position:absolute;left:50%;bottom:124px;transform:translateX(-50%);cursor:pointer}
 #chara{display:block}
-#bubble{position:absolute;left:58%;top:6%;max-width:230px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;padding:8px 12px;opacity:0;transition:opacity .3s,transform .3s;transform:translateY(6px);box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink),-3px 0 0 var(--ink),3px 0 0 var(--ink),4px 8px 0 0 #0006;white-space:nowrap}
+#bubble{position:absolute;left:56%;bottom:100%;margin-bottom:12px;max-width:230px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;padding:8px 12px;opacity:0;transition:opacity .3s,transform .3s;transform:translateY(6px);box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink),-3px 0 0 var(--ink),3px 0 0 var(--ink),4px 8px 0 0 #0006;white-space:nowrap}
 #bubble.on{opacity:1;transform:none}
 #bubble:after{content:"";position:absolute;left:14px;bottom:-12px;border:6px solid transparent;border-top:8px solid var(--ink)}
-#panel{position:absolute;right:14px;top:14px;width:262px;background:#10162ee8;color:#fff;padding:12px 14px;box-shadow:0 -4px 0 var(--ink),0 4px 0 var(--ink),-4px 0 0 var(--ink),4px 0 0 var(--ink),inset 0 4px 0 #3b4a9a,0 10px 0 0 #0008}
-#panel .pt{font-size:12px;color:#9fe8ff;letter-spacing:2px}
-#panel .pr{font-size:21px;font-weight:900;color:#ffe066;margin:4px 0 8px;text-shadow:2px 2px 0 #000}
-#panel .row{font-size:13px;margin:5px 0;display:flex;justify-content:space-between;gap:8px}
-#panel .row b{color:#fff;font-size:15px}
-#panel .gauge{height:14px;border:3px solid var(--ink);background:#050510;margin:6px 0 2px;overflow:hidden}
-#panel .gauge i{display:block;height:100%;background:repeating-linear-gradient(45deg,#59f08a 0 8px,#2fbf63 8px 16px);transition:width 1s}
-#panel .sub{font-size:11px;color:#b8c4e8}
-#panel .pips{display:inline-flex;gap:4px;align-items:center}
-#panel .pip{width:14px;height:11px;border:2px solid #ffe3a3;background:#0a0d18;display:inline-block}
-#panel .pip.on{background:linear-gradient(#ffe066,#e0a82e)}
 #bar{position:absolute;left:0;right:0;bottom:0;height:112px;background:linear-gradient(#0d0f2600,#0d0f26d8 26%,#0d0f26f6);border-top:4px solid #ffd23f}
 #bar:before{content:"";position:absolute;left:0;right:0;top:-4px;height:4px;background:repeating-linear-gradient(90deg,#ffd23f 0 14px,#0d0f26 14px 20px)}
 #vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 90px #0008}
-@media (max-aspect-ratio:5/4){#panel{display:none}#sign{font-size:11px;padding:5px 10px}#bubble{left:50%;top:0;font-size:12px}}
+@media (max-aspect-ratio:5/4){#sign{font-size:11px;padding:5px 10px}#bubble{left:50%;font-size:12px}}
 </style></head><body>
 <div id="scene" class="day">
  <div id="sky"></div><div id="stars"></div><div id="sun"></div>
@@ -600,11 +589,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
  <div id="plaza"></div><div id="papers"></div>
  <div id="sign">🏛️ 우기기 법률사무소 · <b>영업 중</b></div>
  <div id="cw"><svg id="chara" viewBox="0 0 200 160" shape-rendering="crispEdges"></svg><div id="bubble"></div></div>
- <div id="panel"><div class="pt">⚖️ 오늘의 법정</div><div class="pr" id="p_rank"></div>
-  <div class="row"><span>🏆 평판</span><b id="p_rep"></b></div><div class="gauge"><i id="p_gauge"></i></div><div class="sub" id="p_next"></div>
-  <div class="row"><span>🔥 연속 무죄</span><b id="p_streak"></b></div><div class="row"><span>✅ 무죄 / 재판</span><b id="p_wins"></b></div>
-  <div class="row"><span>⚖️ 선임비</span><span class="pips" id="p_fee"></span></div></div>
- <div id="bar"></div><div id="vig"></div>
+  <div id="bar"></div><div id="vig"></div>
 </div>
 <script>
 const D=__DATA__;
@@ -736,14 +721,11 @@ function nextStep(){if(!queue.length)queue=plan();step=queue.shift();tgt=P[step.
 function tick(dtMs){const dt=Math.min(dtMs,64)/1000;t+=dt;if(!step||t>=stepEnd)nextStep();if(bubbleOff&&t>bubbleOff){say(null);bubbleOff=0}render(dt)}
 let last=0;function loop(ts){if(last)tick(ts-last);last=ts;requestAnimationFrame(loop)}
 $('cw').addEventListener('click',()=>{const lines=['앗! 간지러워요~','소장 접수는 아래 버튼!','제 변론, 믿어 보세요!','커피 마시는 중인데…!'];queue.unshift({p:'wave',d:1800,s:rnd(lines)});stepEnd=0});
-/* ------------------ 화면 구성: 시간대 / 크기 / 정보 패널 ------------------ */
+/* ------------------ 화면 구성: 시간대 / 크기 ------------------ */
 (function(){const h=new Date().getHours(),s=$('scene');s.className=(h>=6&&h<17)?'day':(h>=17&&h<20)?'dusk':'night';
- if(s.className==='night'){const sun=$('sun');sun.style.boxShadow='inset -14px -4px 0 #26306f,0 0 30px #fff3b0'}
- $('p_rank').textContent=D.icon+' '+D.rank;$('p_rep').textContent=D.rep+'점';$('p_gauge').style.width=D.pct+'%';
- $('p_next').textContent=D.next?('다음 랭크 '+D.next+'까지 '+D.need+'점'):'최고 랭크! 평판을 지켜내세요';
- $('p_streak').textContent=D.streak+'연승';$('p_wins').textContent=D.wins+' / '+D.trials;
- let pips='';for(let i=0;i<D.feeMax;i++)pips+='<i class="pip'+(i<D.fee?' on':'')+'"></i>';$('p_fee').innerHTML=pips+' '+D.fee+'/'+D.feeMax})();
-function fit(){const s=$('scene'),H=s.clientHeight-128,W=s.clientWidth;let w=H*1.25;if(w>W*1.1)w=W*1.1;const h=w/1.25;$('chara').style.width=w+'px';$('chara').style.height=h+'px'}
+ if(s.className==='night'){const sun=$('sun');sun.style.boxShadow='inset -14px -4px 0 #26306f,0 0 30px #fff3b0'}})();
+const SCALE=0.72; /* 캐릭터·책상·노트북 세트의 크기 비율 (0.70~0.75 권장) */
+function fit(){const s=$('scene'),H=s.clientHeight-128,W=s.clientWidth;let w=H*1.25;if(w>W*1.1)w=W*1.1;w*=SCALE;const h=w/1.25;$('chara').style.width=w+'px';$('chara').style.height=h+'px'}
 window.addEventListener('resize',fit);fit();
 window.__lobby={tick:tick,pose:function(name,dur){tgt=P[name];step={p:name};stepEnd=1e9;queue=[]},state:function(){return {cur:cur,holding:holding}}};
 requestAnimationFrame(loop);
@@ -753,3 +735,19 @@ requestAnimationFrame(loop);
 def render_lobby(data, height=540):
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     components.html(LOBBY_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
+
+
+def court_panel_html(rep, icon, rank, pct, next_name, need, streak, wins, trials, fee, fee_max, badges):
+    """'오늘의 법정' 상태 패널 (로비에서는 숨겨 두고, 프로필 모달을 열었을 때만 보여준다)"""
+    pips = "".join(f'<i class="pip{" on" if k < fee else ""}"></i>' for k in range(fee_max))
+    nxt = f"다음 랭크 {html.escape(str(next_name))}까지 {need}점" if next_name else "최고 랭크! 평판을 지켜내세요"
+    return (
+        '<div class="court-panel"><div class="cp-t">⚖️ 오늘의 법정</div>'
+        f'<div class="cp-r">{icon} {html.escape(str(rank))}</div>'
+        f'<div class="cp-row"><span>🏆 평판</span><b>{rep}점</b></div>'
+        f'<div class="cp-gauge"><i style="width:{pct}%"></i></div><div class="cp-sub">{nxt}</div>'
+        f'<div class="cp-row"><span>🔥 연속 무죄</span><b>{streak}연승</b></div>'
+        f'<div class="cp-row"><span>✅ 무죄 / 재판</span><b>{wins} / {trials}</b></div>'
+        f'<div class="cp-row"><span>🎖️ 칭호</span><b>{badges}개</b></div>'
+        f'<div class="cp-row"><span>⚖️ 선임비</span><span class="cp-pips">{pips} {fee}/{fee_max}</span></div></div>'
+    )
