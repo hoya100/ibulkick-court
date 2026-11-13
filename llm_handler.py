@@ -3,7 +3,6 @@
 API 키는 st.secrets["OPENROUTER_API_KEY"] → 환경변수 순서로만 읽습니다. (코드에 키를 적지 않습니다)
 """
 
-import concurrent.futures as cf
 import json
 import os
 import random
@@ -23,8 +22,6 @@ from openai import (
 from config import (
     ATTEMPTS_PER_MODEL,
     BASE_URL,
-    LOAD_MSGS,
-    LOAD_TIPS,
     MAX_TOTAL_CALLS,
     MODEL_CANDIDATES,
     PAID_FALLBACK,
@@ -37,7 +34,6 @@ from characters import (
     SHOUT_MAP,
     SPEAKERS,
 )
-from templates import overlay_html
 
 # =================================================================
 # API 키 / OpenRouter 클라이언트
@@ -343,24 +339,3 @@ def normalize_verdict(data, ex1="", ex2=""):
         "sentence": sentence, "badge": card.get("badge") or random.choice(fallback_badge),
         "score": score, "ruling": ruling,
     }
-
-# =================================================================
-# 대기 화면(풀스크린 로딩)과 함께 LLM 호출 실행
-# =================================================================
-
-def run_with_overlay(kind, fn, *args, **kwargs):
-    """LLM 호출을 별도 스레드에서 돌리는 동안, 화면 전체를 덮는 독립 로딩 연출을 보여준다."""
-    box = st.empty()
-    start = time.time()
-    msgs = random.sample(LOAD_MSGS[kind], len(LOAD_MSGS[kind]))
-    tip = random.choice(LOAD_TIPS)
-    try:
-        with cf.ThreadPoolExecutor(max_workers=1) as ex:
-            fut = ex.submit(fn, *args, **kwargs)
-            while not fut.done():
-                el = int(time.time() - start)
-                box.markdown(overlay_html(msgs[(el // 3) % len(msgs)], kind, el, tip), unsafe_allow_html=True)
-                time.sleep(0.5)
-            return fut.result()
-    finally:
-        box.empty()
