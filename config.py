@@ -255,6 +255,28 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .lf-msg{ font-size:19px; }
   .st-key-lobby_main .stButton>button{ height:96px; font-size:22px; }
 }
+/* ============ 서브컬처풍 가로 로비: 장면(iframe) 위에 버튼을 겹쳐 배치 ============ */
+.st-key-lobby_stage{ position:relative; margin:4px 5px 14px; }
+.st-key-lobby_stage iframe{ margin:0 !important; }
+.st-key-lobby_ui{ position:absolute; inset:0; pointer-events:none; z-index:6; }
+.st-key-lobby_ui button{ pointer-events:auto; }
+.st-key-lb_side{ position:absolute; left:14px; top:14px; width:124px; display:flex; flex-direction:column; gap:2px; }
+.st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ height:48px; font-size:14px; letter-spacing:0 !important;
+  background:#5b8cff !important;
+  box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),inset 0 4px 0 0 #bcd2ff,inset 0 -6px 0 0 #2f4fc4,0 10px 0 0 #0009 !important; }
+.st-key-lb_side .stButton>button, .st-key-lb_side .stButton>button *, .st-key-lb_corner .stButton>button, .st-key-lb_corner .stButton>button *{
+  color:#fff !important; text-shadow:2px 2px 0 #0d0f2699; }
+.st-key-lb_corner{ position:absolute; right:14px; bottom:12px; width:124px; }
+.st-key-lobby_stage .st-key-lobby_main{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); width:min(460px,56%); margin:0; }
+.st-key-lobby_stage .st-key-lobby_main .stButton{ padding:0 5px 8px; }
+.st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:84px; font-size:24px; }
+@media (max-width: 760px){
+  .st-key-lb_side{ left:8px; top:8px; width:96px; }
+  .st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ height:40px; font-size:12px; }
+  .st-key-lb_corner{ right:8px; bottom:8px; width:96px; }
+  .st-key-lobby_stage .st-key-lobby_main{ width:70%; }
+  .st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:72px; font-size:20px; }
+}
 """
 
 # =================================================================
@@ -309,6 +331,7 @@ STREAK_BONUS = 10  # 무죄 2연승부터 (연승-1)×10 가산, 최대 +30
 SPEED_MS = {"느리게": 45, "보통": 30, "빠르게": 16}
 
 VN_H = 560  # 가로형(16:9에 가까운) 연출 화면 높이
+LOBBY_H = 540  # 로비 장면(iframe) 높이
 
 RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job")
 
