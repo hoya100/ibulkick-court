@@ -36,9 +36,42 @@
 """
 
 import html
+import os
 import random
+import sys
 
 import streamlit as st
+
+# ── 배포 자가 점검 ──────────────────────────────────────────────────
+# 필수 파일/패키지가 빠져 있으면 'ModuleNotFoundError' 대신, 무엇이 없는지 알려 주는 안내 화면을 보여줍니다.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)  # app.py 와 같은 폴더의 모듈을 항상 찾을 수 있게 함
+_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py"]
+_present = os.listdir(_HERE)
+_missing = []
+for _f in _REQUIRED_FILES:
+    if _f not in _present:
+        _alt = [n for n in _present if n.lower() == _f.lower() or n.lower().startswith(_f.lower() + ".")]
+        _missing.append(_f + (f"  (비슷한 이름이 있어요: {', '.join(_alt)} → 이름을 정확히 '{_f}'로 바꿔 주세요)" if _alt else ""))
+try:
+    import openai  # noqa: F401
+except ModuleNotFoundError:
+    _missing.append("openai 패키지  (requirements.txt 에 openai 를 추가하세요)")
+if _missing:
+    st.set_page_config(page_title="이불킥 법정", page_icon="🏛️")
+    st.error("🧩 배포 폴더에 필요한 파일/패키지가 빠져 있어요.")
+    st.markdown("**없는 것**\n\n" + "\n".join(f"- `{m}`" for m in _missing))
+    st.markdown(
+        "**해결 방법**\n\n"
+        "1. `app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py` 6개를 **같은 폴더**(GitHub 저장소 최상위)에 올립니다.\n"
+        "2. 파일 이름은 소문자 그대로여야 합니다. (리눅스 서버는 대소문자를 구분해요)\n"
+        "3. `.gitignore` 에 `config.py` 등이 들어 있지 않은지 확인하고, 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
+    )
+    with st.expander("서버에 실제로 올라간 파일 목록"):
+        st.code("\n".join(sorted(_present)))
+    st.stop()
+
 from openai import (
     AuthenticationError,
 )
