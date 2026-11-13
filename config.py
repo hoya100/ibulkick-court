@@ -9,7 +9,7 @@
 
 PAGE_TITLE = "이불킥 법정"
 PAGE_ICON = "🏛️"
-PAGE_LAYOUT = "centered"
+PAGE_LAYOUT = "wide"  # 가로 화면: 넓은 레이아웃
 
 # =================================================================
 # 전역 CSS (도트/픽셀 아케이드 스타일)
@@ -23,10 +23,10 @@ APP_CSS = r"""
 { font-family:'Galmuri11','Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
 .stApp{ background:#05070f; color:#eef2ff; }
 header[data-testid="stHeader"], footer{ display:none; }
-.block-container, [data-testid="stMainBlockContainer"]{ max-width:480px !important; margin:0 auto; padding:1rem .8rem 7rem !important; background:#0a0d18; box-shadow:0 0 0 3px #1b2350, 0 0 60px #000; min-height:100vh; }
+.block-container, [data-testid="stMainBlockContainer"]{ max-width:1120px !important; margin:0 auto; padding:1rem 1.6rem 6rem !important; background:#0a0d18; box-shadow:0 0 0 3px #1b2350, 0 0 60px #000; min-height:100vh; }
 html, body{ overflow-x:hidden; }
-[data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"]{ max-width:480px !important; margin:0 auto; }
-div[role="dialog"]{ max-width:440px !important; }
+[data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"]{ max-width:1120px !important; margin:0 auto; }
+div[role="dialog"]{ max-width:560px !important; }
 [data-testid="stToolbar"]{ display:none; }
 iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 
@@ -39,26 +39,26 @@ iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 .stButton>button:hover, .stButton>button:hover *{ color:#fff !important; }
 
 /* ---------- 타이틀 ---------- */
-.ts{ position:relative; height:580px; overflow:hidden; }
+.ts{ position:relative; height:520px; overflow:hidden; }
 .ts-wall{ position:absolute; inset:0; background:linear-gradient(#f1e5b7,#d9c78d); }
 .ts-pil{ position:absolute; top:0; bottom:30%; width:11%; border-left:3px solid #8f7a46; border-right:3px solid #8f7a46;
   background:linear-gradient(90deg,#c9b27a,#f3e7bd 45%,#b59c61); }
 .ts-pil.l{ left:5%; } .ts-pil.r{ right:5%; }
-.ts-seal{ position:absolute; left:50%; top:5%; transform:translateX(-50%); width:78px; height:78px; border-radius:50%;
+.ts-seal{ position:absolute; left:26%; top:5%; transform:translateX(-50%); width:78px; height:78px; border-radius:50%;
   background:radial-gradient(#fff,#cfd6e6); border:5px solid #c9a24d; box-shadow:0 0 0 4px #7a5a1e;
   display:flex; align-items:center; justify-content:center; font-size:38px; }
 .ts-bench{ position:absolute; left:22%; right:22%; bottom:24%; height:26%; border:5px solid #4f2a12;
   background:linear-gradient(#b06a33 0 14%,#7d4521 14%); }
 .ts-floor{ position:absolute; left:0; right:0; bottom:0; height:30%; border-top:5px solid #6b4423;
   background:repeating-conic-gradient(#d7e9de 0 25%,#aecbbb 0 50%) 0 0/54px 54px; }
-.ts-logo{ position:absolute; left:0; right:0; top:13%; text-align:center; }
+.ts-logo{ position:absolute; left:0; right:44%; top:25%; text-align:center; }
 .ts-logo small{ display:inline-block; background:#1a1f4a; color:#9fe8ff; padding:3px 12px; letter-spacing:3px; border:2px solid #9fe8ff; }
 .ts-logo h1{ font-size:clamp(44px,12vw,76px); line-height:1.05; color:#fff; margin:8px 0 4px; letter-spacing:4px; padding:0;
   -webkit-text-stroke:3px #1a1f4a; text-shadow:5px 5px 0 #c1121f,8px 8px 0 #000; }
 .ts-logo em{ font-style:normal; color:#3a2a0e; font-size:12px; letter-spacing:3px; font-weight:700; }
 .ts-crt{ position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(#0000 0 2px,#0002 2px 3px); box-shadow:inset 0 0 110px #000b; }
 .ts-copy{ position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px; color:#e8f3ee; text-shadow:1px 1px 0 #000; }
-.st-key-menu{ position:relative; z-index:5; width:250px; max-width:84%; margin:-282px auto 0; }
+.st-key-menu{ position:relative; z-index:5; width:330px; max-width:84%; margin:-330px 8% 0 auto; }
 
 /* ---------- 소장 접수 ---------- */
 .doc-head{ text-align:center; font-size:30px; font-weight:700; letter-spacing:12px; color:#f7e9b0; text-shadow:3px 3px 0 #000; margin:6px 0 12px; }
@@ -107,11 +107,11 @@ iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 .st-key-hud .stButton>button{ padding:0; font-size:17px; }
 
 /* ---------- 로비 ---------- */
-.lobby-hero{ position:relative; height:250px; overflow:hidden; text-align:center; border:4px solid #2a2f57; box-shadow:6px 6px 0 #000;
+.lobby-hero{ position:relative; height:360px; overflow:hidden; text-align:center; border:4px solid #2a2f57; box-shadow:6px 6px 0 #000;
   background:linear-gradient(#10163f,#2a2f77 62%,#d9c78d 62%); }
 .lobby-hero .stars{ position:absolute; inset:0; opacity:.55; background-image:radial-gradient(#fff 1px,transparent 1.6px); background-size:46px 38px; }
-.lobby-hero .bldg{ position:relative; font-size:96px; margin-top:22px; filter:drop-shadow(0 6px 0 #000); }
-.lobby-hero .lh-t{ position:absolute; left:0; right:0; bottom:12px; color:#fff; font-weight:700; font-size:17px; text-shadow:2px 2px 0 #000; }
+.lobby-hero .bldg{ position:relative; font-size:128px; margin-top:40px; filter:drop-shadow(0 6px 0 #000); }
+.lobby-hero .lh-t{ position:absolute; left:0; right:0; bottom:14px; color:#fff; font-weight:700; font-size:20px; text-shadow:2px 2px 0 #000; }
 .lobby-hero .lh-t small{ display:block; font-size:12px; font-weight:400; color:#2a1a00; text-shadow:none; margin-top:2px; }
 .st-key-lobby_main{ margin-top:14px; }
 .st-key-lobby_main .stButton>button{ height:80px; font-size:21px; letter-spacing:3px; border-color:#ffd23f; background:linear-gradient(#e0a82e,#a8741a); animation:glow 1.6s ease-in-out infinite; }
@@ -124,7 +124,7 @@ iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 .lf{ position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center;
   background:radial-gradient(#1b2350,#05070f 72%); animation:lfin .35s; }
 .lf::after{ content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(#0000 0 2px,#0002 2px 3px); }
-.lf-in{ position:relative; z-index:1; width:min(92vw,420px); text-align:center; padding:26px 18px; border:4px double #c9b26b; background:#10162ee6; box-shadow:6px 6px 0 #000; }
+.lf-in{ position:relative; z-index:1; width:min(92vw,560px); text-align:center; padding:30px 24px; border:4px double #c9b26b; background:#10162ee6; box-shadow:6px 6px 0 #000; }
 .lf-icon{ font-size:64px; animation:lfb 1s steps(2) infinite; }
 .lf-step{ margin-top:4px; color:#ffd23f; letter-spacing:3px; font-size:13px; font-weight:700; }
 .lf-msg{ margin:14px 0; min-height:60px; font-size:19px; font-weight:700; color:#f7e9b0; line-height:1.5; word-break:keep-all; }
@@ -189,7 +189,7 @@ iframe{ animation:pagein .6s; }
 .keybox{ background:#3a1620; color:#ffd0d0; padding:14px; line-height:1.6; }
 .keybox code{ background:#0d0f26; color:#ffe066; padding:1px 6px; }
 /* 결과 큼직 패널 */
-.result-big{ margin:18px 5px; padding:20px 12px; text-align:center; background:#161c4d; color:#fff; }
+.result-big{ max-width:760px; margin:18px auto; padding:20px 12px; text-align:center; background:#161c4d; color:#fff; }
 .rb-title{ font-size:15px; color:#9fe8ff; letter-spacing:2px; }
 .rb-delta{ font-size:56px; font-weight:900; line-height:1.15; margin:6px 0; text-shadow:4px 4px 0 #000; }
 .result-big.up .rb-delta{ color:#59f08a; } .result-big.down .rb-delta{ color:#ff6b6b; }
@@ -211,10 +211,9 @@ iframe{ border:0 !important; border-radius:0 !important; margin:4px 5px;
 div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),0 12px 0 0 #000a; }
 /* 좁은 화면에서도 버튼 줄이 세로로 쌓이지 않게 */
 .st-key-ask2 [data-testid="stHorizontalBlock"], .st-key-story_nav [data-testid="stHorizontalBlock"],
-.st-key-nav3 [data-testid="stHorizontalBlock"], .st-key-paper [data-testid="stHorizontalBlock"]{ flex-wrap:nowrap !important; gap:8px !important; }
+.st-key-nav3 [data-testid="stHorizontalBlock"]{ flex-wrap:nowrap !important; gap:8px !important; }
 .st-key-ask2 [data-testid="stColumn"], .st-key-story_nav [data-testid="stColumn"], .st-key-nav3 [data-testid="stColumn"],
-.st-key-paper [data-testid="stColumn"], .st-key-ask2 [data-testid="column"], .st-key-story_nav [data-testid="column"],
-.st-key-nav3 [data-testid="column"], .st-key-paper [data-testid="column"]{ min-width:0 !important; }
+.st-key-ask2 [data-testid="column"], .st-key-story_nav [data-testid="column"], .st-key-nav3 [data-testid="column"]{ min-width:0 !important; }
 
 /* ---------- 스토리 / 스토리 확인 ---------- */
 .story{ padding:22px 18px; text-align:center; background:linear-gradient(#1c2557,#0f1538); border:4px solid #ffe3a3;
@@ -227,12 +226,35 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .anim-walk{ animation:swalk 2.2s linear infinite; } @keyframes swalk{ 0%{ transform:translateX(-80px); opacity:0; } 30%{ opacity:1; } 100%{ transform:translateX(80px); opacity:0; } }
 .anim-zoom{ animation:szoom 2.8s ease-out forwards; } @keyframes szoom{ 0%{ transform:scale(.4); } 100%{ transform:scale(1.5); } }
 .anim-pulse{ animation:spulse 1s ease-in-out infinite; } @keyframes spulse{ 50%{ transform:scale(1.25); } }
-.ask{ padding:36px 20px; text-align:center; margin:40px 0 18px; background:linear-gradient(#27327f,#151b4a); border:4px solid #ffe3a3; box-shadow:0 12px 28px #000a; }
+.ask{ padding:36px 20px; text-align:center; max-width:640px; margin:40px auto 18px; background:linear-gradient(#27327f,#151b4a); border:4px solid #ffe3a3; box-shadow:0 12px 28px #000a; }
 .ask-icon{ font-size:72px; }
 .ask h2{ font-size:25px; line-height:1.4; color:#fff; margin:8px 0; padding:0; }
 .ask p{ color:#b8c4e8; margin:0; }
 .lf-head{ font-size:32px; color:#fff; margin-top:6px; text-shadow:3px 3px 0 #000; }
 .lf-bar, .lf-bar i{ border-radius:0; }
+/* ============ 가로 화면(Landscape) 레이아웃 ============ */
+.st-key-ask2, .st-key-story_nav{ max-width:560px; margin-left:auto; margin-right:auto; }
+.st-key-lobby_main .stButton>button{ height:104px; font-size:24px; }
+.st-key-paper textarea{ font-size:17px; line-height:1.6; }
+.tip{ font-size:13px; line-height:1.6; }
+.lf-msg{ font-size:22px; }
+
+/* ============ 좁은 화면(세로 모드 폰 등) 대비 ============ */
+@media (max-width: 760px){
+  .block-container, [data-testid="stMainBlockContainer"]{ max-width:480px !important; padding:1rem .8rem 7rem !important; }
+  [data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"]{ max-width:480px !important; }
+  div[role="dialog"]{ max-width:440px !important; }
+  .ts{ height:580px; }
+  .ts-seal{ left:50%; }
+  .ts-logo{ right:0; top:13%; }
+  .st-key-menu{ width:250px; margin:-282px auto 0; }
+  .lobby-hero{ height:250px; }
+  .lobby-hero .bldg{ font-size:96px; margin-top:22px; }
+  .lobby-hero .lh-t{ font-size:17px; }
+  .lf-in{ width:min(92vw,420px); padding:26px 18px; }
+  .lf-msg{ font-size:19px; }
+  .st-key-lobby_main .stButton>button{ height:96px; font-size:22px; }
+}
 """
 
 # =================================================================
@@ -286,7 +308,7 @@ STREAK_BONUS = 10  # 무죄 2연승부터 (연승-1)×10 가산, 최대 +30
 
 SPEED_MS = {"느리게": 45, "보통": 30, "빠르게": 16}
 
-VN_H = 640  # 세로형 연출 화면 높이
+VN_H = 560  # 가로형(16:9에 가까운) 연출 화면 높이
 
 RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job")
 
