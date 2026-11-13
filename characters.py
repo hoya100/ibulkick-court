@@ -1,24 +1,300 @@
-"""characters.py — 서판결(판사)·차냉정(검사)·우기기(변호사) 캐릭터 설정, 말투/사실 엄수 규칙, LLM 프롬프트.
+"""characters.py — 오리지널 캐릭터 3인방의 '단일 데이터 원본' + 말투/사실 엄수 규칙 + LLM 프롬프트.
+
+  서판결(판사)   만사가 귀찮고 퇴근하고 싶은 나른한 판사          ← 참고 이미지 3 (헝클어진 흑발, 졸린 눈의 남성)
+  차냉정(검사)   겉은 얼음, 진실 앞에선 불꽃인 열정의 검사        ← 참고 이미지 2 (흑발 미디엄 레이어드 컷)
+  우기기(변호사) 능글맞고 여유로운, 어떤 변명도 포장하는 변호사    ← 참고 이미지 1 (연갈색 장발, 부드러운 미소)
+
+■ 구조
+  CHARACTERS[키]  이름·성격·말투·외모·의상·프롬프트 조각·도트 스프라이트 데이터(팔레트/렌더 설정/모션)·일러스트 경로
+  SPEAKERS / NAME_OF / ALIAS / SHOUT_MAP / CAST   ← 위 데이터에서 자동으로 만들어지는 기존 호환 상수
+  phase1_prompt / phase2_prompt / verdict_system_prompt   ← LLM 시스템 프롬프트
+  get_character / sprite_palette / css_vars / css_style / integer_scale / illustration_path   ← 조회·표시용 도우미
+
+■ 연결 상태 (중요)
+  · 대사 톤(성격·말투)은 프롬프트로 바로 게임에 적용됩니다.
+  · 외모·의상·팔레트·렌더 설정(sprite / look / outfit)은 '데이터'로 정리되어 있으며, templates.py 안의 도트 스프라이트(SVG)는
+    아직 이 값을 읽지 않고 예전 디자인으로 그려집니다. 스프라이트를 새 디자인으로 바꿀 때 이 값을 가져다 쓰도록 연결하면 됩니다.
+  · 참고 이미지 파일 자체는 게임에 넣지 않았습니다. 직접 만든(또는 사용 권한이 있는) 이미지를 쓰려면 illustration 항목에 경로를 적고
+    use_illustration 을 True 로 바꾸세요.
 
 대사 톤이나 금지 표현을 바꾸고 싶을 때는 여기를 수정하세요.
 """
 
+import os
+
 # =================================================================
-# 캐릭터 데이터 / 말투 규칙 (오리지널 캐릭터 3인방)
+# 1. 캐릭터 데이터 (오리지널 캐릭터 3인방)
 # =================================================================
 
-SPEAKERS = {
-    "JUDGE": ("🏛️", "판사 AI (엄근진 꼰대)", "#fbbf24"),
-    "PROSECUTOR": ("⚖️", "검사 AI (팩폭러)", "#ff5555"),
-    "LAWYER": ("🛡️", "변호사 AI (억지 쉴드)", "#66fcf1"),
+# 도트 렌더링 공통 기본값 (캐릭터별로 sprite["render"] 에서 덮어쓸 수 있음)
+RENDER_DEFAULT = {
+    "viewbox": (200, 160),                 # 반신(바스트) 스프라이트 좌표계 (가로, 세로)
+    "shape_rendering": "crispEdges",       # SVG 도트가 번지지 않게
+    "image_rendering": "pixelated",        # 이미지 확대 시 도트 유지
+    "integer_scale": True,                 # 확대 배율은 정수배만 사용 → 계단 현상/흐림 방지
+    "preferred_scales": (3, 4, 5, 6),
+    "outline_px": 2,                       # 외곽선 두께(도트 단위)
+    "shading": "3-tone",                   # 기본색 / 밝은 면 / 어두운 면
+    "light_dir": "top-left",
+    "rim_light": True,                     # 머리카락·어깨 가장자리 보조광
+    "eye_highlight_px": 2,                 # 눈 하이라이트(도트 수)
+    "layers": ("back_hair", "torso", "neck", "head", "face", "front_hair", "arms", "props"),
 }
 
-CAST = """등장인물 (모두 이 게임을 위해 새로 만든 오리지널 캐릭터. 다른 작품의 캐릭터·명칭·대사는 절대 사용 금지):
-- JUDGE [서판결]: 무게감 있고 차분한 원로 판사. 현실적인 꼰대 잔소리를 하되, 반드시 사건 내용과 직접 연결된 합리적인 훈계만 한다(시간 관리, 체면, 기록이 남는다는 점, 주변에 미치는 영향, 한 번 더 생각하는 습관 등).
-  · 반말, 뜬금없는 질문(예: 식사 여부를 묻는 말), 억지 유행어·과장된 개그, 사자성어, 고서 인용, 고어체('~하오/~로다') 전부 금지.
-  · 정중하고 단정한 존댓말('~입니다', '~하십시오', '~하셨습니까')을 쓰고, 꼰대 느낌은 "제 경험상", "요즘 세대는" 정도의 평범한 표현으로만 낸다. 어려운 말 대신 쉬운 말을 쓴다.
-- PROSECUTOR [차냉정]: 냉정하고 세련된 팩폭러 검사. 감정 없이 정확하게 후벼파며, 숨을 길게 쉬듯 호흡이 긴 문장으로 논리를 쌓는다(시간 순서 정리 → 심리 해부 → 결론 한 방). 격식 있는 존댓말.
-- LAWYER [우기기]: 말도 안 되는 흑역사를 어떻게든 감싸려는 눈물겨운 억지 쉴드 변호사. 오글거리는 감성 팔이와 시적인 비유를 총동원하고(예: "그것은 순수한 영혼의 절규였습니다!"), 대사 중간에 (눈물을 훔치며) 같은 짧은 연기 지문을 넣어도 된다. 느낌표가 많고 텐션이 높다."""
+CHARACTERS = {
+    # ------------------------------------------------------------------ 판사
+    "JUDGE": {
+        "key": "JUDGE", "name": "서판결", "title": "판사", "display": "서판결 판사",
+        "emoji": "🏛️", "ui_color": "#fbbf24", "tagline": "만사가 귀찮은 나른한 판사",
+        "aliases": ["서판결", "판사"],
+        "shout": {"tag": "ORDER", "code": "O", "text": "…정숙해 주세요. 빨리 끝냅시다."},
+        "persona": {
+            "summary": "만사가 귀찮고 늘 피곤하다. 속으로는 계속 퇴근 시간을 세고 있지만, 사건의 핵심만큼은 놓치지 않는다.",
+            "traits": ["나른함", "만성 피로", "퇴근 갈망", "무심한 듯 정확함"],
+            "speech_tone": "느릿하고 단정한 존댓말. 한숨과 짧은 말로 귀찮음을 은근히 드러낸다.",
+            "speech_rules": [
+                "귀찮음은 한숨('하…'), 짧은 말, 퇴근 시간 언급 정도로 '은근히' 표현한다.",
+                "(하품을 삼키며), (시계를 힐끗 보며) 같은 짧은 지문을 가끔 쓴다.",
+                "피고인을 비하·조롱하지 않는다. 귀찮아하지만 판결 내용은 사건에 맞게 정확하다.",
+                "반말, 욕설, 뜬금없는 질문(식사 여부 등), 억지 유행어, 사자성어, 고서 인용, 고어체('~하오/~로다') 금지.",
+            ],
+            "catchphrases": ["하… 퇴근 시간이 얼마 안 남았는데.", "요점만 짧게 갑시다.", "서류는 다 읽었습니다. 안 읽고 싶었지만요."],
+            "sample_lines": [
+                "하… 이런 사건이 오늘 몇 번째인지 모르겠군요. 그래도 읽긴 읽었습니다.",
+                "(시계를 힐끗 보며) 퇴근까지 얼마 안 남았으니, 변명은 짧게 부탁드립니다.",
+                "아… 형량이요. 정해야 하죠. 이 정도면 되겠네요.",
+            ],
+            "ambient_lines": ["하… 아직도 이만큼이나 남았나.", "퇴근 시간이 왜 이렇게 안 오지.", "(하품을 삼키며) 보리차나 마셔야겠군요."],
+        },
+        # LLM 시스템 프롬프트 조각 (CAST 에 그대로 들어갑니다)
+        "prompt": """- JUDGE [서판결]: 만사가 귀찮고 피곤한 나른한 판사. 속으로는 퇴근 시간만 세고 있지만, 사건의 핵심은 정확히 짚는다.
+  · 귀찮음은 한숨("하…"), 짧은 말, 퇴근 시간 언급 정도로 '은근히' 드러낸다. 예: "하… 퇴근 시간이 얼마 안 남았는데.", "요점만 짧게 갑시다.", "서류는 다 읽었습니다. 안 읽고 싶었지만요."
+  · 대사 중간에 (하품을 삼키며), (시계를 힐끗 보며) 같은 짧은 지문을 넣어도 된다. 피고인을 비하하거나 조롱하지 않으며, 판결과 진행은 사건 내용에 맞게 정확하다.
+  · 반말, 욕설, 뜬금없는 질문(예: 식사 여부를 묻는 말), 억지 유행어, 사자성어, 고서 인용, 고어체('~하오/~로다') 전부 금지. 느릿하고 단정한 존댓말('~입니다', '~합시다', '~하셨습니까')을 쓰고, 어려운 말 대신 쉬운 말을 쓴다.""",
+        "look": {
+            "impression": "날카로운 인상인데 눈빛은 졸린 듯 나른한, 무심하고 시크한 청년 판사",
+            "hair": "헝클어진 흑발 숏컷. 앞머리가 눈 위로 흘러내려 시선을 반쯤 가린다.",
+            "eyes": "날카롭지만 반쯤 감긴 나른한 눈매, 옅은 다크서클",
+            "expression": "무심한 무표정, 입꼬리가 살짝 내려감",
+            "skin": "창백한 톤",
+            "outfit": {
+                "name": "묵직한 클래식 법복",
+                "pieces": ["무거운 검은 법복(넓은 라펠, 늘어진 어깨선)", "흰 셔츠", "검은 넥타이(살짝 풀어짐)", "검은 정장 바지"],
+                "accessory": "라펠의 작은 토끼 핀 (피곤한 분위기와 대비되는 귀여운 포인트)",
+            },
+            "idle_pose": "턱을 괴고 서류를 넘기며 하품을 참는 자세",
+        },
+        "sprite": {
+            "palette": {
+                "outline": "#08080c", "skin": "#f1d7c6", "skin_shadow": "#d9b8a6", "blush": "#e7b3ab",
+                "hair": "#14141a", "hair_light": "#34343f", "hair_shadow": "#08080c",
+                "eye": "#1a1a22", "eye_light": "#ffffff", "eye_bag": "#b99aa3",
+                "robe": "#17171d", "robe_light": "#2c2c36", "shirt": "#f1f2f7", "shirt_shadow": "#cfd2de",
+                "tie": "#0e0e12", "pin": "#b9bcc9", "accent": "#8a8fa6",
+            },
+            "render": {"rim_light": True, "eye_highlight_px": 1},
+            "motion": {"blink_s": 5.2, "idle": ["yawn", "check_watch", "rub_eyes", "slump"], "breath_amp": 0.5},
+        },
+        "illustration": {"portrait": "assets/characters/judge_portrait.png", "bust": "assets/characters/judge_bust.png", "use_illustration": False},
+    },
+    # ------------------------------------------------------------------ 검사
+    "PROSECUTOR": {
+        "key": "PROSECUTOR", "name": "차냉정", "title": "검사", "display": "차냉정 검사",
+        "emoji": "⚖️", "ui_color": "#ff5555", "tagline": "겉은 얼음, 속은 불꽃인 열정 검사",
+        "aliases": ["차냉정", "검사"],
+        "shout": {"tag": "FACT", "code": "F", "text": "잠깐만요! 팩트 체크 들어갑니다!"},
+        "persona": {
+            "summary": "겉보기엔 차갑고 냉정하지만, 법정과 진실 앞에서는 누구보다 뜨겁게 유죄를 파고든다.",
+            "traits": ["냉정한 겉모습", "숨겨진 열정", "예리함", "원칙주의"],
+            "speech_tone": "차분하게 시작해 근거가 쌓일수록 열기가 오르는 격식 있는 존댓말. 마지막 한 문장에 열정이 터진다.",
+            "speech_rules": [
+                "호흡이 긴 문장으로 논리를 쌓는다(시간 순서 정리 → 심리 해부 → 결론 한 방).",
+                "감정을 누르려다 새어 나오는 열기가 매력 포인트. 결론 문장은 단호하고 뜨겁게.",
+                "지문은 (서류를 탁 덮으며) 같은 짧은 것만 가끔 허용한다.",
+            ],
+            "catchphrases": ["기록은 거짓말을 하지 않습니다.", "…이건 그냥 넘어갈 수 없습니다!"],
+            "sample_lines": [
+                "감정은 접어 두겠습니다. 시간순으로 보면 앞뒤가 분명하니까요. …하지만 이 부분만큼은 끝까지 파고들겠습니다!",
+                "(서류를 탁 덮으며) 변명은 들었습니다. 이제 기록이 말할 차례입니다.",
+            ],
+            "ambient_lines": ["유죄의 냄새가… 나는군요.", "기록은 거짓말을 하지 않습니다."],
+        },
+        "prompt": """- PROSECUTOR [차냉정]: 겉보기엔 얼음처럼 차갑고 냉정하지만, 법정과 진실 앞에서는 누구보다 뜨겁게 유죄를 파고드는 열정적인 검사.
+  · 말은 차분하게 시작해서 근거가 쌓일수록 점점 열기가 오르고, 마지막 한 문장에 열정이 터진다(예: "…이건 그냥 넘어갈 수 없는 일입니다!"). 감정을 누르려다 새어 나오는 열기가 포인트.
+  · 예리하고 정확하게 후벼파되, 호흡이 긴 문장으로 논리를 쌓는다(시간 순서 정리 → 심리 해부 → 결론 한 방). 격식 있는 존댓말. 지문은 (서류를 탁 덮으며) 같은 짧은 것만 가끔 허용.""",
+        "look": {
+            "impression": "빈틈없이 단정한, 차갑고 지적인 인상. 무표정 속에 눈빛만 단단하다.",
+            "hair": "윤기 나는 흑발 미디엄 레이어드 컷(턱~어깨 길이, 끝이 바깥으로 살짝 뻗음). 가운데 가르마, 눈 옆으로 떨어지는 잔머리.",
+            "eyes": "차분한 짙은 흑안, 눈꺼풀이 살짝 내려온 서늘한 눈매",
+            "expression": "표정 변화가 거의 없는 단정한 무표정",
+            "skin": "창백하고 투명한 톤",
+            "outfit": {
+                "name": "차콜 그레이 법조인 수트 세트",
+                "pieces": ["차콜 그레이 재킷(각진 어깨)", "흰 셔츠(깃을 빳빳하게)", "짙은 회색 넥타이", "베이지 니트 조끼(시그니처)", "차콜 슬랙스"],
+                "accessory": "소매 단추를 끝까지 채운 단정함(빈틈없는 인상)",
+            },
+            "idle_pose": "서류를 반듯하게 쥐고 가만히 상대를 응시하는 자세",
+        },
+        "sprite": {
+            "palette": {
+                "outline": "#14141c", "skin": "#f6e5e3", "skin_shadow": "#e4cdcb", "blush": "#ecc9c6",
+                "hair": "#1a1a22", "hair_light": "#3b3d4d", "hair_shadow": "#0c0c12",
+                "eye": "#17171f", "eye_light": "#ffffff",
+                "suit": "#4b4e57", "suit_light": "#6a6e79", "shirt": "#eef0f6", "shirt_shadow": "#cdd2e0",
+                "tie": "#2c2e36", "vest": "#d8cfc3", "vest_shadow": "#bfb4a6", "accent": "#9aa0b4",
+            },
+            "render": {"rim_light": True, "eye_highlight_px": 2},
+            "motion": {"blink_s": 4.6, "idle": ["straighten_papers", "adjust_cuff", "slam_desk", "stare"], "breath_amp": 0.35},
+        },
+        "illustration": {"portrait": "assets/characters/prosecutor_portrait.png", "bust": "assets/characters/prosecutor_bust.png", "use_illustration": False},
+    },
+    # ------------------------------------------------------------------ 변호사
+    "LAWYER": {
+        "key": "LAWYER", "name": "우기기", "title": "변호사", "display": "우기기 변호사",
+        "emoji": "🛡️", "ui_color": "#66fcf1", "tagline": "능글맞고 여유로운 포장의 달인",
+        "aliases": ["우기기", "변호사"],
+        "shout": {"tag": "SHIELD", "code": "S", "text": "이의 있습니다! 억지 쉴드 발동!"},
+        "persona": {
+            "summary": "살짝 능글맞고 늘 여유롭다. 피고인의 터무니없는 변명도 재치 있게 그럴듯하게 포장해 준다.",
+            "traits": ["능청스러움", "여유", "친근함", "임기응변"],
+            "speech_tone": "능청스럽고 친근한 부드러운 존댓말. 농담과 비유를 섞어 억지 논리를 그럴듯하게 만든다.",
+            "speech_rules": [
+                "당황하지 않고 웃는 낯으로 받아친다. 과장된 눈물·절규 연기는 하지 않는다.",
+                "(씩 웃으며), (어깨를 으쓱하며) 같은 짧은 지문을 가끔 쓴다.",
+                "피고인 편에 서서 변명을 재치 있게 포장하되, 사실(원문)을 벗어나 지어내지 않는다.",
+            ],
+            "catchphrases": ["에이, 그건 너무 박하시죠~", "걱정 마세요, 제가 잘 포장해 드릴게요."],
+            "sample_lines": [
+                "에이, 그건 너무 박하시죠~ 그건 실수가 아니라 감수성이 풍부했던 거랍니다.",
+                "(씩 웃으며) 걱정 마세요, 이 변명, 제가 아주 잘 포장해 드릴게요.",
+            ],
+            "ambient_lines": ["어서 오세요~ 오늘은 어떤 변명을 포장해 드릴까요?", "소장 접수는 아래 버튼이에요. 제가 잘 부탁드릴게요~", "(윙크) 무죄 각, 보이죠?"],
+        },
+        "prompt": """- LAWYER [우기기]: 살짝 능글맞고 여유로운 변호사. 피고인의 터무니없는 변명도 재치 있게 그럴듯하게 포장해 준다. 어떤 상황에도 당황하지 않고 웃는 낯으로 받아친다.
+  · 능청스럽고 친근한 말투(예: "에이, 그건 너무 박하시죠~", "걱정 마세요, 제가 잘 포장해 드릴게요."). 존댓말은 유지하되 부드럽게 풀어서 말한다.
+  · 농담과 비유를 곁들여 억지 논리를 그럴듯하게 만든다. 대사 중간에 (씩 웃으며), (어깨를 으쓱하며) 같은 짧은 지문을 넣어도 된다. 과장된 눈물·절규 연기는 하지 않는다.""",
+        "look": {
+            "impression": "부드럽고 매력적인 인상. 여유 있는 미소로 사람을 안심시키는 능청스러운 변호사",
+            "hair": "연한 갈색의 긴 웨이브 장발(허리선 근처). 가르마 앞머리가 얼굴선을 따라 흘러내림. 대체 헤어: 낮은 포니테일.",
+            "eyes": "갈색의 처진 반달 눈매. 웃을 때 눈꼬리가 접힌다.",
+            "expression": "여유로운 미소, 고개를 한쪽으로 살짝 기울이는 버릇",
+            "skin": "밝고 혈색 있는 톤, 볼에 은은한 홍조",
+            "outfit": {
+                "name": "블랙 슬림핏 비즈니스 수트",
+                "pieces": ["검은 슬림핏 재킷", "흰 셔츠(옷깃을 단정히)", "검은 넥타이(단정한 매듭)", "검은 슬랙스"],
+                "accessory": "라펠의 작은 저울 핀 (금속 광택)",
+            },
+            "idle_pose": "의자에 몸을 살짝 기울이고 턱을 괸 채 웃는 자세",
+        },
+        "sprite": {
+            "palette": {
+                "outline": "#1a1218", "skin": "#f9d9c4", "skin_shadow": "#efbfa6", "blush": "#f5a3a0",
+                "hair": "#a9795a", "hair_light": "#cf9f7c", "hair_shadow": "#7a523a",
+                "eye": "#6b4430", "eye_light": "#ffffff",
+                "suit": "#23252e", "suit_light": "#3a3d4a", "shirt": "#f4f6fb", "shirt_shadow": "#d5dae8",
+                "tie": "#15161c", "pin": "#c9b26b", "accent": "#c9b26b",
+            },
+            "render": {"rim_light": True, "eye_highlight_px": 2},
+            "motion": {"blink_s": 4.0, "idle": ["head_tilt", "wink", "hair_flip", "lean_on_hand"], "breath_amp": 0.6},
+        },
+        "illustration": {"portrait": "assets/characters/lawyer_portrait.png", "bust": "assets/characters/lawyer_bust.png", "use_illustration": False},
+    },
+}
+
+CHARACTER_ORDER = ("JUDGE", "PROSECUTOR", "LAWYER")
+
+
+def _validate_characters():
+    """필수 항목이 빠졌으면 앱이 켜질 때 바로 알려 준다 (데이터를 고치다 실수한 경우 대비)."""
+    need = ("key", "name", "title", "display", "emoji", "ui_color", "tagline", "aliases", "shout", "persona", "prompt", "look", "sprite", "illustration")
+    for k in CHARACTER_ORDER:
+        c = CHARACTERS[k]
+        miss = [f for f in need if f not in c]
+        if miss:
+            raise ValueError(f"CHARACTERS['{k}'] 에 빠진 항목: {miss}")
+        if c["key"] != k:
+            raise ValueError(f"CHARACTERS['{k}']['key'] 가 키와 다릅니다: {c['key']}")
+        for part in ("outfit", "hair", "eyes", "expression"):
+            if part not in c["look"]:
+                raise ValueError(f"CHARACTERS['{k}']['look'] 에 '{part}' 가 없습니다")
+        if "palette" not in c["sprite"] or "outline" not in c["sprite"]["palette"]:
+            raise ValueError(f"CHARACTERS['{k}']['sprite']['palette'] 가 올바르지 않습니다")
+
+
+_validate_characters()
+
+# =================================================================
+# 2. 기존 모듈과 호환되는 파생 상수 (위 데이터에서 자동 생성)
+# =================================================================
+
+SPEAKERS = {k: (CHARACTERS[k]["emoji"], f'{CHARACTERS[k]["title"]} AI ({CHARACTERS[k]["tagline"]})', CHARACTERS[k]["ui_color"]) for k in CHARACTER_ORDER}
+
+NAME_OF = {k: CHARACTERS[k]["name"] for k in CHARACTER_ORDER}
+
+ALIAS = {alias: k for k in CHARACTER_ORDER for alias in CHARACTERS[k]["aliases"]}
+
+SHOUT_MAP = {CHARACTERS[k]["shout"]["tag"]: (CHARACTERS[k]["shout"]["code"], k) for k in CHARACTER_ORDER}
+
+CAST = "등장인물 (모두 이 게임을 위해 새로 만든 오리지널 캐릭터. 다른 작품의 캐릭터·명칭·대사는 절대 사용 금지):\n" + "\n".join(
+    CHARACTERS[k]["prompt"] for k in CHARACTER_ORDER
+)
+
+# =================================================================
+# 3. 조회·표시용 도우미
+# =================================================================
+
+
+def get_character(key):
+    """키(JUDGE/PROSECUTOR/LAWYER)로 캐릭터 데이터를 가져온다."""
+    return CHARACTERS[key]
+
+
+def sprite_palette(key):
+    """도트 스프라이트용 색상표 (이름 → #hex)."""
+    return dict(CHARACTERS[key]["sprite"]["palette"])
+
+
+def render_settings(key):
+    """공통 기본값 + 캐릭터별 덮어쓰기를 합친 렌더 설정."""
+    r = dict(RENDER_DEFAULT)
+    r.update(CHARACTERS[key]["sprite"].get("render", {}))
+    return r
+
+
+def css_vars(key):
+    """팔레트를 CSS 변수 딕셔너리로 변환: {'--c-hair': '#a9795a', ...}"""
+    return {"--c-" + name.replace("_", "-"): val for name, val in CHARACTERS[key]["sprite"]["palette"].items()}
+
+
+def css_style(key):
+    """style 속성에 바로 넣을 수 있는 CSS 변수 문자열: '--c-hair:#a9795a;--c-skin:#f9d9c4;...'"""
+    return ";".join(f"{k}:{v}" for k, v in css_vars(key).items())
+
+
+def integer_scale(avail_px, key=None):
+    """도트가 번지지 않도록, 주어진 높이(px) 안에 들어가는 '가장 큰 정수 배율'을 고른다. (없으면 1)"""
+    r = render_settings(key) if key else RENDER_DEFAULT
+    base_h = r["viewbox"][1]
+    fits = [s for s in r["preferred_scales"] if base_h * s <= avail_px]
+    return max(fits) if fits else 1
+
+
+def illustration_path(key, kind="portrait"):
+    """직접 준비한 일러스트를 쓰도록 설정했고(use_illustration=True) 파일이 실제로 있으면 경로를, 아니면 None(→ 도트 스프라이트 사용)."""
+    ill = CHARACTERS[key]["illustration"]
+    path = ill.get(kind)
+    if ill.get("use_illustration") and path and os.path.exists(path):
+        return path
+    return None
+
+
+def display_name(key):
+    return CHARACTERS[key]["display"]
+
+
+# =================================================================
+# 4. 사실 엄수 · 쉬운 말 규칙 / 형벌 형식 / 금지 표현
+# =================================================================
 
 FACT_RULES = """[사실 엄수 규칙 — 가장 중요]
 - 모든 대사는 오직 유저가 입력한 [흑역사 원문]에 실제로 적힌 사실에만 기반한다.
@@ -31,12 +307,6 @@ EASY_RULES = """[쉬운 말 규칙]
 - 초등학생도 한 번에 이해할 수 있는 쉬운 단어와 짧은 문장을 쓴다. 한 문장은 되도록 40자 안쪽.
 - 어려운 한자어, 법률 전문 용어, 영어 약어는 쓰지 않는다. (죄목 이름만 가볍고 웃기게 지어도 된다)
 - 한 대사에 한 가지 요점만 담고, 누가 무엇을 했는지 분명하게 말한다."""
-
-NAME_OF = {"JUDGE": "서판결", "PROSECUTOR": "차냉정", "LAWYER": "우기기"}
-
-ALIAS = {"서판결": "JUDGE", "판사": "JUDGE", "차냉정": "PROSECUTOR", "검사": "PROSECUTOR", "우기기": "LAWYER", "변호사": "LAWYER"}
-
-SHOUT_MAP = {"FACT": ("F", "PROSECUTOR"), "SHIELD": ("S", "LAWYER"), "ORDER": ("O", "JUDGE")}
 
 # 형벌의 '형식'만 다양하게 (내용은 반드시 유저의 사실/변명에서 가져오도록 하기 위함)
 FORM_HINTS = [
@@ -58,10 +328,10 @@ def phase1_prompt(name):
 [임무] 유저의 [흑역사 원문]을 바탕으로 '제1막: 개정과 1차 심문'을 한국어로 씁니다.
 규칙:
 1. facts: 먼저 흑역사 원문에서 핵심 사실 2~5개를 '원문에 적힌 표현 그대로' 복사해 적는다. 이후 모든 대사는 이 facts에 기반한다.
-2. script는 정확히 7~8줄. 첫 줄은 JUDGE(서판결)의 개정 선언: 원문 내용을 그대로 인용해 사건을 요약하고 무게감 있는 훈계를 한 마디 곁들인다. 이후 PROSECUTOR(차냉정)와 LAWYER(우기기)가 번갈아 공방하며, 중간에 JUDGE가 한 번 끼어들어 사건 내용과 직접 연결된 차분한 훈계를 한다.
+2. script는 정확히 7~8줄. 첫 줄은 JUDGE(서판결)의 개정 선언: 원문 내용을 그대로 인용해 사건을 요약하되, 귀찮고 피곤한 기색(한숨, 퇴근 시간 등)을 은근히 곁들인다. 이후 PROSECUTOR(차냉정)와 LAWYER(우기기)가 번갈아 공방하며, 중간에 JUDGE가 한 번 끼어들어 귀찮아하면서도 사건의 핵심을 짚는 한마디를 한다.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 한 사람이 자기 논리를 차근차근(주장 → 근거 → 마무리 한 방) 풀어낸다. 짧게 치고 빠지지 말 것. 상대 말을 끊는 느낌은 대사 끝의 '—'로 가끔만 표현.
-4. 인물별 말투는 위 등장인물 설정을 엄수한다. 특히 서판결은 반말·뜬금없는 질문·사자성어·고서·고어체 금지.
-5. 각 줄의 shout 필드: PROSECUTOR가 상대를 끊고 팩트로 치고 들어갈 때 "FACT", LAWYER가 억지로 반박할 때 "SHIELD", JUDGE가 소란을 정리할 때 "ORDER", 그 외 "NONE". 전체에서 3~4번만 사용.
+4. 인물별 말투는 위 등장인물 설정을 엄수한다: 서판결은 나른하고 귀찮은 존댓말(반말·뜬금없는 질문·사자성어·고서·고어체 금지), 차냉정은 차갑게 시작해 갈수록 열정적으로, 우기기는 능청스럽고 친근하게.
+5. 각 줄의 shout 필드: PROSECUTOR가 상대를 끊고 팩트로 치고 들어갈 때 "FACT", LAWYER가 능청스럽게 받아치며 억지로 감쌀 때 "SHIELD", JUDGE가 소란을 정리할 때 "ORDER", 그 외 "NONE". 전체에서 3~4번만 사용.
 6. question: 검사 [차냉정]이 피고인에게 던지는 1차 팩폭 질문 (1~2문장, 원문 내용을 구체적으로 짚고, 피고인이 직접 변명을 적어 답할 수 있게).
 7. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지. 모든 문자열은 큰따옴표.
 형식 예시(형식만 참고):
@@ -74,7 +344,7 @@ def phase2_prompt(name):
 {EASY_RULES}
 [임무] 피고인의 1차 변명을 두고 벌어지는 '제2막: 변명 공방과 최후 심문'을 한국어로 씁니다. 입력으로 [흑역사 원문], [확정 사실], 지금까지의 대화, [피고인의 1차 변명]이 주어집니다.
 규칙:
-1. script는 정확히 6~7줄. LAWYER(우기기)가 피고인의 1차 변명을 눈물겹게 미화·옹호하고, PROSECUTOR(차냉정)가 변명 속 모순과 원문의 사실을 근거로 정밀 타격합니다. 중간에 JUDGE(서판결) 1줄이 사건 내용에 맞는 무게감 있는 훈계로 개입.
+1. script는 정확히 6~7줄. LAWYER(우기기)가 피고인의 1차 변명을 재치 있게 그럴듯하게 포장·옹호하고, PROSECUTOR(차냉정)가 변명 속 모순과 원문의 사실을 근거로 열정적으로 파고듭니다. 중간에 JUDGE(서판결) 1줄이 귀찮음을 은근히 드러내며 사건 내용에 맞는 한마디로 개입.
 2. 피고인의 1차 변명 표현을 대사에서 직접 인용해 반영하고("…라고 변명하셨지요"), 새로운 사건을 지어내지 말 것.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 주장 → 근거 → 한 방 순서로 차분히 전개. shout 필드는 1막과 같은 규칙(FACT/SHIELD/ORDER/NONE), 3번 안팎 사용.
 4. final_question: 최후 압박 질문. speaker는 "JUDGE" 또는 "PROSECUTOR", text는 1차 변명과 원문을 파고드는 날카로운 1~2문장.
@@ -97,7 +367,7 @@ def verdict_system_prompt(name, forms, nonce):
 5. final_sentence(선고): GUILTY면 숫자가 들어간 황당한 형량, MITIGATED면 가볍게 줄어든 황당한 형량, NOT_GUILTY면 반드시 "무죄"로 시작하고 웃긴 훈방 조건을 한 줄 덧붙인다(예: '무죄. 단, 앞으로 ~할 것'). 유죄·감형 문장은 "무죄"로 시작하면 안 된다. 이번 판결의 형식 힌트: [{" / ".join(forms)}]
 6. badge(칭호): 맨 앞에 이모지 1개 + 10자 안팎의 칭호. GUILTY는 웃긴 불명예 칭호, MITIGATED는 아슬아슬한 칭호, NOT_GUILTY는 자랑스럽고 웃긴 칭호.
 7. 다음 진부한 표현은 금지: {", ".join(BANNED)}
-8. script는 JUDGE [서판결]의 선고 대사 3~4줄. 각 줄은 2~3문장, 80~150자. 앞쪽 줄에서 피고인의 변명이 어땠는지 쉬운 말로 평가하고, 마지막 줄에서 판결을 선언한다.
+8. script는 JUDGE [서판결]의 선고 대사 3~4줄. 각 줄은 2~3문장, 80~150자. 나른하고 피곤한 말투로 빨리 끝내고 싶은 기색(한숨, 퇴근 시간 등)을 은근히 드러내되, 판결 내용은 사건과 변명에 맞게 정확해야 한다. 앞쪽 줄에서 피고인의 변명이 어땠는지 쉬운 말로 평가하고, 마지막 줄에서 판결을 선언한다.
 9. verdict_title: 이 판결의 한 줄 제목.
 10. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
 형식 예시(형식만 참고):
