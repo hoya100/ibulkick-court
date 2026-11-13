@@ -92,6 +92,7 @@ from config import (
 )
 from templates import (
     TITLE_HTML,
+    court_panel_html,
     render_lobby,
     render_story,
     render_vn,
@@ -162,16 +163,19 @@ def key_guard():
 @st.dialog("👤 내 프로필", width="large")
 def profile_dialog():
     p = ss["profile"]
-    _, icon, rname, cur, nxt = rank_info(p["rep"])
-    st.markdown(f"### {icon} {rname}")
-    st.write(
-        f"🏆 평판 **{p['rep']}점** · 🔥 연속 무죄 **{p.get('streak', 0)}회** · ⚖️ 재판 **{p['trials']}회** · "
-        f"✅ 무죄 **{p['wins']}회** · 🎖️ 칭호 **{len(p['badges'])}개**"
+    idx, icon, rname, cur, nxt = rank_info(p["rep"])
+    # '오늘의 법정' 상태 패널: 로비에는 항상 띄우지 않고, 프로필을 열었을 때만 이 모달 안에 보여준다
+    st.markdown(
+        court_panel_html(
+            rep=p["rep"], icon=icon, rank=rname,
+            pct=100 if nxt is None else int(min((p["rep"] - cur) / (nxt - cur), 1) * 100),
+            next_name=None if nxt is None else f"{RANKS[idx + 1][1]} {RANKS[idx + 1][2]}",
+            need=0 if nxt is None else nxt - p["rep"],
+            streak=p.get("streak", 0), wins=p["wins"], trials=p["trials"],
+            fee=ss["fee"], fee_max=FEE_MAX, badges=len(p["badges"]),
+        ),
+        unsafe_allow_html=True,
     )
-    if nxt is not None:
-        st.progress(min((p["rep"] - cur) / (nxt - cur), 1.0), text=f"다음 랭크까지 평판 {nxt - p['rep']}점")
-    else:
-        st.caption("👑 최고 랭크 달성! 이 명예로운 평판을 지켜내세요.")
     st.caption("랭크 기준: 👑 이불킥 청정수 200↑ · 🟢 정상인 120↑ · 🟡 새벽 감성러 60↑ · 🟠 이불킥 장인 20↑ · 🔴 인간 흑역사 박물관")
     st.caption("💡 무죄를 연달아 받으면 연승 보너스(+10, +20, +30)가 붙어요!")
     tabs = ["🎖️ 칭호", "📚 흑역사 기록"]
@@ -335,20 +339,8 @@ elif stage == "STORY":
 elif stage == "LOBBY":
     # 서브컬처풍 로비: 가운데 캐릭터 장면(iframe) 위에 버튼을 겹쳐 배치한다.
     #   왼쪽 위 = 작은 메뉴 / 오른쪽 아래 = 타이틀로 / 아래 가운데 = 큼직한 [소장 접수]
-    lobby_p = ss["profile"]
-    lobby_idx, lobby_icon, lobby_rank, lobby_cur, lobby_nxt = rank_info(lobby_p["rep"])
     with st.container(key="lobby_stage"):
-        render_lobby(
-            {
-                "icon": lobby_icon, "rank": lobby_rank, "rep": lobby_p["rep"],
-                "pct": 100 if lobby_nxt is None else int(min((lobby_p["rep"] - lobby_cur) / (lobby_nxt - lobby_cur), 1) * 100),
-                "next": None if lobby_nxt is None else f"{RANKS[lobby_idx + 1][1]} {RANKS[lobby_idx + 1][2]}",
-                "need": 0 if lobby_nxt is None else lobby_nxt - lobby_p["rep"],
-                "streak": lobby_p.get("streak", 0), "wins": lobby_p["wins"], "trials": lobby_p["trials"],
-                "fee": ss["fee"], "feeMax": FEE_MAX,
-            },
-            height=LOBBY_H,
-        )
+        render_lobby({}, height=LOBBY_H)  # 상태 패널은 숨김 → 장면에 넘길 값이 없다
         with st.container(key="lobby_ui"):
             with st.container(key="lb_side"):
                 if st.button("⚙️ 설정", use_container_width=True, key="nav_set"):
