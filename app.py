@@ -139,6 +139,19 @@ def show_error():
         with st.expander("상세 에러 보기"):
             st.code(ss["error"])
 
+def excuse_gate():
+    """변명 입력칸(chat_input)은 평소에 숨기고, 재판 연출에서 '변명 차례'(마지막 심문이 끝난 순간)가 되면 아래에서 올라오게 한다.
+    연출(iframe)이 이 표식 컨테이너에 상태를 적으면 config.py의 CSS가 입력창을 보여 준다."""
+    with st.container(key="excuse_gate"):
+        st.empty()
+    if ss.get("error"):  # 에러로 되돌아온 경우엔 연출을 다시 보지 않아도 바로 입력할 수 있게 연다
+        st.markdown(
+            '<style>.stApp:has(.st-key-excuse_gate) [data-testid="stBottom"]'
+            "{transform:none !important;opacity:1 !important;pointer-events:auto !important;animation:none !important}</style>",
+            unsafe_allow_html=True,
+        )
+
+
 def key_guard():
     """API 키가 없을 때 보여줄 깔끔한 안내. (키 값은 절대 화면/로그에 노출하지 않는다)"""
     if key_format_ok():
@@ -424,10 +437,11 @@ elif stage == "DEBATE1":
         "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
         phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", **vn_opts(),
     )
-    st.caption("▶ 화면을 클릭(터치)하거나 Space/Enter로 대사를 넘기세요. 천천히 읽고, 심문이 끝나면 아래 입력창에 1차 변명을 제출하세요.")
+    st.caption("▶ 화면을 클릭(터치)하거나 Space/Enter로 대사를 넘기세요. 천천히 읽고, 심문이 끝나면 변명 입력창이 아래에서 올라옵니다.")
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup1"):
         go("LOBBY")
     show_error()
+    excuse_gate()
     ex1 = st.chat_input("1차 변명을 입력하세요 (최대 200자)", key="chat_ex1")
     if ex1 and ex1.strip():
         ss["ex1"] = ex1.strip()[:200]
@@ -439,10 +453,11 @@ elif stage == "DEBATE2":
         "debate", ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
         phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", **vn_opts(),
     )
-    st.caption("▶ 1차 변명을 두고 벌어지는 공방입니다. 마지막 질문에 최후 변명을 직접 입력하세요. 사실에 맞고 진심이 담길수록 무죄에 가까워요!")
+    st.caption("▶ 1차 변명을 두고 벌어지는 공방입니다. 마지막 질문이 끝나면 변명 입력창이 올라옵니다. 사실에 맞고 진심이 담길수록 무죄에 가까워요!")
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup2"):
         go("LOBBY")
     show_error()
+    excuse_gate()
     ex2 = st.chat_input("최후 변명을 입력하세요 (최대 200자)", key="chat_ex2")
     if ex2 and ex2.strip():
         ss["ex2"] = ex2.strip()[:200]
