@@ -2,7 +2,7 @@
 
   서판결(판사)   만사가 귀찮고 퇴근하고 싶은 나른한 판사          ← 참고 이미지 3 (헝클어진 흑발, 졸린 눈의 남성)
   차냉정(검사)   겉은 얼음, 진실 앞에선 불꽃인 열정의 검사        ← 참고 이미지 2 (흑발 미디엄 레이어드 컷)
-  우기기(변호사) 능글맞고 여유로운, 어떤 변명도 포장하는 변호사    ← 참고 이미지 1 (연갈색 장발, 부드러운 미소)
+  한유리(변호사) 능글맞고 여유로운, 어떤 변명도 포장하는 변호사    ← 참고 이미지 1 (연갈색 장발, 부드러운 미소)
 
 ■ 구조
   CHARACTERS[키]  이름·성격·말투·외모·의상·프롬프트 조각·도트 스프라이트 데이터(팔레트/렌더 설정/모션)·일러스트 경로
@@ -65,6 +65,18 @@ CHARACTERS = {
                 "아… 형량이요. 정해야 하죠. 이 정도면 되겠네요.",
             ],
             "ambient_lines": ["하… 아직도 이만큼이나 남았나.", "퇴근 시간이 왜 이렇게 안 오지.", "(하품을 삼키며) 보리차나 마셔야겠군요."],
+            # AI 응답을 기다리는 동안 보이는 '서류 살피는 판사' 장면의 혼잣말(말풍선). templates.py 가 이 값을 읽는다.
+            "wait_lines": {
+                "read": ["…", "하… 길다.", "(사락…)"], "flip": ["(서류를 넘긴다)", "(하품을 삼키며)"],
+                "compare": ["앞뒤가 맞나… 맞겠죠.", "이쪽이랑 이쪽이라…"], "magnify": ["세부 사항이라… 귀찮지만 봅시다."],
+                "rub": ["(눈을 비빈다)", "잠깐만요… 눈이 따가워서."], "yawn": ["(하아암…)", "퇴근 시간까지 얼마나 남았더라."],
+                "write": ["메모… 해야 하나.", "(사각사각)"],
+                "ponder": {
+                    "p1": ["소장 내용은 확인했습니다. 귀찮지만요.", "흠… 이 사건은…"],
+                    "p2": ["변명이라… 앞뒤는 따져 봐야겠죠.", "하, 그렇게 나오시는군요."],
+                    "verdict": ["이제 판결을 내려야 하는군요… 빨리 끝냅시다.", "형량… 형량이라… 귀찮네요."],
+                },
+            },
         },
         # LLM 시스템 프롬프트 조각 (CAST 에 그대로 들어갑니다)
         "prompt": """- JUDGE [서판결]: 만사가 귀찮고 피곤한 나른한 판사. 속으로는 퇴근 시간만 세고 있지만, 사건의 핵심은 정확히 짚는다.
@@ -87,11 +99,15 @@ CHARACTERS = {
         "sprite": {
             "palette": {
                 "outline": "#08080c", "skin": "#f1d7c6", "skin_shadow": "#d9b8a6", "blush": "#e7b3ab",
-                "hair": "#14141a", "hair_light": "#34343f", "hair_shadow": "#08080c",
-                "eye": "#1a1a22", "eye_light": "#ffffff", "eye_bag": "#b99aa3",
-                "robe": "#17171d", "robe_light": "#2c2c36", "shirt": "#f1f2f7", "shirt_shadow": "#cfd2de",
-                "tie": "#0e0e12", "pin": "#b9bcc9", "accent": "#8a8fa6",
+                "hair": "#14141a", "hair_light": "#34343f", "hair_shadow": "#08080c", "brow": "#0e0e14",
+                "eye": "#1a1a22", "iris_light": "#3a3a4a", "pupil": "#05050a", "eye_light": "#ffffff", "eye_bag": "#b99aa3",
+                "mouth": "#6a3a40", "tongue": "#c97b84",
+                "robe": "#17171d", "robe_light": "#2c2c36", "robe_inner": "#0b0b10",
+                "shirt": "#f1f2f7", "shirt_shadow": "#cfd2de", "tie": "#0e0e12", "pin": "#b9bcc9", "accent": "#8a8fa6",
             },
+            # 어떤 모양으로 그릴지(머리·눈·눈썹·입·의상). 값은 STYLE_CATALOG 에 있는 이름만 쓸 수 있고, templates.py 의 스프라이트 그리기 코드가 이 이름을 읽는다.
+            "style": {"hair": "messy_short", "eyes": "sleepy_half", "brows": "low_tired", "mouth": "weary", "outfit": "judge_robe",
+                      "shoulder_dx": 44, "shoulder_y": 106, "sleeve_w": 17},
             "render": {"rim_light": True, "eye_highlight_px": 1},
             "motion": {"blink_s": 5.2, "idle": ["yawn", "check_watch", "rub_eyes", "slump"], "breath_amp": 0.5},
         },
@@ -138,11 +154,14 @@ CHARACTERS = {
         "sprite": {
             "palette": {
                 "outline": "#14141c", "skin": "#f6e5e3", "skin_shadow": "#e4cdcb", "blush": "#ecc9c6",
-                "hair": "#1a1a22", "hair_light": "#3b3d4d", "hair_shadow": "#0c0c12",
-                "eye": "#17171f", "eye_light": "#ffffff",
+                "hair": "#1a1a22", "hair_light": "#3b3d4d", "hair_shadow": "#0c0c12", "brow": "#1a1a22",
+                "eye": "#17171f", "iris_light": "#3b3d52", "pupil": "#050508", "eye_light": "#ffffff",
+                "mouth": "#8a4a52", "tongue": "#d98a92",
                 "suit": "#4b4e57", "suit_light": "#6a6e79", "shirt": "#eef0f6", "shirt_shadow": "#cdd2e0",
                 "tie": "#2c2e36", "vest": "#d8cfc3", "vest_shadow": "#bfb4a6", "accent": "#9aa0b4",
             },
+            "style": {"hair": "layered_medium", "eyes": "cool_half", "brows": "straight_sharp", "mouth": "thin_cool", "outfit": "charcoal_vest",
+                      "shoulder_dx": 38, "shoulder_y": 106, "sleeve_w": 14},
             "render": {"rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 4.6, "idle": ["straighten_papers", "adjust_cuff", "slam_desk", "stare"], "breath_amp": 0.35},
         },
@@ -150,9 +169,9 @@ CHARACTERS = {
     },
     # ------------------------------------------------------------------ 변호사
     "LAWYER": {
-        "key": "LAWYER", "name": "우기기", "title": "변호사", "display": "우기기 변호사",
+        "key": "LAWYER", "name": "한유리", "title": "변호사", "display": "한유리 변호사",
         "emoji": "🛡️", "ui_color": "#66fcf1", "tagline": "능글맞고 여유로운 포장의 달인",
-        "aliases": ["우기기", "변호사"],
+        "aliases": ["한유리", "변호사"],
         "shout": {"tag": "SHIELD", "code": "S", "text": "이의 있습니다! 억지 쉴드 발동!"},
         "persona": {
             "summary": "살짝 능글맞고 늘 여유롭다. 피고인의 터무니없는 변명도 재치 있게 그럴듯하게 포장해 준다.",
@@ -169,8 +188,18 @@ CHARACTERS = {
                 "(씩 웃으며) 걱정 마세요, 이 변명, 제가 아주 잘 포장해 드릴게요.",
             ],
             "ambient_lines": ["어서 오세요~ 오늘은 어떤 변명을 포장해 드릴까요?", "소장 접수는 아래 버튼이에요. 제가 잘 부탁드릴게요~", "(윙크) 무죄 각, 보이죠?"],
+            # 로비에서 한유리가 일하고·커피 마시고·기지개 켜는 동안 뜨는 말풍선. templates.py 가 이 값을 읽는다.
+            "lobby_lines": {
+                "wave": ["어서 오세요~ 오늘은 어떤 변명을 포장해 드릴까요?", "👋 어머, 오늘도 오셨네요?"],
+                "work": ["📝 변론서 작성 중… 여유롭게요~", "타닥타닥… 이 정도 포장은 식은 죽 먹기죠.", "이 사건, 무죄 각이 보이는데요?"],
+                "coffee": ["☕ 커피 타임~", "후루룩… 크으, 이 맛이죠~"],
+                "think": ["흠… 이건 어떻게 포장해야 예쁠까요?", "🤔 능청스럽게 가 볼까요?"],
+                "stretch": ["으으~ 어깨가 뻐근하네요.", "🙆 잠깐 스트레칭~"],
+                "idle": ["소장 접수는 아래 큰 버튼이에요~", "저는 언제든 준비돼 있답니다."],
+                "poke": ["어머, 간지러워요~", "소장 접수는 아래 버튼! 제가 잘 부탁드릴게요~", "(윙크) 제 변론, 믿어 보세요.", "커피 마시는 중인데요~?"],
+            },
         },
-        "prompt": """- LAWYER [우기기]: 살짝 능글맞고 여유로운 변호사. 피고인의 터무니없는 변명도 재치 있게 그럴듯하게 포장해 준다. 어떤 상황에도 당황하지 않고 웃는 낯으로 받아친다.
+        "prompt": """- LAWYER [한유리]: 살짝 능글맞고 여유로운 변호사. 피고인의 터무니없는 변명도 재치 있게 그럴듯하게 포장해 준다. 어떤 상황에도 당황하지 않고 웃는 낯으로 받아친다.
   · 능청스럽고 친근한 말투(예: "에이, 그건 너무 박하시죠~", "걱정 마세요, 제가 잘 포장해 드릴게요."). 존댓말은 유지하되 부드럽게 풀어서 말한다.
   · 농담과 비유를 곁들여 억지 논리를 그럴듯하게 만든다. 대사 중간에 (씩 웃으며), (어깨를 으쓱하며) 같은 짧은 지문을 넣어도 된다. 과장된 눈물·절규 연기는 하지 않는다.""",
         "look": {
@@ -189,11 +218,14 @@ CHARACTERS = {
         "sprite": {
             "palette": {
                 "outline": "#1a1218", "skin": "#f9d9c4", "skin_shadow": "#efbfa6", "blush": "#f5a3a0",
-                "hair": "#a9795a", "hair_light": "#cf9f7c", "hair_shadow": "#7a523a",
-                "eye": "#6b4430", "eye_light": "#ffffff",
+                "hair": "#a9795a", "hair_light": "#cf9f7c", "hair_shadow": "#7a523a", "brow": "#7a523a",
+                "eye": "#6b4430", "iris_light": "#a8714c", "pupil": "#2a1810", "eye_light": "#ffffff",
+                "mouth": "#8a3b3b", "tongue": "#e58a8a",
                 "suit": "#23252e", "suit_light": "#3a3d4a", "shirt": "#f4f6fb", "shirt_shadow": "#d5dae8",
                 "tie": "#15161c", "pin": "#c9b26b", "accent": "#c9b26b",
             },
+            "style": {"hair": "long_wavy", "eyes": "crescent_smile", "brows": "arched_raised", "mouth": "smirk", "outfit": "slim_suit",
+                      "shoulder_dx": 34, "shoulder_y": 106, "sleeve_w": 12},
             "render": {"rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 4.0, "idle": ["head_tilt", "wink", "hair_flip", "lean_on_hand"], "breath_amp": 0.6},
         },
@@ -203,9 +235,33 @@ CHARACTERS = {
 
 CHARACTER_ORDER = ("JUDGE", "PROSECUTOR", "LAWYER")
 
+# 스프라이트 스타일 카탈로그: '스타일 이름 → 그 스타일을 그리는 데 꼭 필요한 팔레트 색 이름'.
+# CHARACTERS[...]["sprite"]["style"] 에는 여기 있는 이름만 쓸 수 있고, templates.py 의 그리기 코드가 같은 이름의 그리기 함수를 가지고 있다.
+STYLE_CATALOG = {
+    "hair": {
+        "long_wavy": ["hair", "hair_light", "hair_shadow"],        # 허리 근처까지 내려오는 웨이브 장발 + 가르마 앞머리
+        "layered_medium": ["hair", "hair_light", "hair_shadow"],   # 턱~어깨 길이, 끝이 바깥으로 뻗는 레이어드 단발
+        "messy_short": ["hair", "hair_light", "hair_shadow"],      # 헝클어진 숏컷, 앞머리가 눈을 반쯤 가림
+    },
+    "eyes": {
+        "crescent_smile": ["eye", "iris_light", "pupil", "eye_light"],            # 웃을 때 반달로 접히는 눈
+        "cool_half": ["eye", "iris_light", "pupil", "eye_light"],                 # 서늘하고 차분한 눈
+        "sleepy_half": ["eye", "iris_light", "pupil", "eye_light", "eye_bag"],    # 졸린 듯 반쯤 감긴 눈 + 다크서클
+    },
+    "brows": {"arched_raised": ["brow"], "straight_sharp": ["brow"], "low_tired": ["brow"]},
+    "mouth": {"smirk": ["mouth", "tongue"], "thin_cool": ["mouth", "tongue"], "weary": ["mouth", "tongue"]},
+    "outfit": {
+        "slim_suit": ["suit", "suit_light", "shirt", "shirt_shadow", "tie", "pin"],
+        "charcoal_vest": ["suit", "suit_light", "shirt", "shirt_shadow", "tie", "vest", "vest_shadow"],
+        "judge_robe": ["robe", "robe_light", "robe_inner", "shirt", "shirt_shadow", "tie", "pin"],
+    },
+}
+COMMON_PALETTE_KEYS = ["outline", "skin", "skin_shadow", "blush"]
+
+
 
 def _validate_characters():
-    """필수 항목이 빠졌으면 앱이 켜질 때 바로 알려 준다 (데이터를 고치다 실수한 경우 대비)."""
+    """필수 항목·스타일 이름·팔레트 색이 빠졌으면 앱이 켜질 때 바로 알려 준다 (데이터를 고치다 실수한 경우 대비)."""
     need = ("key", "name", "title", "display", "emoji", "ui_color", "tagline", "aliases", "shout", "persona", "prompt", "look", "sprite", "illustration")
     for k in CHARACTER_ORDER:
         c = CHARACTERS[k]
@@ -214,11 +270,31 @@ def _validate_characters():
             raise ValueError(f"CHARACTERS['{k}'] 에 빠진 항목: {miss}")
         if c["key"] != k:
             raise ValueError(f"CHARACTERS['{k}']['key'] 가 키와 다릅니다: {c['key']}")
+        if c["name"] not in c["prompt"] or c["name"] not in c["display"]:
+            raise ValueError(f"CHARACTERS['{k}'] 의 name('{c['name']}')이 display/prompt 와 일치하지 않습니다 (이름을 바꿨다면 둘 다 고치세요)")
+        for alias_must in (c["name"], c["title"]):
+            if alias_must not in c["aliases"]:
+                raise ValueError(f"CHARACTERS['{k}']['aliases'] 에 '{alias_must}' 가 없습니다")
         for part in ("outfit", "hair", "eyes", "expression"):
             if part not in c["look"]:
                 raise ValueError(f"CHARACTERS['{k}']['look'] 에 '{part}' 가 없습니다")
-        if "palette" not in c["sprite"] or "outline" not in c["sprite"]["palette"]:
-            raise ValueError(f"CHARACTERS['{k}']['sprite']['palette'] 가 올바르지 않습니다")
+        sp = c["sprite"]
+        pal, style = sp.get("palette", {}), sp.get("style")
+        if not style:
+            raise ValueError(f"CHARACTERS['{k}']['sprite']['style'] 이 없습니다")
+        for kind, names in STYLE_CATALOG.items():
+            val = style.get(kind)
+            if val not in names:
+                raise ValueError(f"CHARACTERS['{k}'] 스타일 {kind}='{val}' 은(는) STYLE_CATALOG 에 없습니다. 가능: {list(names)}")
+            lacking = [n for n in names[val] if n not in pal]
+            if lacking:
+                raise ValueError(f"CHARACTERS['{k}'] 팔레트에 '{val}' 스타일이 쓰는 색이 빠졌습니다: {lacking}")
+        lacking = [n for n in COMMON_PALETTE_KEYS if n not in pal]
+        if lacking:
+            raise ValueError(f"CHARACTERS['{k}'] 팔레트에 공통 색이 빠졌습니다: {lacking}")
+        for n in ("shoulder_dx", "shoulder_y", "sleeve_w"):
+            if n not in style:
+                raise ValueError(f"CHARACTERS['{k}']['sprite']['style'] 에 '{n}' 가 없습니다")
 
 
 _validate_characters()
@@ -292,6 +368,21 @@ def display_name(key):
     return CHARACTERS[key]["display"]
 
 
+def sprite_payload():
+    """화면 연출(templates.py)에 넘기는 캐릭터 데이터: 이름·팔레트·스타일·외침 문구·말풍선 대사. JSON 으로 바로 직렬화할 수 있다."""
+    out = {}
+    for k in CHARACTER_ORDER:
+        c = CHARACTERS[k]
+        persona = c["persona"]
+        out[k] = {
+            "key": k, "name": c["name"], "title": c["title"], "display": c["display"],
+            "palette": dict(c["sprite"]["palette"]), "style": dict(c["sprite"]["style"]),
+            "render": {k2: (list(v) if isinstance(v, tuple) else v) for k2, v in render_settings(k).items()},
+            "shout": dict(c["shout"]),
+            "lines": {"ambient": list(persona.get("ambient_lines", [])), "lobby": persona.get("lobby_lines", {}), "wait": persona.get("wait_lines", {})},
+        }
+    return out
+
 # =================================================================
 # 4. 사실 엄수 · 쉬운 말 규칙 / 형벌 형식 / 금지 표현
 # =================================================================
@@ -328,11 +419,11 @@ def phase1_prompt(name):
 [임무] 유저의 [흑역사 원문]을 바탕으로 '제1막: 개정과 1차 심문'을 한국어로 씁니다.
 규칙:
 1. facts: 먼저 흑역사 원문에서 핵심 사실 2~5개를 '원문에 적힌 표현 그대로' 복사해 적는다. 이후 모든 대사는 이 facts에 기반한다.
-2. script는 정확히 7~8줄. 첫 줄은 JUDGE(서판결)의 개정 선언: 원문 내용을 그대로 인용해 사건을 요약하되, 귀찮고 피곤한 기색(한숨, 퇴근 시간 등)을 은근히 곁들인다. 이후 PROSECUTOR(차냉정)와 LAWYER(우기기)가 번갈아 공방하며, 중간에 JUDGE가 한 번 끼어들어 귀찮아하면서도 사건의 핵심을 짚는 한마디를 한다.
+2. script는 정확히 7~8줄. 첫 줄은 JUDGE({NAME_OF['JUDGE']})의 개정 선언: 원문 내용을 그대로 인용해 사건을 요약하되, 귀찮고 피곤한 기색(한숨, 퇴근 시간 등)을 은근히 곁들인다. 이후 PROSECUTOR({NAME_OF['PROSECUTOR']})와 LAWYER({NAME_OF['LAWYER']})가 번갈아 공방하며, 중간에 JUDGE가 한 번 끼어들어 귀찮아하면서도 사건의 핵심을 짚는 한마디를 한다.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 한 사람이 자기 논리를 차근차근(주장 → 근거 → 마무리 한 방) 풀어낸다. 짧게 치고 빠지지 말 것. 상대 말을 끊는 느낌은 대사 끝의 '—'로 가끔만 표현.
-4. 인물별 말투는 위 등장인물 설정을 엄수한다: 서판결은 나른하고 귀찮은 존댓말(반말·뜬금없는 질문·사자성어·고서·고어체 금지), 차냉정은 차갑게 시작해 갈수록 열정적으로, 우기기는 능청스럽고 친근하게.
+4. 인물별 말투는 위 등장인물 설정을 엄수한다: {NAME_OF['JUDGE']}: 나른하고 귀찮은 존댓말(반말·뜬금없는 질문·사자성어·고서·고어체 금지) / {NAME_OF['PROSECUTOR']}: 차갑게 시작해 갈수록 열정적으로 / {NAME_OF['LAWYER']}: 능청스럽고 친근하게.
 5. 각 줄의 shout 필드: PROSECUTOR가 상대를 끊고 팩트로 치고 들어갈 때 "FACT", LAWYER가 능청스럽게 받아치며 억지로 감쌀 때 "SHIELD", JUDGE가 소란을 정리할 때 "ORDER", 그 외 "NONE". 전체에서 3~4번만 사용.
-6. question: 검사 [차냉정]이 피고인에게 던지는 1차 팩폭 질문 (1~2문장, 원문 내용을 구체적으로 짚고, 피고인이 직접 변명을 적어 답할 수 있게).
+6. question: 검사 [{NAME_OF['PROSECUTOR']}]이 피고인에게 던지는 1차 팩폭 질문 (1~2문장, 원문 내용을 구체적으로 짚고, 피고인이 직접 변명을 적어 답할 수 있게).
 7. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지. 모든 문자열은 큰따옴표.
 형식 예시(형식만 참고):
 {{"facts":["원문 표현 그대로 1","원문 표현 그대로 2"],"script":[{{"speaker":"JUDGE","dialogue":"...","shout":"NONE"}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT"}},{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD"}}],"question":"..."}}"""
@@ -344,7 +435,7 @@ def phase2_prompt(name):
 {EASY_RULES}
 [임무] 피고인의 1차 변명을 두고 벌어지는 '제2막: 변명 공방과 최후 심문'을 한국어로 씁니다. 입력으로 [흑역사 원문], [확정 사실], 지금까지의 대화, [피고인의 1차 변명]이 주어집니다.
 규칙:
-1. script는 정확히 6~7줄. LAWYER(우기기)가 피고인의 1차 변명을 재치 있게 그럴듯하게 포장·옹호하고, PROSECUTOR(차냉정)가 변명 속 모순과 원문의 사실을 근거로 열정적으로 파고듭니다. 중간에 JUDGE(서판결) 1줄이 귀찮음을 은근히 드러내며 사건 내용에 맞는 한마디로 개입.
+1. script는 정확히 6~7줄. LAWYER({NAME_OF['LAWYER']})가 피고인의 1차 변명을 재치 있게 그럴듯하게 포장·옹호하고, PROSECUTOR({NAME_OF['PROSECUTOR']})가 변명 속 모순과 원문의 사실을 근거로 열정적으로 파고듭니다. 중간에 JUDGE({NAME_OF['JUDGE']}) 1줄이 귀찮음을 은근히 드러내며 사건 내용에 맞는 한마디로 개입.
 2. 피고인의 1차 변명 표현을 대사에서 직접 인용해 반영하고("…라고 변명하셨지요"), 새로운 사건을 지어내지 말 것.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 주장 → 근거 → 한 방 순서로 차분히 전개. shout 필드는 1막과 같은 규칙(FACT/SHIELD/ORDER/NONE), 3번 안팎 사용.
 4. final_question: 최후 압박 질문. speaker는 "JUDGE" 또는 "PROSECUTOR", text는 1차 변명과 원문을 파고드는 날카로운 1~2문장.
@@ -353,7 +444,7 @@ def phase2_prompt(name):
 {{"script":[{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD"}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT"}}],"final_question":{{"speaker":"JUDGE","text":"..."}}}}"""
 
 def verdict_system_prompt(name, forms, nonce):
-    return f"""당신은 오리지널 B급 법정 아케이드 게임 '이불킥 법정'의 판결 엔진이며, 판사 [서판결]입니다. 피고인 이름: "{name}". 판결 번호: #{nonce}
+    return f"""당신은 오리지널 B급 법정 아케이드 게임 '이불킥 법정'의 판결 엔진이며, 판사 [{NAME_OF['JUDGE']}]입니다. 피고인 이름: "{name}". 판결 번호: #{nonce}
 {CAST}
 {FACT_RULES}
 {EASY_RULES}
@@ -367,7 +458,7 @@ def verdict_system_prompt(name, forms, nonce):
 5. final_sentence(선고): GUILTY면 숫자가 들어간 황당한 형량, MITIGATED면 가볍게 줄어든 황당한 형량, NOT_GUILTY면 반드시 "무죄"로 시작하고 웃긴 훈방 조건을 한 줄 덧붙인다(예: '무죄. 단, 앞으로 ~할 것'). 유죄·감형 문장은 "무죄"로 시작하면 안 된다. 이번 판결의 형식 힌트: [{" / ".join(forms)}]
 6. badge(칭호): 맨 앞에 이모지 1개 + 10자 안팎의 칭호. GUILTY는 웃긴 불명예 칭호, MITIGATED는 아슬아슬한 칭호, NOT_GUILTY는 자랑스럽고 웃긴 칭호.
 7. 다음 진부한 표현은 금지: {", ".join(BANNED)}
-8. script는 JUDGE [서판결]의 선고 대사 3~4줄. 각 줄은 2~3문장, 80~150자. 나른하고 피곤한 말투로 빨리 끝내고 싶은 기색(한숨, 퇴근 시간 등)을 은근히 드러내되, 판결 내용은 사건과 변명에 맞게 정확해야 한다. 앞쪽 줄에서 피고인의 변명이 어땠는지 쉬운 말로 평가하고, 마지막 줄에서 판결을 선언한다.
+8. script는 JUDGE [{NAME_OF['JUDGE']}]의 선고 대사 3~4줄. 각 줄은 2~3문장, 80~150자. 나른하고 피곤한 말투로 빨리 끝내고 싶은 기색(한숨, 퇴근 시간 등)을 은근히 드러내되, 판결 내용은 사건과 변명에 맞게 정확해야 한다. 앞쪽 줄에서 피고인의 변명이 어땠는지 쉬운 말로 평가하고, 마지막 줄에서 판결을 선언한다.
 9. verdict_title: 이 판결의 한 줄 제목.
 10. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
 형식 예시(형식만 참고):
