@@ -124,7 +124,7 @@ from openai import (
     AuthenticationError,
 )
 
-from characters import display_name
+from characters import SPRITE_DATA_VERSION, display_name
 from config import (
     APP_CSS,
     FEE_MAX,
@@ -140,6 +140,7 @@ from config import (
     VN_H,
 )
 from templates import (
+    SPRITE_ENGINE_VERSION,
     TITLE_HTML,
     court_panel_html,
     render_lobby,
@@ -169,6 +170,17 @@ from utils import (
     vn_opts,
     watch_ad,
 )
+
+
+# characters.py(그림 데이터)와 templates.py(그리는 코드)가 서로 짝이 맞는 버전인지 확인
+if SPRITE_ENGINE_VERSION != SPRITE_DATA_VERSION:
+    st.set_page_config(page_title="이불킥 법정", page_icon="🏛️")
+    st.error("🧩 characters.py 와 templates.py 의 버전이 서로 달라요. (한쪽만 최신 버전입니다)")
+    st.markdown(
+        f"- `templates.py` 의 그림 엔진 버전: **{SPRITE_ENGINE_VERSION}**\n- `characters.py` 의 그림 데이터 버전: **{SPRITE_DATA_VERSION}**\n\n"
+        "두 파일을 같은 시점에 받은 최신 버전으로 **함께** 다시 올린 뒤, 커밋/푸시하고 앱을 **Reboot** 하세요."
+    )
+    st.stop()
 
 
 # =================================================================
