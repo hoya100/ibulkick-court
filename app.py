@@ -36,6 +36,7 @@
 """
 
 import html
+import ast
 import os
 import random
 import sys
@@ -70,6 +71,53 @@ if _missing:
     )
     with st.expander("서버에 실제로 올라간 파일 목록"):
         st.code("\n".join(sorted(_present)))
+    st.stop()
+
+# 파일은 다 있는데 '버전이 서로 안 맞는' 경우(예: app.py 만 최신이고 characters.py 는 옛 버전)도
+# ImportError 대신, 어느 파일에 무엇이 없는지 알려 주는 안내 화면을 보여줍니다. (코드를 실행하지 않고 소스만 읽어서 검사)
+def _defined_names(path):
+    names = set()
+    for node in ast.parse(open(path, encoding="utf-8").read()).body:
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(t.id for t in node.targets if isinstance(t, ast.Name))
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            names.update((a.asname or a.name).split(".")[0] for a in node.names)
+    return names
+
+
+_stale = []
+for _fname in ["app.py"] + _REQUIRED_FILES:
+    try:
+        _tree = ast.parse(open(os.path.join(_HERE, _fname), encoding="utf-8").read())
+    except (OSError, SyntaxError, UnicodeDecodeError) as _e:
+        _stale.append(f"`{_fname}` 을(를) 읽을 수 없습니다 ({type(_e).__name__})")
+        continue
+    for _node in _tree.body:
+        if isinstance(_node, ast.ImportFrom) and _node.level == 0 and _node.module and _node.module + ".py" in _REQUIRED_FILES:
+            _have = _defined_names(os.path.join(_HERE, _node.module + ".py"))
+            _stale += [
+                f"`{_fname}` 이(가) `{_node.module}.py` 의 `{a.name}` 을(를) 쓰려는데, 서버의 `{_node.module}.py` 에는 없습니다"
+                for a in _node.names if a.name not in _have
+            ]
+if _stale:
+    st.set_page_config(page_title="이불킥 법정", page_icon="🏛️")
+    st.error("🧩 서버에 올라간 파일들의 버전이 서로 맞지 않아요. (일부 파일이 예전 버전입니다)")
+    st.markdown("**맞지 않는 부분**\n\n" + "\n".join(f"- {m}" for m in _stale))
+    st.markdown(
+        "**해결 방법**\n\n"
+        "1. 같은 시점에 받은 6개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
+        "2. 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
+    )
+    with st.expander("서버에 올라간 파일 크기(줄 수)"):
+        _info = []
+        for _f in ["app.py"] + _REQUIRED_FILES:
+            try:
+                _info.append(f"{_f}: {len(open(os.path.join(_HERE, _f), encoding='utf-8').read().splitlines())}줄")
+            except OSError:
+                _info.append(f"{_f}: 읽을 수 없음")
+        st.code("\n".join(_info))
     st.stop()
 
 from openai import (
