@@ -121,20 +121,7 @@ iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 .tip{ margin:12px 0; padding:8px 12px; font-size:12px; color:#b8c4e8; border-left:4px solid #c9b26b; background:#10162e; }
 
 /* ---------- 전체 화면 로딩 ---------- */
-.lf{ position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center;
   background:radial-gradient(#1b2350,#05070f 72%); animation:lfin .35s; }
-.lf::after{ content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(#0000 0 2px,#0002 2px 3px); }
-.lf-in{ position:relative; z-index:1; width:min(92vw,560px); text-align:center; padding:30px 24px; border:4px double #c9b26b; background:#10162ee6; box-shadow:6px 6px 0 #000; }
-.lf-icon{ font-size:64px; animation:lfb 1s steps(2) infinite; }
-.lf-step{ margin-top:4px; color:#ffd23f; letter-spacing:3px; font-size:13px; font-weight:700; }
-.lf-msg{ margin:14px 0; min-height:60px; font-size:19px; font-weight:700; color:#f7e9b0; line-height:1.5; word-break:keep-all; }
-.lf-bar{ height:14px; border:3px solid #c9b26b; background:#0a0d18; overflow:hidden; }
-.lf-bar i{ display:block; height:100%; width:40%; background:repeating-linear-gradient(45deg,#ffd23f 0 10px,#e0a82e 10px 20px); animation:lfm 1.4s linear infinite; }
-.lf-meta{ margin-top:8px; font-size:12px; color:#9fe8ff; }
-.lf-tip{ margin-top:14px; padding-top:10px; border-top:1px dashed #c9b26b66; font-size:12px; color:#b8c4e8; }
-@keyframes lfin{ from{ opacity:0; } to{ opacity:1; } }
-@keyframes lfb{ 50%{ transform:translateY(-8px) rotate(-6deg); } }
-@keyframes lfm{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(260%); } }
 iframe{ animation:pagein .6s; }
 @keyframes pagein{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
@@ -174,7 +161,7 @@ iframe{ animation:pagein .6s; }
 /* 타이틀 메뉴 버튼 */
 .st-key-menu .stButton>button{ height:56px; font-size:18px; }
 /* 패널류: 픽셀 외곽선 */
-.st-key-hud, .st-key-paper, .loading, .lf-in, .tip, .result-big, .keybox, .ts, .lobby-hero, .ask{ border:0 !important; border-radius:0 !important;
+.st-key-hud, .st-key-paper, .loading, .tip, .result-big, .keybox, .ts, .lobby-hero, .ask{ border:0 !important; border-radius:0 !important;
   box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),inset 0 4px 0 0 #ffffff22,inset 0 -6px 0 0 #00000033,0 10px 0 0 #0009 !important; }
 .st-key-hud{ background:linear-gradient(#27327f,#151b4a); padding:8px 8px 4px; margin:4px 5px 14px; }
 .st-key-paper{ background:#fff4d6; margin:4px 5px 14px; padding:14px; }
@@ -230,14 +217,11 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .ask-icon{ font-size:72px; }
 .ask h2{ font-size:25px; line-height:1.4; color:#fff; margin:8px 0; padding:0; }
 .ask p{ color:#b8c4e8; margin:0; }
-.lf-head{ font-size:32px; color:#fff; margin-top:6px; text-shadow:3px 3px 0 #000; }
-.lf-bar, .lf-bar i{ border-radius:0; }
 /* ============ 가로 화면(Landscape) 레이아웃 ============ */
 .st-key-ask2, .st-key-story_nav{ max-width:560px; margin-left:auto; margin-right:auto; }
 .st-key-lobby_main .stButton>button{ height:104px; font-size:24px; }
 .st-key-paper textarea{ font-size:17px; line-height:1.6; }
 .tip{ font-size:13px; line-height:1.6; }
-.lf-msg{ font-size:22px; }
 
 /* ============ 좁은 화면(세로 모드 폰 등) 대비 ============ */
 @media (max-width: 760px){
@@ -251,8 +235,6 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .lobby-hero{ height:250px; }
   .lobby-hero .bldg{ font-size:96px; margin-top:22px; }
   .lobby-hero .lh-t{ font-size:17px; }
-  .lf-in{ width:min(92vw,420px); padding:26px 18px; }
-  .lf-msg{ font-size:19px; }
   .st-key-lobby_main .stButton>button{ height:96px; font-size:22px; }
 }
 /* ============ 서브컬처풍 가로 로비: 장면(iframe) 위에 버튼을 겹쳐 배치 ============ */
@@ -288,6 +270,11 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .court-panel .cp-gauge i{ display:block; height:100%; background:repeating-linear-gradient(45deg,#59f08a 0 8px,#2fbf63 8px 16px); }
 .court-panel .cp-sub{ font-size:12px; color:#b8c4e8; }
 .court-panel .cp-pips{ display:inline-flex; gap:4px; align-items:center; }
+/* ============ 대기 연출(판사가 서류를 살피는 풀스크린 장면): AI 응답을 기다리는 동안 표시 ============ */
+.st-key-wait_stage{ position:fixed; inset:0; z-index:999999; background:#000; margin:0 !important; padding:0 !important; }
+.st-key-wait_stage iframe{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important;
+  margin:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; animation:none !important; }
+.stApp:has(.st-key-wait_stage), body:has(.st-key-wait_stage){ overflow:hidden !important; }
 """
 
 # =================================================================
@@ -347,36 +334,8 @@ LOBBY_H = 540  # 로비 장면(iframe) 높이
 RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job")
 
 # =================================================================
-# 화면 문구: 로딩 멘트 / 로비 팁
+# 화면 문구: 로비 팁
 # =================================================================
-
-LOADING_P1 = [
-    "⚖️ 검사와 변호사가 치열하게 증거를 조작하는 중", "🏛️ 서판결 판사가 돋보기로 흑역사를 정밀 감식 중",
-    "📜 차냉정 검사가 공소장에 빨간 줄을 긋는 중", "🛡️ 우기기 변호사가 눈물겨운 쉴드 대본을 쓰는 중",
-    "☕ 서판결 판사가 보리차를 마시며 한숨 쉬는 중", "🔨 법원 직원이 망치를 닦는 중",
-]
-
-LOADING_P2 = [
-    "🧊 차냉정 검사가 변명의 허점을 얼려서 부수는 중", "🎭 우기기 변호사가 변명을 감동 실화로 각색하는 중",
-    "🏛️ 서판결 판사가 훈계 원고를 다듬는 중", "📎 서기관이 변명 속 모순에 형광펜을 긋는 중",
-    "💧 우기기 변호사가 손수건을 준비하는 중",
-]
-
-LOADING_V = [
-    "🖋️ 서판결 판사가 판결문에 만년필을 꾹꾹 눌러쓰는 중", "🎲 형량 룰렛을 돌리는 중", "🏅 뱃지 공방에서 칭호를 각인하는 중",
-    "📠 판결문을 인쇄하다 용지가 걸린 중", "🔨 법원 직원이 망치를 다시 닦는 중",
-]
-
-LOAD_STEP = {"p1": "제1막 준비 중", "p2": "제2막 준비 중", "verdict": "최종 판결문 작성 중"}
-
-LOAD_HEAD = {"p1": ("⚖️", "개정 준비!"), "p2": ("⚡", "이의 있습니다!"), "verdict": ("🔨", "판결 직전!")}
-
-LOAD_MSGS = {"p1": LOADING_P1, "p2": LOADING_P2, "verdict": LOADING_V}
-
-LOAD_TIPS = [
-    "구체적으로 적을수록 공방이 정확해집니다.", "입력하신 내용만 사실로 취급됩니다.",
-    "변명은 사실에 맞고 진심일수록 무죄에 가까워져요.", "무료 AI라 조금 느릴 수 있어요. 법정이 열리는 중입니다.",
-]
 
 LOBBY_TIPS = [
     "흑역사를 구체적으로 적을수록 공방이 정확해집니다.",
