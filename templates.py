@@ -158,6 +158,24 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 .res-r{margin-top:8px;font-size:21px;font-weight:700;color:#ffe066;line-height:1.4}
 .res-s{margin-top:6px;font-size:14px;color:#9fe8ff}
 #start h2{text-shadow:3px 3px 0 #b3121c}
+
+/* ---- 가로 화면: iframe 비율이 가로형(5:4 이상)일 때 적용. 세로 폰에서는 위 기본값을 그대로 사용 ---- */
+@media (min-aspect-ratio:5/4){
+.who{width:clamp(130px,38vh,260px)}
+.char.j{bottom:32%}
+#scene[data-cam=J] .char.j .who{transform:scale(1.1)}
+.seal{width:96px;height:96px;font-size:46px}
+#dlg{left:10%;right:10%;height:36%;min-height:150px}
+#txt{font-size:clamp(16px,3.7vh,22px);padding:22px 52px 14px 28px}
+#hint{top:12px}
+.card{width:min(92%,640px)}
+.card-in{padding:20px 30px 18px}
+.row{margin:7px 0;padding-bottom:7px}
+.row.big{margin-top:10px}
+.badge{margin-top:12px}
+.res{margin-top:14px;padding:10px}
+.res-d{font-size:38px}
+}
 </style></head><body>
 <div id="scene" data-cam="J">
  <div id="world">
@@ -351,6 +369,21 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 @keyframes fadein{to{opacity:1}}
 .crown{display:inline-block;animation:sfloat 1.6s ease-in-out infinite}
 @keyframes sfloat{50%{transform:translateY(-10px) scale(1.08)}}
+
+/* ---- 가로 화면: iframe 비율이 가로형(5:4 이상)일 때 적용 ---- */
+@media (min-aspect-ratio:5/4){
+#bldg{left:0;right:0;margin:0 auto;width:min(156%,112vh)}
+#dlg{left:10%;right:10%;min-height:30%}
+#txt{font-size:clamp(16px,3.7vh,22px);padding:22px 52px 14px 28px}
+.bed{left:0;right:0;margin:0 auto;width:min(90%,760px)}
+.win{width:min(36%,300px)}
+.bcard{left:0;right:0;margin:0 auto;width:min(76%,400px)}
+.ch{width:min(31%,36vh)}
+#c_judge{left:calc(50% - min(31%,36vh)/2) !important}
+#c_pros{left:calc(50% - min(31%,36vh)*1.5 - 12px) !important}
+#c_law{left:calc(50% + min(31%,36vh)*.5 + 12px) !important;right:auto !important}
+.gbox{max-width:420px}
+}
 </style></head><body>
 <div id="scene">
  <div class="cloud" style="top:9%;animation-delay:-6s"></div><div class="cloud" style="top:20%;animation-duration:46s;animation-delay:-22s"></div>
