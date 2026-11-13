@@ -1,6 +1,7 @@
 """templates.py — 화면에 그려지는 HTML/JS 템플릿 모음.
 
-재판 연출(VN_TEMPLATE), 스토리 연출(STORY_TEMPLATE), 판결 결과 패널, 로딩 오버레이, 타이틀 화면.
+재판 연출(VN_TEMPLATE: 공방·판결 + AI 응답 대기 중 '판사가 서류를 살피는' 연출), 스토리 연출(STORY_TEMPLATE),
+로비 연출(LOBBY_TEMPLATE), 판결 결과 패널, 타이틀 화면.
 연출·사운드·픽셀 디자인을 손볼 때는 여기를 수정하세요.
 """
 
@@ -9,21 +10,10 @@ import json
 
 import streamlit.components.v1 as components
 
-from config import LOAD_HEAD, LOAD_STEP
 
 # =================================================================
 # HTML 조각
 # =================================================================
-
-def overlay_html(msg, kind, el, tip):
-    icon, head = LOAD_HEAD[kind]
-    return (
-        '<style>html,body,.stApp{overflow:hidden !important}</style><div class="lf"><div class="lf-in">'
-        f'<div class="lf-icon">{icon}</div><div class="lf-head">{html.escape(head)}</div>'
-        f'<div class="lf-step">{html.escape(LOAD_STEP[kind])}</div>'
-        f'<div class="lf-msg">{html.escape(msg)}{"." * (el % 3 + 1)}</div><div class="lf-bar"><i></i></div>'
-        f'<div class="lf-meta">경과 {el}초</div><div class="lf-tip">💡 {html.escape(tip)}</div></div></div>'
-    )
 
 def result_panel_html(res):
     up = res["delta"] >= 0
@@ -176,7 +166,32 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 .res{margin-top:14px;padding:10px}
 .res-d{font-size:38px}
 }
+/* ---- 대기 연출(mode='wait'): 판사가 서류를 살피며 고민하는 몰입형 장면 ---- */
+#wait{display:none;position:absolute;inset:0;overflow:hidden;background:#2a1a10}
+html.wait #wait{display:block;animation:wfade .9s}
+html.wait #scene{display:none}
+@keyframes wfade{from{opacity:0}to{opacity:1}}
+.w-wall{position:absolute;left:0;right:0;top:0;bottom:16%;background:repeating-linear-gradient(90deg,#8a5a34 0 56px,#7a4c2a 56px 60px)}
+.w-wall:after{content:"";position:absolute;inset:0;background:linear-gradient(#0000 30%,#0006)}
+.w-wain{position:absolute;left:0;right:0;bottom:16%;height:20%;background:#5a3a22;border-top:6px solid #d9b85a}
+.w-shelf{position:absolute;top:10%;bottom:34%;width:17%;border:5px solid #0d0f26;background:repeating-linear-gradient(#0000 0 52px,#2a1a10 52px 60px),repeating-linear-gradient(90deg,#b3261a 0 9px,#2f5a8a 9px 17px,#d9b85a 17px 22px,#2f7a3d 22px 31px,#7b2cbf 31px 38px,#e0a82e 38px 43px)}
+.w-shelf.l{left:3%}.w-shelf.r{right:3%}
+.w-seal{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:84px;height:84px;border-radius:50%;background:radial-gradient(#fff,#cfd6e6);border:5px solid #c9a24d;box-shadow:0 0 0 4px #7a5a1e;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#1f5ea8}
+.w-lamp{position:absolute;left:0;right:0;top:0;height:70%;background:radial-gradient(ellipse at 50% 0%,#ffe9a866,#0000 62%)}
+.dust{position:absolute;width:3px;height:3px;background:#ffe9a8;opacity:0;animation:dust var(--d,12s) linear infinite;animation-delay:var(--l,0s)}
+@keyframes dust{0%{transform:translate(0,0);opacity:0}15%{opacity:.7}85%{opacity:.6}100%{transform:translate(30px,-130px);opacity:0}}
+#w-cw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);transform-origin:50% 100%;animation:wsway 10s ease-in-out infinite}
+@keyframes wsway{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.012)}}
+#jchara{display:block}
+#w-bubble{position:absolute;left:58%;bottom:100%;margin-bottom:14px;background:#fff;color:#0d0f26;font-size:clamp(13px,2.4vh,17px);font-weight:700;padding:8px 14px;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .4s;white-space:nowrap;box-shadow:0 -3px 0 #0d0f26,0 3px 0 #0d0f26,-3px 0 0 #0d0f26,3px 0 0 #0d0f26,4px 8px 0 0 #0006}
+#w-bubble.on{opacity:1;transform:none}
+#w-bubble:after{content:"";position:absolute;left:16px;bottom:-12px;border:6px solid transparent;border-top:8px solid #0d0f26}
+#w-bench{position:absolute;left:0;right:0;bottom:0;background:#5a3a22;border-top:6px solid #8a5a34;box-shadow:inset 0 6px 0 #d9b85a55}
+#w-vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 120px #000a}
 </style></head><body>
+<div id="wait"><div class="w-wall"></div><div class="w-wain"></div><div class="w-shelf l"></div><div class="w-shelf r"></div><div class="w-seal">法</div><div class="w-lamp"></div><div id="w-dust"></div>
+ <div id="w-cw"><svg id="jchara" viewBox="0 0 200 160" shape-rendering="crispEdges"></svg><div id="w-bubble"></div></div>
+ <div id="w-bench"></div><div id="w-vig"></div></div>
 <div id="scene" data-cam="J">
  <div id="world">
   <div class="panel"><div class="wood"></div><div class="pil" style="left:4%"></div><div class="floor"></div>
@@ -202,6 +217,119 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 </div>
 <script>
 const D=__DATA__;
+if(D.mode==='wait'){document.documentElement.className='wait';(function(){
+ const NS='http://www.w3.org/2000/svg',CX=100,INK='#0d0f26',SKIN='#f0c9a0',ROBE='#2f5a46',ROBE2='#244637',GOLD='#d9b85a',WHITE='#f4f4fa',SH='#e3b78c';
+ const g=id=>document.getElementById(id),svg=g('jchara');
+ const E=(tag,at,p)=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);(p||svg).appendChild(e);return e};
+ const A=(p,x,y,w,h,f,o)=>E('rect',Object.assign({x:x,y:y,width:w,height:h,fill:f},o||{}),p);
+ const R=(p,dx,y,w,h,f,o)=>A(p,CX+dx,y,w,h,f,o);
+ const OUT={stroke:INK,'stroke-width':2},THIN={stroke:INK,'stroke-width':1.2};
+ const gChair=E('g'),gTorso=E('g'),gHead=E('g'),gArmL=E('g'),gArmR=E('g'),gPL=E('g'),gPR=E('g'),gDesk=E('g'),gTool=E('g');
+ /* 의자 등받이 + 법복 */
+ R(gChair,-52,10,104,8,GOLD,OUT);R(gChair,-50,16,100,130,'#5a3a22',OUT);R(gChair,-42,24,84,114,'#6b4528');
+ for(let r=0;r<4;r++)for(let c=0;c<5;c++)R(gChair,-32+c*16,34+r*26,4,4,GOLD);
+ R(gTorso,-10,84,20,14,SH);R(gTorso,-38,92,76,66,ROBE,OUT);R(gTorso,-42,92,84,12,ROBE2,OUT);
+ E('polygon',{points:[CX-14,92,CX+14,92,CX,122].join(' '),fill:WHITE,stroke:INK,'stroke-width':1.5},gTorso);
+ R(gTorso,-3,100,6,56,GOLD);R(gTorso,-26,108,4,44,ROBE2);R(gTorso,22,108,4,44,ROBE2);
+ /* 머리: 서판결 (대머리 + 흰 옆머리 + 금테 안경 + 흰 수염) */
+ R(gHead,-34,40,8,26,WHITE,OUT);R(gHead,26,40,8,26,WHITE,OUT);R(gHead,-32,48,4,12,SKIN);R(gHead,28,48,4,12,SKIN);
+ R(gHead,-28,28,56,54,SKIN,OUT);R(gHead,-24,24,14,5,WHITE);R(gHead,10,24,14,5,WHITE);
+ const brows=E('g',{},gHead);R(brows,-23,40,16,5,WHITE,THIN);R(brows,7,40,16,5,WHITE,THIN);
+ R(gHead,-22,48,14,12,'#fff');R(gHead,8,48,14,12,'#fff');
+ const pL=E('g',{},gHead),pR=E('g',{},gHead);A(pL,CX-18,52,5,5,INK);A(pR,CX+12,52,5,5,INK);
+ const lidL=R(gHead,-22,48,14,0,SKIN),lidR=R(gHead,8,48,14,0,SKIN);
+ E('rect',{x:CX-25,y:46,width:20,height:16,fill:'none',stroke:GOLD,'stroke-width':2.5},gHead);E('rect',{x:CX+5,y:46,width:20,height:16,fill:'none',stroke:GOLD,'stroke-width':2.5},gHead);
+ R(gHead,-5,52,10,2.5,GOLD);R(gHead,-30,50,5,2,GOLD);R(gHead,25,50,5,2,GOLD);R(gHead,-23,48,4,3,'#fff',{opacity:.7});R(gHead,7,48,4,3,'#fff',{opacity:.7});
+ R(gHead,-3,58,6,9,SH);
+ E('polygon',{points:[CX-24,66,CX+24,66,CX+20,100,CX,118,CX-20,100].join(' '),fill:WHITE,stroke:INK,'stroke-width':1.5},gHead);
+ E('polygon',{points:[CX-20,66,CX+20,66,CX+13,76,CX,71,CX-13,76].join(' '),fill:'#fff',stroke:INK,'stroke-width':1.2},gHead);
+ const mFlat=E('g',{},gHead);R(mFlat,-6,78,12,2,'#7a3b3b');const mHmm=E('g',{},gHead);R(mHmm,-3,77,6,5,'#7a3b3b');
+ /* 팔: 어깨→팔꿈치→손 (역기구학으로 각도 계산) */
+ const SL=[CX-38,106],SR=[CX+38,106],L1=26,L2=27.5;
+ function arm(gr,S){const up=E('g',{},gr);A(up,S[0]-8,104,16,28,ROBE,OUT);A(up,S[0]-8,104,16,5,ROBE2);const fo=E('g',{},up);A(fo,S[0]-7,130,14,26,ROBE,OUT);A(fo,S[0]-8,150,16,4,GOLD,OUT);A(fo,S[0]-5,154,10,11,SKIN,OUT);return {up:up,fo:fo}}
+ const armL=arm(gArmL,SL),armR=arm(gArmR,SR);
+ /* 손에 든 서류 / 돋보기 / 펜 */
+ function paper(gr){A(gr,-15,-42,30,42,'#fff',OUT);const ls=[];for(let i=0;i<7;i++)ls.push(A(gr,-11,-37+i*5.4,22,1.8,'#9aa0bb'));E('polygon',{points:'15,-42 15,-34 7,-42',fill:'#dfe3f2'},gr);return ls}
+ const linesL=paper(gPL),linesR=paper(gPR);
+ function newPage(){[linesL,linesR].forEach(ls=>ls.forEach(l=>l.setAttribute('width',(8+Math.random()*14).toFixed(1))))}newPage();
+ const lens=E('g',{},gTool);E('circle',{cx:0,cy:-16,r:11,fill:'#bfe9ff','fill-opacity':.4,stroke:GOLD,'stroke-width':3},lens);A(lens,-2,-5,4,14,GOLD,THIN);A(lens,-6,-22,4,3,'#fff',{opacity:.8});
+ const pen=E('g',{},gTool);A(pen,-1.5,-16,3,18,'#222');A(pen,-1.5,-18,3,3,GOLD);E('polygon',{points:'-1.5,2 1.5,2 0,6',fill:'#222'},pen);
+ /* 책상: 서류 더미 · 법봉 · 찻잔 · 명패 */
+ A(gDesk,0,134,200,26,'#5a3a22');A(gDesk,0,130,200,6,'#8a5a34');A(gDesk,0,134,200,2,GOLD);A(gDesk,0,154,200,6,'#3f2916');
+ R(gDesk,-26,143,52,10,GOLD,OUT);E('text',{x:CX,y:151,'font-size':6.2,'text-anchor':'middle',fill:INK,'font-weight':'bold'},gDesk).textContent='서판결 판사';
+ R(gDesk,-88,125,36,5,'#fff',OUT);R(gDesk,-86,120,34,5,'#f3f3ff',OUT);R(gDesk,-84,115,32,5,'#fff',OUT);
+ R(gDesk,-52,123,18,7,'#c58a4a',OUT);R(gDesk,-60,126,10,3,'#8a5a34',OUT);
+ const mugG=E('g',{transform:'translate('+(CX+70)+' 130)'},gDesk);A(mugG,-7,-14,14,14,'#fff',OUT);A(mugG,7,-11,4,8,'#fff',OUT);A(mugG,-5,-12,10,3,'#8a5a2a');
+ const steam=[0,1,2].map(i=>A(mugG,-4+i*4,-20,2,4,'#fff',{opacity:.7}));
+ /* 역기구학 */
+ const rotOf=a=>Math.atan2(-Math.cos(a),Math.sin(a))*180/Math.PI;
+ function ik(S,T){let dx=T[0]-S[0],dy=T[1]-S[1],d=Math.hypot(dx,dy);const maxd=L1+L2-0.6,mind=Math.abs(L1-L2)+2,reach=Math.max(mind,Math.min(maxd,d));
+  const base=Math.atan2(dy,dx),cb=(L1*L1+reach*reach-L2*L2)/(2*L1*reach),b=Math.acos(Math.max(-1,Math.min(1,cb)));
+  const c=[base+b,base-b].map(a=>({a:a,ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>q.ey-p.ey)[0];
+  const hx=S[0]+reach*Math.cos(base),hy=S[1]+reach*Math.sin(base),fa=Math.atan2(hy-c.ey,hx-c.ex);
+  let t1=rotOf(c.a),t2=rotOf(fa)-t1;while(t2>180)t2-=360;while(t2<-180)t2+=360;return {t1:t1,t2:t2,hx:hx,hy:hy}}
+ /* 자세 정의 (서류 읽기 · 넘기기 · 두 장 비교 · 돋보기 · 턱수염 쓰다듬기 · 안경 고쳐 쓰기 · 메모) */
+ const P={
+  read:{L:[CX-38,118],R:[CX+24,128],pl:1,pr:0,tilt:-4,gx:0,gy:4,lid:.3,brow:0,mouth:'flat',lean:1,scan:1},
+  flip:{L:[CX-38,118],R:[CX+34,126],pl:1,pr:0,tilt:-3,gx:0,gy:4,lid:.3,brow:0,mouth:'flat',lean:1,scan:1,sweep:1},
+  compare:{L:[CX-36,120],R:[CX+36,120],pl:1,pr:1,tilt:-5,gx:-3,gy:3,lid:.2,brow:0,mouth:'flat',lean:0,cmp:1},
+  magnify:{L:[CX-30,126],R:[CX+4,124],pl:1,pr:0,tilt:2,gx:0,gy:5,lid:.5,brow:1,mouth:'flat',lean:5,tool:'lens',jit:1},
+  ponder:{L:[CX-36,126],R:[CX+8,92],pl:0,pr:0,tilt:5,gx:-3,gy:-2,lid:.15,brow:2,mouth:'hmm',lean:0,stroke:1},
+  glasses:{L:[CX-36,126],R:[CX+2,55],pl:0,pr:0,tilt:2,gx:0,gy:2,lid:.7,brow:0,mouth:'flat',lean:0},
+  write:{L:[CX-28,124],R:[CX+10,127],pl:1,pr:0,tilt:-2,gx:2,gy:5,lid:.35,brow:1,mouth:'flat',lean:3,tool:'pen',scribble:1}
+ };
+ const cur={R:[CX+24,128],L:[CX-38,118],tilt:0,gx:0,gy:0,lid:0,lean:0,brow:0};
+ let tgt=P.read,t=0;const ap=(c,v,k,dt)=>c+(v-c)*(1-Math.exp(-k*dt));
+ function render(dt){const p=tgt;
+  cur.R[0]=ap(cur.R[0],p.R[0],7,dt);cur.R[1]=ap(cur.R[1],p.R[1],7,dt);cur.L[0]=ap(cur.L[0],p.L[0],7,dt);cur.L[1]=ap(cur.L[1],p.L[1],7,dt);
+  cur.tilt=ap(cur.tilt,p.tilt,5,dt);cur.lid=ap(cur.lid,p.lid,8,dt);cur.lean=ap(cur.lean,p.lean,5,dt);cur.brow=ap(cur.brow,p.brow,6,dt);
+  let gxT=p.gx,gyT=p.gy,tiltAdd=0,rx=cur.R[0],ry=cur.R[1],lx=cur.L[0],ly=cur.L[1];
+  if(p.scan){const f=(t*1.3)%1,line=Math.floor(t*1.3)%3;gxT=-3+f*6;gyT=3+line*0.7}
+  if(p.cmp){const side=Math.floor(t/1.8)%2;gxT=side?4:-4;tiltAdd=side?10:0}
+  if(p.jit)gxT=Math.sin(t*3)*1.4;
+  if(p.stroke){ry+=Math.sin(t*5)*2.2;gxT=-3+Math.sin(t*0.7)*3}
+  if(p.scribble){rx+=Math.sin(t*8)*3;ry+=Math.cos(t*6)*1.5}
+  if(p.sweep)rx=CX+34-((t*1.5)%1)*40;
+  cur.gx=ap(cur.gx,gxT,10,dt);cur.gy=ap(cur.gy,gyT,10,dt);
+  const a=ik(SL,[lx,ly]),b=ik(SR,[rx,ry]);
+  armL.up.setAttribute('transform','rotate('+a.t1.toFixed(2)+' '+SL[0]+' 106)');armL.fo.setAttribute('transform','rotate('+a.t2.toFixed(2)+' '+SL[0]+' 132)');
+  armR.up.setAttribute('transform','rotate('+b.t1.toFixed(2)+' '+SR[0]+' 106)');armR.fo.setAttribute('transform','rotate('+b.t2.toFixed(2)+' '+SR[0]+' 132)');
+  const bob=Math.sin(t*1.6)*0.6;
+  gHead.setAttribute('transform','translate(0 '+(bob+cur.lean).toFixed(2)+') rotate('+(cur.tilt+tiltAdd).toFixed(2)+' '+CX+' 88)');
+  gTorso.setAttribute('transform','translate(0 '+(Math.sin(t*1.6)*0.5).toFixed(2)+')');
+  brows.setAttribute('transform','translate(0 '+cur.brow.toFixed(2)+')');
+  const blink=((t%3.9)<0.12)?1:0,lid=Math.max(cur.lid,blink);
+  [pL,pR].forEach(q=>q.setAttribute('transform','translate('+cur.gx.toFixed(2)+' '+cur.gy.toFixed(2)+')'));[lidL,lidR].forEach(l=>l.setAttribute('height',(lid*11.5).toFixed(2)));
+  mFlat.setAttribute('display',p.mouth==='flat'?'inline':'none');mHmm.setAttribute('display',p.mouth==='hmm'?'inline':'none');
+  gPL.setAttribute('display',p.pl?'inline':'none');gPR.setAttribute('display',p.pr?'inline':'none');
+  gPL.setAttribute('transform','translate('+a.hx.toFixed(2)+' '+a.hy.toFixed(2)+') rotate(-8)');gPR.setAttribute('transform','translate('+b.hx.toFixed(2)+' '+b.hy.toFixed(2)+') rotate(8)');
+  gTool.setAttribute('display',p.tool?'inline':'none');gTool.setAttribute('transform','translate('+b.hx.toFixed(2)+' '+(b.hy+2).toFixed(2)+')');
+  lens.setAttribute('display',p.tool==='lens'?'inline':'none');pen.setAttribute('display',p.tool==='pen'?'inline':'none');
+  steam.forEach((e,i)=>{const f=((t*0.7+i*0.33)%1);e.setAttribute('y',-20-f*12);e.setAttribute('opacity',(0.7*(1-f)).toFixed(2))})}
+ /* 행동 계획: 요청 종류(p1 소장 / p2 변명 / verdict 판결)에 따라 다른 흐름 */
+ const PLAN={
+  p1:[['read',5000],['flip',900],['read',4500],['magnify',4500],['ponder',4200],['read',4500],['flip',900],['compare',5200],['glasses',1800]],
+  p2:[['compare',5200],['ponder',4400],['read',4200],['flip',900],['write',4600],['ponder',4400],['magnify',4200],['glasses',1800]],
+  verdict:[['ponder',5200],['compare',4600],['write',4600],['glasses',1800],['ponder',5400],['read',4200],['flip',900]]
+ };
+ const SAY={read:['…','음…','(사락…)'],flip:['(서류를 넘긴다)'],compare:['앞뒤가 맞는지 보자.','이쪽과 이쪽을 맞춰 보면…'],magnify:['세부 내용이 중요하지.','어디, 자세히 볼까.'],glasses:['(안경을 고쳐 쓴다)'],write:['메모해 둬야겠군.','(사각사각)'],
+  ponder:{p1:['소장의 내용을 확인하자.','흠… 이 사건은…'],p2:['변명이라… 앞뒤를 따져 봐야겠군.','흠, 그렇게 나온단 말이지.'],verdict:['이제 판결을 내릴 때가 됐군.','신중하게 정해야 한다.']}};
+ const kind=PLAN[D.phase]?D.phase:'p1',rnd=a=>a[Math.floor(Math.random()*a.length)];
+ let idx=0,step=null,stepEnd=0,bubbleOff=0,prev=null;
+ function say(s,ms){const b=g('w-bubble');if(!s){b.className='';return}b.textContent=s;b.className='on';bubbleOff=t+(ms||2600)/1000}
+ function nextStep(){if(prev==='flip')newPage();const e=PLAN[kind][idx%PLAN[kind].length];idx++;step=e[0];prev=e[0];tgt=P[e[0]];stepEnd=t+e[1]/1000;
+  const lines=(e[0]==='ponder')?SAY.ponder[kind]:SAY[e[0]];if(lines&&Math.random()<0.8)say(rnd(lines),Math.min(e[1]-300,3200))}
+ function tick(dtMs){const dt=Math.min(dtMs,64)/1000;t+=dt;if(!step||t>=stepEnd)nextStep();if(bubbleOff&&t>bubbleOff){say(null);bubbleOff=0}render(dt)}
+ /* 크기 맞춤 + 먼지 입자 */
+ function fit(){const de=document.documentElement,W=de.clientWidth||800,H=de.clientHeight||600;let h=H*0.82,w=h*1.25;if(w>W*1.05){w=W*1.05;h=w/1.25}
+  svg.style.width=w+'px';svg.style.height=h+'px';g('w-bench').style.height=(h*26/160)+'px'}
+ window.addEventListener('resize',fit);fit();
+ (function(){const d=g('w-dust');for(let i=0;i<18;i++){const e=document.createElement('div');e.className='dust';e.style.left=(Math.random()*96)+'%';e.style.top=(30+Math.random()*60)+'%';e.style.setProperty('--d',(9+Math.random()*8)+'s');e.style.setProperty('--l',(-Math.random()*12)+'s');d.appendChild(e)}})();
+ window.__wait={tick:tick,pose:function(n){tgt=P[n];step=n;stepEnd=1e9;idx=0},poses:Object.keys(P)};
+ let last=0;function loop(ts){if(last)tick(ts-last);last=ts;requestAnimationFrame(loop)}requestAnimationFrame(loop);
+})();}
+</script>
+<script>
 const $=id=>document.getElementById(id);
 const scene=$('scene');
 const NAMES={J:'서판결 판사',P:'차냉정 검사',L:'우기기 변호사'};
