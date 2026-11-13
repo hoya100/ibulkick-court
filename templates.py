@@ -217,6 +217,12 @@ html.wait #scene{display:none}
 </div>
 <script>
 const D=__DATA__;
+/* ---- 변명 입력칸 제어: 연출(iframe)이 부모 화면의 표식(.st-key-excuse_gate)에 상태를 적어 두면, CSS가 입력창을 숨기거나 올려 준다.
+        부모 화면에 접근할 수 없는 환경이면 아무것도 하지 않고(= 입력창은 항상 보임/6초 뒤 자동 표시) 게임은 그대로 진행된다. ---- */
+function exSet(attr,after){let n=0;const go=()=>{n++;let m=null;try{m=window.parent.document.querySelector('.st-key-excuse_gate')}catch(e){return true}
+ if(m){m.setAttribute(attr,'1');if(after)after();return true}return n>25};if(!go()){const iv=setInterval(()=>{if(go())clearInterval(iv)},200)}}
+function exOpen(){if(D.mode!=='debate')return;exSet('data-open',()=>{setTimeout(()=>{try{const ta=window.parent.document.querySelector('[data-testid="stChatInput"] textarea');if(ta)ta.focus({preventScroll:true})}catch(e){}},650)})}
+if(D.mode==='debate')exSet('data-gate');
 if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const NS='http://www.w3.org/2000/svg',CX=100,INK='#0d0f26',SKIN='#f0c9a0',ROBE='#2f5a46',ROBE2='#244637',GOLD='#d9b85a',WHITE='#f4f4fa',SH='#e3b78c';
  const g=id=>document.getElementById(id),svg=g('jchara');
@@ -358,7 +364,7 @@ let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',end
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c))}
 function stopType(){clearInterval(timer);typing=false;$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
- if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block'}}}
+ if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen()}}}
 function type(text){typing=true;full=text;let k=0;$('txt').textContent='';timer=setInterval(()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length)stopType()},D.speed||32)}
 const SHOUT={F:'잠깐만요! 팩트 체크 들어갑니다!',S:'이의 있습니다! 억지 쉴드 발동!',O:'정숙하십시오! 법정에서의 소란은 허용되지 않습니다!'};
 function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' on';[520,780,1040].forEach((f,j)=>setTimeout(()=>beep(f,.16,.07),j*90));scene.classList.remove('shake');void scene.offsetWidth;scene.classList.add('shake');setTimeout(()=>{e.className='';cb()},950)}
