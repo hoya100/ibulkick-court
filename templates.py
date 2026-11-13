@@ -538,3 +538,218 @@ $('start').addEventListener('click',e=>{e.stopPropagation();started=true;ac();be
 def render_story(mute=False, speed=30, height=640):
     payload = json.dumps({"mute": mute, "speed": speed}, ensure_ascii=False).replace("</", "<\\/")
     components.html(STORY_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
+
+
+# =================================================================
+# 서브컬처풍 가로 로비 (iframe: 우기기 변호사가 일하고, 커피 마시고, 기지개 켜는 중앙 연출)
+#   * 캐릭터·배경은 모두 이 게임을 위해 직접 그린 오리지널 도트 그래픽입니다.
+# =================================================================
+LOBBY_TEMPLATE = r"""<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent}
+:root{--ink:#0d0f26}
+#scene{position:relative;width:100%;height:100%;overflow:hidden;background:var(--sky1)}
+#scene.day{--sky1:#6ec6ff;--sky2:#d9f1ff;--bld:#8fa7d6;--bld2:#6f88c0;--win:#cfe6ff;--t1:#d9cdb0;--t2:#c4b693;--cl:#ffffffd0;--haze:#ffffff40;--sun:#ffe066}
+#scene.dusk{--sky1:#4a3a8c;--sky2:#ffb27a;--bld:#5a4a86;--bld2:#43376d;--win:#ffd98a;--t1:#a99486;--t2:#8f7c71;--cl:#ffd0b0d0;--haze:#ff9a6a30;--sun:#ff9a5a}
+#scene.night{--sky1:#0a0e2e;--sky2:#26306f;--bld:#222a5c;--bld2:#181e47;--win:#ffe28a;--t1:#454a6e;--t2:#383d5c;--cl:#5a6aa8a0;--haze:#4a5ad020;--sun:#fff3b0}
+#sky{position:absolute;inset:0;background:linear-gradient(var(--sky1),var(--sky2) 68%)}
+#stars{position:absolute;inset:0;opacity:0;background-image:radial-gradient(#fff 1px,transparent 1.6px);background-size:46px 38px;transition:opacity 1s}
+#scene.night #stars{opacity:.8}
+#sun{position:absolute;right:30%;top:9%;width:54px;height:54px;border-radius:50%;background:var(--sun);box-shadow:0 0 40px var(--sun)}
+.cloud{position:absolute;height:14px;width:60px;background:var(--cl);box-shadow:20px -10px 0 var(--cl),40px 0 0 var(--cl);animation:drift var(--d,80s) linear infinite}
+@keyframes drift{from{transform:translateX(-140px)}to{transform:translateX(1300px)}}
+#city{position:absolute;left:0;right:0;bottom:26%;width:100%;height:46%}
+#city .b1{fill:var(--bld)}#city .b2{fill:var(--bld2)}#city .w{fill:var(--win)}#city .ink{fill:var(--ink)}
+#plaza{position:absolute;left:0;right:0;bottom:0;height:30%;border-top:5px solid var(--ink);background:repeating-conic-gradient(var(--t1) 0 25%,var(--t2) 0 50%) 0 0/60px 60px}
+#plaza:after{content:"";position:absolute;inset:0;background:linear-gradient(var(--haze),#0003)}
+#papers{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.paper{position:absolute;top:-14px;width:9px;height:12px;background:#fff;border:2px solid var(--ink);opacity:.9;animation:fall var(--fd,14s) linear infinite;animation-delay:var(--fl,0s)}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(40px,300px) rotate(180deg)}100%{transform:translate(-20px,640px) rotate(380deg)}}
+#sign{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:#ffd23f;font-size:13px;font-weight:700;padding:6px 14px;letter-spacing:1px;box-shadow:0 0 0 3px #ffd23f,0 6px 0 3px #0008;white-space:nowrap}
+#sign b{color:#59f08a;animation:blink 1.4s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+#cw{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);cursor:pointer}
+#chara{display:block}
+#bubble{position:absolute;left:58%;top:6%;max-width:230px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;padding:8px 12px;opacity:0;transition:opacity .3s,transform .3s;transform:translateY(6px);box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink),-3px 0 0 var(--ink),3px 0 0 var(--ink),4px 8px 0 0 #0006;white-space:nowrap}
+#bubble.on{opacity:1;transform:none}
+#bubble:after{content:"";position:absolute;left:14px;bottom:-12px;border:6px solid transparent;border-top:8px solid var(--ink)}
+#panel{position:absolute;right:14px;top:14px;width:262px;background:#10162ee8;color:#fff;padding:12px 14px;box-shadow:0 -4px 0 var(--ink),0 4px 0 var(--ink),-4px 0 0 var(--ink),4px 0 0 var(--ink),inset 0 4px 0 #3b4a9a,0 10px 0 0 #0008}
+#panel .pt{font-size:12px;color:#9fe8ff;letter-spacing:2px}
+#panel .pr{font-size:21px;font-weight:900;color:#ffe066;margin:4px 0 8px;text-shadow:2px 2px 0 #000}
+#panel .row{font-size:13px;margin:5px 0;display:flex;justify-content:space-between;gap:8px}
+#panel .row b{color:#fff;font-size:15px}
+#panel .gauge{height:14px;border:3px solid var(--ink);background:#050510;margin:6px 0 2px;overflow:hidden}
+#panel .gauge i{display:block;height:100%;background:repeating-linear-gradient(45deg,#59f08a 0 8px,#2fbf63 8px 16px);transition:width 1s}
+#panel .sub{font-size:11px;color:#b8c4e8}
+#panel .pips{display:inline-flex;gap:4px;align-items:center}
+#panel .pip{width:14px;height:11px;border:2px solid #ffe3a3;background:#0a0d18;display:inline-block}
+#panel .pip.on{background:linear-gradient(#ffe066,#e0a82e)}
+#bar{position:absolute;left:0;right:0;bottom:0;height:112px;background:linear-gradient(#0d0f2600,#0d0f26d8 26%,#0d0f26f6);border-top:4px solid #ffd23f}
+#bar:before{content:"";position:absolute;left:0;right:0;top:-4px;height:4px;background:repeating-linear-gradient(90deg,#ffd23f 0 14px,#0d0f26 14px 20px)}
+#vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 90px #0008}
+@media (max-aspect-ratio:5/4){#panel{display:none}#sign{font-size:11px;padding:5px 10px}#bubble{left:50%;top:0;font-size:12px}}
+</style></head><body>
+<div id="scene" class="day">
+ <div id="sky"></div><div id="stars"></div><div id="sun"></div>
+ <div class="cloud" style="top:14%;--d:90s;animation-delay:-20s"></div><div class="cloud" style="top:26%;--d:120s;animation-delay:-70s"></div><div class="cloud" style="top:8%;--d:105s;animation-delay:-45s"></div>
+ <svg id="city" viewBox="0 0 400 100" preserveAspectRatio="xMidYMax slice" shape-rendering="crispEdges"></svg>
+ <div id="plaza"></div><div id="papers"></div>
+ <div id="sign">🏛️ 우기기 법률사무소 · <b>영업 중</b></div>
+ <div id="cw"><svg id="chara" viewBox="0 0 200 160" shape-rendering="crispEdges"></svg><div id="bubble"></div></div>
+ <div id="panel"><div class="pt">⚖️ 오늘의 법정</div><div class="pr" id="p_rank"></div>
+  <div class="row"><span>🏆 평판</span><b id="p_rep"></b></div><div class="gauge"><i id="p_gauge"></i></div><div class="sub" id="p_next"></div>
+  <div class="row"><span>🔥 연속 무죄</span><b id="p_streak"></b></div><div class="row"><span>✅ 무죄 / 재판</span><b id="p_wins"></b></div>
+  <div class="row"><span>⚖️ 선임비</span><span class="pips" id="p_fee"></span></div></div>
+ <div id="bar"></div><div id="vig"></div>
+</div>
+<script>
+const D=__DATA__;
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const CX=100, INK='#0d0f26', SKIN='#f2c79b', HAIR='#f26b1d', SUIT='#e0a82e';
+const SL=[CX-33,102], SR=[CX+33,102], L1=24, L2=24.5;
+function E(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||$('chara')).appendChild(e);return e}
+function A(p,x,y,w,h,f,o){return E('rect',Object.assign({x:x,y:y,width:w,height:h,fill:f},o||{}),p)}
+function R(p,dx,y,w,h,f,o){return A(p,CX+dx,y,w,h,f,o)}
+const OUT={stroke:INK,'stroke-width':2};
+
+/* ------------------ 도시 배경 (직접 그린 오리지널 도트 스카이라인) ------------------ */
+(function(){const c=$('city');
+ const blds=[[0,40,34,60],[30,52,26,48],[52,34,30,66],[78,46,28,54],[300,44,30,56],[326,30,28,70],[350,50,26,50],[372,38,28,62]];
+ blds.forEach((b,i)=>{E('rect',{class:i%2?'b2':'b1',x:b[0],y:b[1],width:b[2],height:b[3]},c);
+  for(let wy=b[1]+6;wy<b[1]+b[3]-6;wy+=10)for(let wx=b[0]+4;wx<b[0]+b[2]-4;wx+=8)if(((wx*7+wy*3+i)%5)!==0)E('rect',{class:'w',x:wx,y:wy,width:4,height:5},c)});
+ // 법원 건물(가운데 뒤): 원형 문양 + 기둥 + 돔
+ E('rect',{class:'b2',x:140,y:36,width:120,height:64},c);E('rect',{class:'b1',x:150,y:30,width:100,height:70},c);
+ E('rect',{class:'b2',x:176,y:14,width:48,height:16},c);E('rect',{class:'b1',x:184,y:6,width:32,height:10},c);E('rect',{class:'ink',x:198,y:0,width:4,height:8},c);
+ E('circle',{cx:200,cy:52,r:11,fill:'#1f5ea8',stroke:'#e8b84a','stroke-width':2},c);
+ for(let i=0;i<6;i++)E('rect',{class:'b2',x:152+i*18,y:68,width:5,height:32},c);
+ E('rect',{class:'ink',x:188,y:78,width:24,height:22},c);
+ E('rect',{class:'b2',x:146,y:64,width:108,height:4},c)})();
+/* ------------------ 낙하하는 종이 ------------------ */
+(function(){const p=$('papers');for(let i=0;i<12;i++){const e=document.createElement('div');e.className='paper';e.style.left=(Math.random()*96)+'%';e.style.setProperty('--fd',(11+Math.random()*9)+'s');e.style.setProperty('--fl',(-Math.random()*16)+'s');p.appendChild(e)}})();
+
+/* ------------------ 캐릭터: 우기기 변호사 (모든 파츠를 직접 그림) ------------------ */
+const gBack=E('g'),gTorso=E('g'),gHead=E('g'),gArmL=E('g'),gArmR=E('g'),gDesk=E('g'),gMugDesk=E('g'),gMugHand=E('g');
+// 뒤쪽 아프로 머리
+R(gBack,-44,26,88,34,HAIR);R(gBack,-40,14,80,16,HAIR);R(gBack,-32,6,64,10,HAIR);R(gBack,-44,52,88,8,'#d9570f');R(gBack,-28,10,22,5,'#ff8a3d');R(gBack,-48,34,8,18,HAIR);R(gBack,40,34,8,18,HAIR);
+// 몸통(노란 정장 + 흰 셔츠 + 보라 넥타이)
+R(gTorso,-8,80,16,14,'#e3b78c');R(gTorso,-30,92,60,50,SUIT,OUT);R(gTorso,-34,92,68,10,'#c98f1c');
+E('polygon',{points:[CX-10,92,CX+10,92,CX,116].join(' '),fill:'#fff',stroke:INK,'stroke-width':1},gTorso);
+E('polygon',{points:[CX-4,100,CX+4,100,CX+6,126,CX,132,CX-6,126].join(' '),fill:'#7b2cbf'},gTorso);
+E('polygon',{points:[CX-20,92,CX-10,92,CX-2,116,CX-14,128].join(' '),fill:'#c98f1c'},gTorso);E('polygon',{points:[CX+20,92,CX+10,92,CX+2,116,CX+14,128].join(' '),fill:'#c98f1c'},gTorso);
+[[-24,108],[-20,124],[22,110],[24,126],[-26,134],[16,134]].forEach(d=>R(gTorso,d[0],d[1],5,5,'#7b2cbf'));
+// 머리
+const head=gHead;
+R(head,-32,46,4,12,SKIN);R(head,28,46,4,12,SKIN);R(head,-28,30,56,52,SKIN,OUT);
+R(head,-26,64,8,4,'#ff9a8a');R(head,18,64,8,4,'#ff9a8a');
+function eye(dx){R(head,dx,45,16,16,'#fff',OUT);const g=E('g',{},head);A(g,CX+dx+5,51,6,6,INK);A(g,CX+dx+6,52,2,2,'#fff');return g}
+const pupL=eye(-22),pupR=eye(6);
+const lidL=R(head,-23,44,18,0,SKIN),lidR=R(head,5,44,18,0,SKIN);
+R(head,-22,41,14,3,'#5a2d0c');R(head,8,41,14,3,'#5a2d0c');
+const mGrin=E('g',{},head);R(mGrin,-12,68,24,8,'#7a1f2b');R(mGrin,-10,68,20,3,'#fff');
+const mSmile=E('g',{},head);R(mSmile,-7,70,14,3,'#7a1f2b');R(mSmile,-9,68,3,3,'#7a1f2b');R(mSmile,6,68,3,3,'#7a1f2b');
+const mOpen=E('g',{},head);R(mOpen,-6,67,12,11,'#7a1f2b');R(mOpen,-3,73,6,4,'#ff7a8a');
+const mFlat=E('g',{},head);R(mFlat,-6,71,12,2,'#7a1f2b');
+const mouths={grin:mGrin,smile:mSmile,open:mOpen,flat:mFlat,hidden:null};
+// 앞머리/곱슬
+R(head,-30,24,60,12,HAIR);R(head,-34,30,8,16,HAIR);R(head,26,30,8,16,HAIR);R(head,-20,18,14,8,HAIR);R(head,2,16,16,10,HAIR);R(head,-8,20,10,6,'#ff8a3d');
+// 팔(어깨→팔꿈치→손). 관절 회전은 transform 속성으로 직접 제어
+function arm(g,S){const up=E('g',{},g);A(up,S[0]-6,100,12,24,SUIT,OUT);A(up,S[0]-6,100,12,5,'#c98f1c');
+ const fo=E('g',{},up);A(fo,S[0]-5,122,10,24,SUIT,OUT);A(fo,S[0]-5,138,10,3,'#fff');A(fo,S[0]-5,143,10,9,SKIN,OUT);return {up:up,fo:fo}}
+const armL=arm(gArmL,SL),armR=arm(gArmR,SR);
+// 책상 + 노트북 + 소품
+A(gDesk,0,138,200,22,'#8a5a34');A(gDesk,0,138,200,4,'#b88555');A(gDesk,0,154,200,6,'#6e4526');
+R(gDesk,-26,146,52,9,'#ffd23f',OUT);E('text',{x:CX,y:153,'font-size':6,'text-anchor':'middle',fill:INK,'font-weight':'bold'},gDesk).textContent='우기기 법률사무소';
+R(gDesk,-30,112,60,28,'#cfd3e6',OUT);R(gDesk,-27,115,54,22,'#e6e9f5');R(gDesk,-34,139,68,3,'#9aa0bb');
+E('text',{x:CX,y:132,'font-size':15,'text-anchor':'middle'},gDesk).textContent='⚖';
+const led=R(gDesk,24,117,3,3,'#59f08a');
+R(gDesk,-92,132,28,6,'#fff',OUT);R(gDesk,-90,127,26,6,'#f3f3ff',OUT);R(gDesk,-58,124,9,14,'#4aa8ff',OUT);R(gDesk,-56,118,2,8,'#d2336b');R(gDesk,-53,119,2,7,'#222');
+// 머그잔 (책상 위 / 손에 든 것) + 김
+function mug(g){A(g,-7,-14,14,14,'#fff',OUT);A(g,7,-11,4,8,'#fff',OUT);A(g,-5,-12,10,3,'#5a2d0c');
+ const st=[];for(let i=0;i<3;i++)st.push(A(g,-4+i*4,-20,2,4,'#fff',{opacity:.7}));return st}
+gMugDesk.setAttribute('transform','translate('+(CX+62)+' 138)');const steamD=mug(gMugDesk);
+const steamH=mug(gMugHand);
+
+/* ------------------ 역기구학(IK): 손 위치 → 어깨·팔꿈치 각도 ------------------ */
+function rotOf(a){return Math.atan2(-Math.cos(a),Math.sin(a))*180/Math.PI}
+function ik(S,T){let dx=T[0]-S[0],dy=T[1]-S[1],d=Math.hypot(dx,dy);const maxd=L1+L2-0.6,mind=Math.abs(L1-L2)+2;const reach=Math.max(mind,Math.min(maxd,d));
+ const base=Math.atan2(dy,dx),cb=(L1*L1+reach*reach-L2*L2)/(2*L1*reach),b=Math.acos(Math.max(-1,Math.min(1,cb)));
+ const c=[base+b,base-b].map(a=>({a:a,ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>q.ey-p.ey)[0];
+ const hx=S[0]+reach*Math.cos(base),hy=S[1]+reach*Math.sin(base),fa=Math.atan2(hy-c.ey,hx-c.ex);
+ let t1=rotOf(c.a),t2=rotOf(fa)-t1;while(t2>180)t2-=360;while(t2<-180)t2+=360;return {t1:t1,t2:t2,hx:hx,hy:hy}}
+
+/* ------------------ 자세 정의 ------------------ */
+const P={
+ work:{R:[CX+12,134],L:[CX-12,134],tilt:3,gx:0,gy:3,lid:.3,mouth:'smile'},
+ idle:{R:[CX+42,133],L:[CX-42,133],tilt:0,gx:0,gy:0,lid:0,mouth:'grin'},
+ wave:{R:[CX+54,62],L:[CX-42,133],tilt:-4,gx:0,gy:0,lid:0,mouth:'grin',wave:1},
+ stretch:{R:[CX+62,36],L:[CX-62,36],tilt:-7,gx:0,gy:-1,lid:1,mouth:'open'},
+ think:{R:[CX+9,87],L:[CX-42,133],tilt:5,gx:-3,gy:-2,lid:.15,mouth:'flat'},
+ reach:{R:[CX+62,131],L:[CX-42,133],tilt:0,gx:3,gy:2,lid:0,mouth:'grin'},
+ lift:{R:[CX+17,88],L:[CX-42,133],tilt:-2,gx:0,gy:0,lid:.4,mouth:'grin',hold:1},
+ sip:{R:[CX+12,84],L:[CX-42,133],tilt:-6,gx:0,gy:0,lid:1,mouth:'hidden',hold:1,mugTilt:-24}
+};
+const cur={R:[CX+42,133],L:[CX-42,133],tilt:0,gx:0,gy:0,lid:0,mugTilt:0,torsoY:0};
+let tgt=P.idle,holding=false,t=0;
+const ap=(c,g,k,dt)=>c+(g-c)*(1-Math.exp(-k*dt));
+function render(dt){
+ const p=tgt,k=7;cur.R[0]=ap(cur.R[0],p.R[0],k,dt);cur.R[1]=ap(cur.R[1],p.R[1],k,dt);cur.L[0]=ap(cur.L[0],p.L[0],k,dt);cur.L[1]=ap(cur.L[1],p.L[1],k,dt);
+ cur.tilt=ap(cur.tilt,p.tilt||0,6,dt);cur.gx=ap(cur.gx,p.gx||0,8,dt);cur.gy=ap(cur.gy,p.gy||0,8,dt);cur.lid=ap(cur.lid,p.lid||0,10,dt);cur.mugTilt=ap(cur.mugTilt,p.mugTilt||0,7,dt);
+ let rx=cur.R[0],ry=cur.R[1],lx=cur.L[0],ly=cur.L[1];
+ if(tgt===P.work){const w=t*13;lx+=Math.sin(w)*3;ly+=(Math.sin(w*1.7)>0?1.5:0);rx+=Math.sin(w+1.8)*3;ry+=(Math.sin(w*1.3+1)>0?1.5:0)}
+ if(p.wave)rx+=Math.sin(t*9)*7;
+ const a=ik(SL,[lx,ly]),b=ik(SR,[rx,ry]);
+ armL.up.setAttribute('transform','rotate('+a.t1.toFixed(2)+' '+SL[0]+' 100)');armL.fo.setAttribute('transform','rotate('+a.t2.toFixed(2)+' '+SL[0]+' 124)');
+ armR.up.setAttribute('transform','rotate('+b.t1.toFixed(2)+' '+SR[0]+' 100)');armR.fo.setAttribute('transform','rotate('+b.t2.toFixed(2)+' '+SR[0]+' 124)');
+ // 머리: 호흡 + 타이핑 끄덕임 + 기울기
+ const bob=Math.sin(t*2)*0.6+(tgt===P.work?Math.sin(t*9)*0.5:0);
+ head.setAttribute('transform','translate(0 '+bob.toFixed(2)+') rotate('+cur.tilt.toFixed(2)+' '+CX+' 84)');
+ gTorso.setAttribute('transform','translate(0 '+(Math.sin(t*2)*0.5).toFixed(2)+')');
+ // 눈: 시선 + 깜빡임
+ const blink=((t%4.2)<0.13)?1:0,lid=Math.max(cur.lid,blink);
+ [pupL,pupR].forEach(g=>g.setAttribute('transform','translate('+cur.gx.toFixed(2)+' '+cur.gy.toFixed(2)+')'));
+ [lidL,lidR].forEach(l=>l.setAttribute('height',(lid*16.5).toFixed(2)));
+ // 입
+ for(const n in mouths){if(mouths[n])mouths[n].setAttribute('display',n===p.mouth?'inline':'none')}
+ // 머그잔: 책상 위 ↔ 손에 쥠
+ holding=!!(p.hold||(step&&step.hold));
+ gMugDesk.setAttribute('display',holding?'none':'inline');
+ gMugHand.setAttribute('display',holding?'inline':'none');
+ gMugHand.setAttribute('transform','translate('+b.hx.toFixed(2)+' '+(b.hy+3).toFixed(2)+') rotate('+cur.mugTilt.toFixed(2)+')');
+ // 김
+ [steamD,steamH].forEach(s=>s.forEach((e,i)=>{const f=((t*0.8+i*0.33)%1);e.setAttribute('y',-20-f*12);e.setAttribute('opacity',(0.75*(1-f)).toFixed(2))}));
+ led.setAttribute('fill',(Math.sin(t*5)>0)?'#59f08a':'#2fbf63');
+}
+
+/* ------------------ 행동 계획: 일하기 → 커피 → 기지개 → 생각 → 손 흔들기 ... ------------------ */
+const SAY={work:['📝 변론서 작성 중…','타닥타닥… 쉴드 논리 보강 중!','이 사건, 무죄 각이 보인다…!'],think:['흠… 이건 억지로라도 되겠는데?','🤔 어떻게 우겨야 하지…'],stretch:['으아~ 뻐근하다!','🙆 기지개 한 번만…'],idle:['소장 접수는 아래 큰 버튼이에요!','저는 언제든 변호할 준비가 됐어요!'],wave:['어서 오세요, 피고인!','👋 오늘도 무죄 가봅시다!']};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function coffee(){return [{p:'reach',d:1000,s:'☕ 커피 타임~'},{p:'lift',d:1000},{p:'sip',d:1900,s:'후루룩… 크으~'},{p:'lift',d:800},{p:'reach',d:1000,hold:1},{p:'work',d:300}]}
+function plan(){return [{p:'work',d:6500,s:rnd(SAY.work)}].concat(coffee(),[{p:'work',d:5500,s:rnd(SAY.work)},{p:'think',d:3200,s:rnd(SAY.think)},{p:'work',d:5000},{p:'stretch',d:3400,s:rnd(SAY.stretch)},{p:'idle',d:3200,s:rnd(SAY.idle)}])}
+let queue=[{p:'wave',d:2600,s:rnd(SAY.wave)}].concat(plan()),step=null,stepEnd=0,bubbleOff=0;
+function say(s,ms){const b=$('bubble');if(!s){b.classList.remove('on');return}b.textContent=s;b.classList.add('on');bubbleOff=t+(ms||2600)/1000}
+function nextStep(){if(!queue.length)queue=plan();step=queue.shift();tgt=P[step.p];stepEnd=t+step.d/1000;if(step.s)say(step.s,Math.min(step.d,3400))}
+function tick(dtMs){const dt=Math.min(dtMs,64)/1000;t+=dt;if(!step||t>=stepEnd)nextStep();if(bubbleOff&&t>bubbleOff){say(null);bubbleOff=0}render(dt)}
+let last=0;function loop(ts){if(last)tick(ts-last);last=ts;requestAnimationFrame(loop)}
+$('cw').addEventListener('click',()=>{const lines=['앗! 간지러워요~','소장 접수는 아래 버튼!','제 변론, 믿어 보세요!','커피 마시는 중인데…!'];queue.unshift({p:'wave',d:1800,s:rnd(lines)});stepEnd=0});
+/* ------------------ 화면 구성: 시간대 / 크기 / 정보 패널 ------------------ */
+(function(){const h=new Date().getHours(),s=$('scene');s.className=(h>=6&&h<17)?'day':(h>=17&&h<20)?'dusk':'night';
+ if(s.className==='night'){const sun=$('sun');sun.style.boxShadow='inset -14px -4px 0 #26306f,0 0 30px #fff3b0'}
+ $('p_rank').textContent=D.icon+' '+D.rank;$('p_rep').textContent=D.rep+'점';$('p_gauge').style.width=D.pct+'%';
+ $('p_next').textContent=D.next?('다음 랭크 '+D.next+'까지 '+D.need+'점'):'최고 랭크! 평판을 지켜내세요';
+ $('p_streak').textContent=D.streak+'연승';$('p_wins').textContent=D.wins+' / '+D.trials;
+ let pips='';for(let i=0;i<D.feeMax;i++)pips+='<i class="pip'+(i<D.fee?' on':'')+'"></i>';$('p_fee').innerHTML=pips+' '+D.fee+'/'+D.feeMax})();
+function fit(){const s=$('scene'),H=s.clientHeight-128,W=s.clientWidth;let w=H*1.25;if(w>W*1.1)w=W*1.1;const h=w/1.25;$('chara').style.width=w+'px';$('chara').style.height=h+'px'}
+window.addEventListener('resize',fit);fit();
+window.__lobby={tick:tick,pose:function(name,dur){tgt=P[name];step={p:name};stepEnd=1e9;queue=[]},state:function(){return {cur:cur,holding:holding}}};
+requestAnimationFrame(loop);
+</script></body></html>"""
+
+
+def render_lobby(data, height=540):
+    payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    components.html(LOBBY_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
