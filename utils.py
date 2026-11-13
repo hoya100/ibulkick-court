@@ -20,6 +20,7 @@ from config import (
 )
 from characters import (
     FORM_HINTS,
+    NAME_OF,
     facts_block,
     phase1_prompt,
     phase2_prompt,
@@ -117,10 +118,10 @@ def reset_run():
 
 def watch_ad():
     """광고 시청 → 선임비 +1 충전 연출. (실제 광고가 아닌 데모 연출입니다)"""
-    bar = st.progress(0, text="📺 [광고] 우기기 변호사 사무소 — 억지도 법이다! (연출용 가상 광고)")
+    bar = st.progress(0, text=f"📺 [광고] {NAME_OF['LAWYER']} 법률사무소 — 변론은 여유롭게~ (연출용 가상 광고)")
     for i in range(1, 41):
         time.sleep(0.1)
-        bar.progress(i / 40, text=f"📺 [광고] 우기기 변호사 사무소 — 억지도 법이다! ({4 - i // 10}초)")
+        bar.progress(i / 40, text=f"📺 [광고] {NAME_OF['LAWYER']} 법률사무소 — 변론은 여유롭게~ ({4 - i // 10}초)")
     add_fee(1)
     ss["toast"] = "✅ 변호사 선임비가 +1 충전되었습니다!"
     st.rerun()
