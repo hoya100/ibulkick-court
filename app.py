@@ -79,7 +79,9 @@ from openai import (
 from config import (
     APP_CSS,
     FEE_MAX,
+    LOBBY_H,
     LOBBY_TIPS,
+    RANKS,
     MODEL_CANDIDATES,
     PAGE_ICON,
     PAGE_LAYOUT,
@@ -90,6 +92,7 @@ from config import (
 )
 from templates import (
     TITLE_HTML,
+    render_lobby,
     render_story,
     render_vn,
     result_panel_html,
@@ -330,38 +333,49 @@ elif stage == "STORY":
 
 # ---------------- LOBBY ----------------
 elif stage == "LOBBY":
-    lobby_left, lobby_right = st.columns([1.25, 1], gap="large")  # 가로 화면: 왼쪽 장면 / 오른쪽 메뉴
-    with lobby_left:
+    # 서브컬처풍 로비: 가운데 캐릭터 장면(iframe) 위에 버튼을 겹쳐 배치한다.
+    #   왼쪽 위 = 작은 메뉴 / 오른쪽 아래 = 타이틀로 / 아래 가운데 = 큼직한 [소장 접수]
+    lobby_p = ss["profile"]
+    lobby_idx, lobby_icon, lobby_rank, lobby_cur, lobby_nxt = rank_info(lobby_p["rep"])
+    with st.container(key="lobby_stage"):
+        render_lobby(
+            {
+                "icon": lobby_icon, "rank": lobby_rank, "rep": lobby_p["rep"],
+                "pct": 100 if lobby_nxt is None else int(min((lobby_p["rep"] - lobby_cur) / (lobby_nxt - lobby_cur), 1) * 100),
+                "next": None if lobby_nxt is None else f"{RANKS[lobby_idx + 1][1]} {RANKS[lobby_idx + 1][2]}",
+                "need": 0 if lobby_nxt is None else lobby_nxt - lobby_p["rep"],
+                "streak": lobby_p.get("streak", 0), "wins": lobby_p["wins"], "trials": lobby_p["trials"],
+                "fee": ss["fee"], "feeMax": FEE_MAX,
+            },
+            height=LOBBY_H,
+        )
+        with st.container(key="lobby_ui"):
+            with st.container(key="lb_side"):
+                if st.button("⚙️ 설정", use_container_width=True, key="nav_set"):
+                    settings_dialog()
+                if st.button("👤 프로필", use_container_width=True, key="nav_prof"):
+                    profile_dialog()
+                if st.button("🛒 상점", use_container_width=True, key="nav_shop"):
+                    shop_dialog()
+                if st.button("📖 스토리", use_container_width=True, key="nav_story"):
+                    go("STORY")
+            with st.container(key="lobby_main"):
+                if st.button("⚖️ 소장 접수 (재판 시작)", use_container_width=True, key="b_court", disabled=ss["fee"] <= 0 or not key_format_ok()):
+                    reset_run()
+                    go("INPUT")
+            with st.container(key="lb_corner"):
+                if st.button("◀ 타이틀", use_container_width=True, key="b_to_title"):
+                    go("TITLE")
+    key_guard()
+    if ss["fee"] <= 0:
+        eta = fee_eta() or 0
         st.markdown(
-            '<div class="lobby-hero"><div class="stars"></div><div class="bldg">🏛️</div>'
-            '<div class="lh-t">오늘의 법정이 열렸습니다<small>무죄를 받아내고 평판을 지켜 보세요!</small></div></div>',
+            '<div class="loading" style="color:#ff9b9b">💸 변호사 선임비가 바닥났습니다!'
+            '<small>우기기 변호사가 "선임비 없으면 억지도 없다"며 퇴장했습니다 · '
+            f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
             unsafe_allow_html=True,
         )
-        st.markdown(f'<div class="tip">💡 {random.choice(LOBBY_TIPS)} · 재판 1회에 선임비 1 소모</div>', unsafe_allow_html=True)
-    with lobby_right:
-        ready = key_guard()
-        if ss["fee"] <= 0:
-            eta = fee_eta() or 0
-            st.markdown(
-                '<div class="loading" style="color:#ff9b9b">💸 변호사 선임비가 바닥났습니다!'
-                '<small>우기기 변호사가 "선임비 없으면 억지도 없다"며 퇴장했습니다 · '
-                f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
-                unsafe_allow_html=True,
-            )
-        with st.container(key="lobby_main"):
-            if st.button("⚖️ 소장 접수 (재판 시작)", use_container_width=True, key="b_court", disabled=ss["fee"] <= 0 or not ready):
-                reset_run()
-                go("INPUT")
-        with st.container(key="nav3"):
-            n1, n2, n3 = st.columns(3)
-            if n1.button("⚙️ 설정", use_container_width=True, key="nav_set"):
-                settings_dialog()
-            if n2.button("👤 프로필", use_container_width=True, key="nav_prof"):
-                profile_dialog()
-            if n3.button("🛒 상점", use_container_width=True, key="nav_shop"):
-                shop_dialog()
-        if st.button("◀ 타이틀로", key="b_to_title"):
-            go("TITLE")
+    st.markdown(f'<div class="tip">💡 {random.choice(LOBBY_TIPS)} · 재판 1회에 선임비 1 소모</div>', unsafe_allow_html=True)
 
 # ---------------- INPUT ----------------
 elif stage == "INPUT":
