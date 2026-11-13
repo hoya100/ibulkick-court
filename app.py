@@ -102,7 +102,6 @@ from llm_handler import (
     call_llm_json,
     key_format_ok,
     make_client,
-    run_with_overlay,
 )
 from utils import (
     add_fee,
@@ -398,15 +397,18 @@ elif stage == "INPUT":
             start_job("p1", "INPUT")
     show_error()
 
-# ---------------- LOADING (풀스크린 로딩/전환 연출) ----------------
+# ---------------- LOADING → '대기 연출' (로딩 화면 없이, 판사가 서류를 살피며 고민하는 풀스크린 장면) ----------------
 elif stage == "LOADING":
     job = ss.get("job")
     if not job:
         go("LOBBY")
     kind, back = job["kind"], job["back"]
     args, kwargs = build_call(kind)
+    # 장면(iframe)을 먼저 화면에 띄운 뒤, 그 장면이 계속 연기하는 동안 AI 응답을 기다린다.
+    with st.container(key="wait_stage"):
+        render_vn("wait", [], phase=kind, height=VN_H, **vn_opts())
     try:
-        raw = run_with_overlay(kind, call_llm_json, *args, **kwargs)
+        raw = call_llm_json(*args, **kwargs)
         nxt = apply_result(kind, raw)
         ss.pop("job", None)
         go(nxt)
