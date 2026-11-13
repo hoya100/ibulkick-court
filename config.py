@@ -120,8 +120,6 @@ iframe{ border:4px solid #2a2f57; box-shadow:6px 6px 0 #000; background:#000; }
 @keyframes glow{ 50%{ filter:brightness(1.28); } }
 .tip{ margin:12px 0; padding:8px 12px; font-size:12px; color:#b8c4e8; border-left:4px solid #c9b26b; background:#10162e; }
 
-/* ---------- 전체 화면 로딩 ---------- */
-  background:radial-gradient(#1b2350,#05070f 72%); animation:lfin .35s; }
 iframe{ animation:pagein .6s; }
 @keyframes pagein{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
@@ -275,6 +273,17 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .st-key-wait_stage iframe{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important;
   margin:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; animation:none !important; }
 .stApp:has(.st-key-wait_stage), body:has(.st-key-wait_stage){ overflow:hidden !important; }
+/* ============ 변명 입력칸: 평소엔 숨겨 두고, '변명 차례'가 되면 아래에서 튀어 올라온다 ============ */
+.st-key-excuse_gate{ display:none; }
+.stApp:has(.st-key-excuse_gate:not([data-open="1"])) [data-testid="stBottom"]{ transform:translateY(140%); opacity:0; pointer-events:none;
+  transition:transform .5s cubic-bezier(.2,1.25,.3,1), opacity .3s; }
+/* 안전장치: 연출이 부모 화면에 접근하지 못하는 환경이면 6초 뒤 입력창을 자동으로 보여 준다 */
+.stApp:has(.st-key-excuse_gate:not([data-gate="1"]):not([data-open="1"])) [data-testid="stBottom"]{ animation:exFail 0s linear 6s forwards; }
+@keyframes exFail{ to{ transform:none; opacity:1; pointer-events:auto; } }
+.stApp:has(.st-key-excuse_gate[data-open="1"]) [data-testid="stBottom"]{ transform:none; opacity:1; pointer-events:auto;
+  transition:transform .55s cubic-bezier(.2,1.25,.3,1), opacity .3s; }
+.stApp:has(.st-key-excuse_gate[data-open="1"]) [data-testid="stChatInput"]{ animation:exGlow 1.2s ease-out 2; }
+@keyframes exGlow{ 0%,100%{ outline:0 solid #ffd23f00; } 50%{ outline:6px solid #ffd23fcc; } }
 """
 
 # =================================================================
