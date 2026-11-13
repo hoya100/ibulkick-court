@@ -156,7 +156,7 @@ def key_guard():
     return False
 
 # ---------------- 모달(프로필 / 설정 / 상점) ----------------
-@st.dialog("👤 내 프로필")
+@st.dialog("👤 내 프로필", width="large")
 def profile_dialog():
     p = ss["profile"]
     _, icon, rname, cur, nxt = rank_info(p["rep"])
@@ -330,50 +330,56 @@ elif stage == "STORY":
 
 # ---------------- LOBBY ----------------
 elif stage == "LOBBY":
-    st.markdown(
-        '<div class="lobby-hero"><div class="stars"></div><div class="bldg">🏛️</div>'
-        '<div class="lh-t">오늘의 법정이 열렸습니다<small>무죄를 받아내고 평판을 지켜 보세요!</small></div></div>',
-        unsafe_allow_html=True,
-    )
-    ready = key_guard()
-    if ss["fee"] <= 0:
-        eta = fee_eta() or 0
+    lobby_left, lobby_right = st.columns([1.25, 1], gap="large")  # 가로 화면: 왼쪽 장면 / 오른쪽 메뉴
+    with lobby_left:
         st.markdown(
-            '<div class="loading" style="color:#ff9b9b">💸 변호사 선임비가 바닥났습니다!'
-            '<small>우기기 변호사가 "선임비 없으면 억지도 없다"며 퇴장했습니다 · '
-            f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
+            '<div class="lobby-hero"><div class="stars"></div><div class="bldg">🏛️</div>'
+            '<div class="lh-t">오늘의 법정이 열렸습니다<small>무죄를 받아내고 평판을 지켜 보세요!</small></div></div>',
             unsafe_allow_html=True,
         )
-    with st.container(key="lobby_main"):
-        if st.button("⚖️ 소장 접수 (재판 시작)", use_container_width=True, key="b_court", disabled=ss["fee"] <= 0 or not ready):
-            reset_run()
-            go("INPUT")
-    st.markdown(f'<div class="tip">💡 {random.choice(LOBBY_TIPS)} · 재판 1회에 선임비 1 소모</div>', unsafe_allow_html=True)
-    with st.container(key="nav3"):
-        n1, n2, n3 = st.columns(3)
-        if n1.button("⚙️ 설정", use_container_width=True, key="nav_set"):
-            settings_dialog()
-        if n2.button("👤 프로필", use_container_width=True, key="nav_prof"):
-            profile_dialog()
-        if n3.button("🛒 상점", use_container_width=True, key="nav_shop"):
-            shop_dialog()
-    if st.button("◀ 타이틀로", key="b_to_title"):
-        go("TITLE")
+        st.markdown(f'<div class="tip">💡 {random.choice(LOBBY_TIPS)} · 재판 1회에 선임비 1 소모</div>', unsafe_allow_html=True)
+    with lobby_right:
+        ready = key_guard()
+        if ss["fee"] <= 0:
+            eta = fee_eta() or 0
+            st.markdown(
+                '<div class="loading" style="color:#ff9b9b">💸 변호사 선임비가 바닥났습니다!'
+                '<small>우기기 변호사가 "선임비 없으면 억지도 없다"며 퇴장했습니다 · '
+                f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
+                unsafe_allow_html=True,
+            )
+        with st.container(key="lobby_main"):
+            if st.button("⚖️ 소장 접수 (재판 시작)", use_container_width=True, key="b_court", disabled=ss["fee"] <= 0 or not ready):
+                reset_run()
+                go("INPUT")
+        with st.container(key="nav3"):
+            n1, n2, n3 = st.columns(3)
+            if n1.button("⚙️ 설정", use_container_width=True, key="nav_set"):
+                settings_dialog()
+            if n2.button("👤 프로필", use_container_width=True, key="nav_prof"):
+                profile_dialog()
+            if n3.button("🛒 상점", use_container_width=True, key="nav_shop"):
+                shop_dialog()
+        if st.button("◀ 타이틀로", key="b_to_title"):
+            go("TITLE")
 
 # ---------------- INPUT ----------------
 elif stage == "INPUT":
     st.markdown('<div class="doc-head">소 장 접 수<small>― 흑역사를 고발하라 ―</small></div>', unsafe_allow_html=True)
     ready = key_guard()
     with st.container(key="paper"):
-        name = st.text_input("피고인 성명 (닉네임)", value=ss["user_name"], max_chars=12)
-        history = st.text_area(
-            "흑역사 내용 (1,000자 제한)", value=ss.get("history_text", ""), max_chars=1000, height=170,
-            placeholder="예: 새벽 2시에 감성에 젖어 싸이월드 감성 글을 올렸습니다...",
-        )
-        st.caption("※ 입력한 내용만 사실로 취급됩니다. 상황이 구체적일수록 공방이 더 정확해집니다. · 재판 1회에 변호사 선임비 1이 듭니다.")
-        c1, c2 = st.columns(2)
-        back = c1.button("◀ 로비", use_container_width=True)
-        start = c2.button("⚖️ 재판 개시", use_container_width=True, disabled=ss["fee"] <= 0 or not ready)
+        paper_left, paper_right = st.columns([1, 1.7], gap="large")  # 가로 화면: 왼쪽 정보·버튼 / 오른쪽 넓은 입력칸
+        with paper_left:
+            name = st.text_input("피고인 성명 (닉네임)", value=ss["user_name"], max_chars=12)
+        with paper_right:
+            history = st.text_area(
+                "흑역사 내용 (1,000자 제한)", value=ss.get("history_text", ""), max_chars=1000, height=250,
+                placeholder="예: 새벽 2시에 감성에 젖어 싸이월드 감성 글을 올렸습니다...",
+            )
+        with paper_left:
+            st.caption("※ 입력한 내용만 사실로 취급됩니다. 상황이 구체적일수록 공방이 더 정확해집니다. · 재판 1회에 변호사 선임비 1이 듭니다.")
+            start = st.button("⚖️ 재판 개시", use_container_width=True, disabled=ss["fee"] <= 0 or not ready)
+            back = st.button("◀ 로비", use_container_width=True)
     if back:
         go("LOBBY")
     if start:
@@ -449,9 +455,11 @@ elif stage == "VERDICT":
     render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", **vn_opts())
     if res and not ss.get("show_result"):
         st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
-        if st.button("📊 평판 · 랭크 결과 확인", use_container_width=True, key="b_show_result"):
-            ss["show_result"] = True
-            st.rerun()
+        _, show_col, _ = st.columns([1, 2, 1])
+        with show_col:
+            if st.button("📊 평판 · 랭크 결과 확인", use_container_width=True, key="b_show_result"):
+                ss["show_result"] = True
+                st.rerun()
     elif res:
         st.markdown(result_panel_html(res), unsafe_allow_html=True)
         if res["dir"] > 0 and res["rank_after"].startswith("👑"):
@@ -461,7 +469,7 @@ elif stage == "VERDICT":
             st.success(f"🎉 랭크 상승! 이제 {res['rank_after']}입니다!")
         elif res["dir"] < 0:
             st.warning(f"😱 랭크 하락… {res['rank_after']}(으)로 떨어졌어요. 다음 재판에서 무죄로 방어하세요!")
-    _, c, _ = st.columns([1, 3, 1])
+    _, c, _ = st.columns([1, 2, 1])
     with c:
         if st.button("🏠 로비로 돌아가기", use_container_width=True, key="b_lobby_back"):
             reset_run()
