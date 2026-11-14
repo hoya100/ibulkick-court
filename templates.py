@@ -413,7 +413,7 @@ const COMBO={
  p_ask:[{d:0,pose:'ask',rate:9,yaw:-10}],
  p_slam:[{d:0,pose:'windup',rate:15,yaw:-5,sfx:'whoosh'},
   {d:170,pose:'slam',rate:44,look:'PSLAM',yaw:-24,fast:1,flinch:.55,thud:1,expr:'angry'},
-  {d:560,set:{lx:HDXj-74,ly:84,pa:-8},rate:38,sfx:'cut'},
+  {d:560,set:{lx:HDXj-54,ly:108,pa:182},rate:38,sfx:'cut'},
   {d:860,rapid:1}],
  p_panic:[{d:0,pose:'panic',rate:14,expr:'panic',yaw:-6,sfx:'gasp'},{d:250,jit:.5},{d:750,jit:0}],
  /* 판사 서판결: 서류 더미에 파묻힘 → 이마 박기 → 망치 */
@@ -435,7 +435,7 @@ function beat(c,b){const F=BUST[c];if(!F)return;
  if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
  if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
  if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
- if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-64,ly:92,pa:-14}:{lx:HDXj-76,ly:82,pa:-4},{rate:40});Stage.flinch(.06);sfx('cut')},260)}}
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-48,ly:102,pa:172}:{lx:HDXj-54,ly:110,pa:184},{rate:40});Stage.flinch(.06);sfx('cut')},260)}}
 function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
 /* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
 function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
@@ -1287,6 +1287,10 @@ const HD_HAIR={
    hdArc(px,0,26,23,15,200,340,C.lt,U);hdArc(px,0,25,21,13,215,325,C.hi,U);hdFlyaways(px,U,C,5,(x,y)=>y<30||Math.abs(x-HDX)>30);return U}}};
 /* ----- 의상: 왼쪽 위 빛 기준 명암 + 접힌 주름 + 칼라/넥타이/핀 ----- */
 function hdRegion(px,pts,C,o){o=o||{};const m=hdPoly(px.w,px.h,hdAbs(pts));hdPaint(px,m,C.base);const sh=hdEdge(m,px.w,px.h,o.sd||2,o.sd||2),lt=hdEdge(m,px.w,px.h,-1,-1);if(!o.noSh)hdPaint(px,hdSub(sh,lt),C.sh);if(!o.noLt)hdPaint(px,hdSub(lt,sh),C.lt||C.hi);return m}
+/* 가슴: 재킷 위에 둥근 볼륨(윗면 하이라이트 + 아랫면 그림자 초승달 + 가슴골 주름)을 얹는다 */
+function HD_BUST(px,J,S,bx,by,rx,ry){const w=px.w,h=px.h;[-1,1].forEach(m=>{const cx=HDX+m*bx,full=hdEll(w,h,cx,by,rx,ry),up=hdEll(w,h,cx,by-2.4,rx,ry),cres=hdAnd(J,hdSub(full,up)),hi=hdAnd(J,hdEll(w,h,cx+m*3,by-4,rx*.5,ry*.38));
+  hdPaint(px,hdAnd(J,hdSub(full,hdEll(w,h,cx,by+3,rx+1,ry))),S.lt);hdPaint(px,cres,S.sh);hdPaint(px,hi,S.hi);
+  const under=hdAnd(J,hdSub(hdEll(w,h,cx,by+3.5,rx+1,ry),hdEll(w,h,cx,by+1.2,rx+1,ry)));hdPaint(px,under,S.deep)})}
 const HD_OUTFIT={
  judge_robe(px,R){const w=px.w,h=px.h,RB=R.robe,SH=R.shirt,T=R.tie;
   const neck=hdRegion(px,[[-9,80],[9,80],[10,100],[-10,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,87,14,6.5)),R.skin.deep);
@@ -1303,8 +1307,9 @@ const HD_OUTFIT={
   return {base:RB.base,lt:RB.lt,sh:RB.sh,w:17}},
  slim_suit(px,R){const w=px.w,h=px.h,S=R.suit,T=R.tie,SH=R.shirt;
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
-  const J=hdRegion(px,[[-35,97],[35,97],[39,108],[32,150],[35,232],[-35,232],[-32,150],[-39,108]],S,{sd:3});
-  hdPolyline(px,hdAbs([[-30,112],[-28,132],[-31,150]]),S.sh,J);hdPolyline(px,hdAbs([[30,112],[28,132],[31,150]]),S.deep,J);hdPolyline(px,hdAbs([[-27,114],[-25,134]]),S.lt,J);
+  const J=hdRegion(px,[[-34,97],[34,97],[38,108],[39,124],[33,140],[24,154],[28,174],[35,200],[36,232],[-36,232],[-35,200],[-28,174],[-24,154],[-33,140],[-39,124],[-38,108]],S,{sd:3});
+  hdPolyline(px,hdAbs([[-31,112],[-31,130],[-24,152]]),S.sh,J);hdPolyline(px,hdAbs([[31,112],[31,130],[24,152]]),S.deep,J);hdPolyline(px,hdAbs([[-28,114],[-27,132]]),S.lt,J);
+  HD_BUST(px,J,S,13,127,11,9);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-40,97],[40,97],[40,101],[-40,101]]))),S.lt);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,134]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,134]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-12,94],[-27,99],[-23,136],[-8,127]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-12,94],[-27,99],[-23,136]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-8,127],[-23,136]])),S.sh);
@@ -1317,9 +1322,10 @@ const HD_OUTFIT={
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
   const legC={base:hdMix(S.base,[10,10,20],.12),sh:S.sh,lt:S.lt};
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const leg=hdRegion(px,f([[-34,186],[-1,186],[-1,232],[-30,232]]),legC,{sd:3});hdPolyline(px,hdAbs(f([[-16,190],[-15,232]])),S.lt,leg);hdPolyline(px,hdAbs(f([[-2,190],[-2,232]])),S.deep,leg)});
-  const J=hdRegion(px,[[-39,97],[39,97],[43,110],[40,160],[44,192],[-44,192],[-40,160],[-43,110]],S,{sd:3});
-  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-34,114],[-33,140],[-36,170]]),S.sh,J);hdPolyline(px,hdAbs([[34,114],[33,140],[36,170]]),S.deep,J);hdPolyline(px,hdAbs([[-31,116],[-30,140]]),S.lt,J);
-  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-43,192],[43,192]]),S.deep,J);
+  const J=hdRegion(px,[[-38,97],[38,97],[42,110],[43,126],[37,142],[27,158],[31,176],[42,192],[-42,192],[-31,176],[-27,158],[-37,142],[-43,126],[-42,110]],S,{sd:3});
+  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-35,114],[-35,132],[-26,158]]),S.sh,J);hdPolyline(px,hdAbs([[35,114],[35,132],[26,158]]),S.deep,J);hdPolyline(px,hdAbs([[-32,116],[-31,134]]),S.lt,J);
+  HD_BUST(px,J,S,14,130,12,10);
+  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-42,192],[42,192]]),S.deep,J);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,148]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,148]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-10,94],[-27,100],[-29,138],[-20,152],[-4,134]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-10,94],[-27,100],[-29,138],[-20,152]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-20,152],[-4,134]])),S.sh);hdPolyline(px,hdAbs(f([[-27,100],[-21,108],[-10,106]])),S.deep);
    hdRegion(px,f([[-11,93],[-3,99],[-12,107],[-15,98]]),{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:1})});
@@ -1359,9 +1365,12 @@ function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRam
  F.setExpr=function(name){const E=(D.expr||{})[name]||(D.expr||{}).neutral||{},S=F.state;S.baseMouth=(E.mouth&&mouths[E.mouth])?E.mouth:md.def;S.mouth=S.baseMouth;S.brow=E.brow||0;S.lid=E.lid||0;S.gx=E.gx||0;S.gy=E.gy||0;S.fx=(E.fx||[]).join(',');F.expr=name};
  F.render=function(ctx,o){o=o||{};ctx.imageSmoothingEnabled=false;const cx=o.cx||0,cy=o.cy||0,ty=Math.round(o.ty||0),lean=Math.round(o.lean||0),tilt=o.tilt||0;
   const tn=o.turn||0,dB=Math.round(-tn*.5),dT=Math.round(tn*.3),dF=Math.round(tn),dH=Math.round(tn*.6);   /* 3/4 반측면: 머리·얼굴·앞머리·몸을 서로 다른 양만큼 밀어 시차로 '고개 돌림' 입체감을 낸다 */
-  ctx.drawImage(cv.back,-cx+dB,ty+Math.round(lean*.85)-cy);ctx.drawImage(cv.torso,-cx+dT,ty-cy);F.composeHead(Math.round(tn*.6));
-  const dh=(img,dx)=>{if(Math.abs(tilt)<0.6)ctx.drawImage(img,-cx+dx,ty+lean-cy);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)ctx.drawImage(img,0,y,W,1,-cx+dx+Math.round((96-y)*t),ty+lean+y-cy,W,1);ctx.drawImage(img,0,104,W,H-104,-cx+dx,ty+lean+104-cy,W,H-104)}};
+  const HK=.86,hs=(fn)=>{ctx.save();const py=ty+lean-cy+96;ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';fn();ctx.restore()};
+  hs(()=>ctx.drawImage(cv.back,-cx+dB,ty+Math.round(lean*.85)-cy));ctx.drawImage(cv.torso,-cx+dT,ty-cy);F.composeHead(Math.round(tn*.6));
+  const hb=F._hb||(F._hb=document.createElement('canvas'));if(hb.width!==W+40){hb.width=W+40;hb.height=H}const bx=hb.getContext('2d');bx.imageSmoothingEnabled=false;bx.clearRect(0,0,hb.width,hb.height);
+  const dh=(img,dx)=>{if(Math.abs(tilt)<0.6)bx.drawImage(img,dx+20,0);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)bx.drawImage(img,0,y,W,1,dx+20+Math.round((96-y)*t),y,W,1);bx.drawImage(img,0,104,W,H-104,dx+20,104,W,H-104)}};
   dh(headC,dF);dh(cv.hairF,dH);
+  {const py=ty+lean-cy+96;ctx.save();ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(hb,-cx-20,ty+lean-cy);ctx.restore();ctx.imageSmoothingEnabled=false}
   if(o.arms){const cw=o.cw||W,ch=o.ch||H;F._arc=F._arc||{};
    ['L','R'].forEach(k=>{const a=o.arms[k];if(!a)return;const pts=[a.S,a.E,a.H].map(q=>[q[0]-cx,q[1]-cy]),xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]),
     x0=Math.max(0,Math.floor(Math.min.apply(null,xs))-12),y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-12),x1=Math.min(cw,Math.ceil(Math.max.apply(null,xs))+12),y1=Math.min(ch,Math.ceil(Math.max.apply(null,ys))+12),bw=x1-x0,bh=y1-y0;if(bw<=0||bh<=0)return;
@@ -1398,9 +1407,9 @@ const HD_POSES={
   gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
  PROSECUTOR:{
   main:{turn:-3,la:1,lx:HDX+8,ly:140,ra:1,rx:HDX-8,ry:146},
-  windup:{turn:-4,lean:-4,tilt:-2,ty:-2,la:1,lx:HDX-46,ly:80,pl:1,pa:-70,ra:1,rx:HDX+30,ry:120},
-  slam:{turn:-9,lean:14,tilt:-3,ty:8,la:1,lx:HDX-60,ly:92,pl:1,pa:-15,ra:1,rx:HDX+34,ry:168,burst:1},
-  ask:{turn:-6,lean:3,tilt:-2,la:1,lx:HDX-56,ly:100,pl:1,pa:-20,ra:1,rx:HDX-8,ry:146},
+  windup:{turn:-4,lean:-4,tilt:-2,ty:-2,la:1,lx:HDX-34,ly:84,pl:1,pa:-120,ra:1,rx:HDX+30,ry:130},
+  slam:{turn:-9,lean:12,tilt:-3,ty:8,la:1,lx:HDX-52,ly:106,pl:1,pa:176,ra:1,rx:HDX+34,ry:176,burst:1},
+  ask:{turn:-6,lean:3,tilt:-2,la:1,lx:HDX-48,ly:112,pl:1,pa:178,ra:1,rx:HDX-8,ry:150},
   panic:{turn:-4,lean:-3,tilt:-3,ty:1,la:1,lx:HDX+8,ly:134,ra:1,rx:HDX-8,ry:140}},
  LAWYER:{
   smug:{turn:5,lean:3,tilt:-5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
@@ -1410,7 +1419,7 @@ HD_POSES.LAWYER.main=HD_POSES.LAWYER.smug;
 const HD_BASE_POSE={tilt:0,lean:0,ty:0,turn:0,desk:0,docs:0,gv:0,gon:0,pl:0,pa:0,doze:0,jit:0};
 function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=268;cvs.height=400;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
  const tmp=document.createElement('canvas');tmp.width=134;tmp.height=200;const tctx=tmp.getContext('2d',{willReadFrequently:true});tctx.imageSmoothingEnabled=false;
- const sd=F.style,CXo=33,CYo=3,SLx=HDX-sd.shoulder_dx,SRx=HDX+sd.shoulder_dx,SYo=sd.shoulder_y,L1=26,L2=27.5,REST={L:[SLx-4,SYo+54],R:[SRx+4,SYo+54]};
+ const sd=F.style,CXo=33,CYo=3,SLx=HDX-sd.shoulder_dx,SRx=HDX+sd.shoulder_dx,SYo=sd.shoulder_y,L1=32,L2=34,REST={L:[SLx-4,SYo+64],R:[SRx+4,SYo+64]};
  const NUM=['lx','ly','rx','ry','tilt','lean','ty','turn','desk','docs','gv','gon','pl','pa','doze','jit','burst'];
  const base0=()=>Object.assign({},HD_BASE_POSE,{lx:REST.L[0],ly:REST.L[1],rx:REST.R[0],ry:REST.R[1],burst:0});
  const cur=base0(),tgt=base0();let armL=false,armR=false,laT=false,raT=false,rate=9,t=0,raf=0,lastTs=0,lastDraw=0,hl=[0,0],hr=[0,0],talk=null;
