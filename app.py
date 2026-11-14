@@ -48,7 +48,7 @@ import streamlit as st
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)  # app.py 와 같은 폴더의 모듈을 항상 찾을 수 있게 함
-_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py"]
+_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py", "stage.py"]
 _present = os.listdir(_HERE)
 _missing = []
 for _f in _REQUIRED_FILES:
@@ -107,7 +107,7 @@ if _stale:
     st.markdown("**맞지 않는 부분**\n\n" + "\n".join(f"- {m}" for m in _stale))
     st.markdown(
         "**해결 방법**\n\n"
-        "1. 같은 시점에 받은 6개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
+        "1. 같은 시점에 받은 7개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
         "2. 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
     )
     with st.expander("서버에 올라간 파일 크기(줄 수)"):
@@ -496,7 +496,7 @@ elif stage == "LOADING":
 elif stage == "DEBATE1":
     render_vn(
         "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
-        phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", **vn_opts(),
+        phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, **vn_opts(),
     )
     st.caption("▶ 화면을 클릭(터치)하거나 Space/Enter로 대사를 넘기세요. 천천히 읽고, 심문이 끝나면 변명 입력창이 아래에서 올라옵니다.")
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup1"):
