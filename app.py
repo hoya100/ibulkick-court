@@ -364,20 +364,14 @@ def render_hud():
     low = " low" if ss["fee"] <= 0 else ""
     fire = f' <span class="h-fire">🔥{p["streak"]}</span>' if p.get("streak", 0) >= 2 else ""
     with st.container(key="hud"):
-        c1, c2, c3, c4 = st.columns([6.4, 1, 1, 1])
-        c1.markdown(
+        st.markdown(
             f'<div class="hud2"><div class="h-l1">👤 <b>{html.escape(ss["user_name"])}</b>'
             f'<span class="h-title">🏆 평판 {p["rep"]}</span>{fire}</div>'
             f'<div class="h-l2"><span class="h-rank">{icon} {html.escape(rname)}</span>'
             f'<span class="h-fee{low}">⚖️ <span class="pips">{pips}</span> {ss["fee"]}/{FEE_MAX}{eta_html}</span></div></div>',
             unsafe_allow_html=True,
         )
-        if c2.button("⚙️", key="hud_set", help="설정"):
-            settings_dialog()
-        if c3.button("👤", key="hud_prof", help="프로필"):
-            profile_dialog()
-        if c4.button("🛒", key="hud_shop", help="상점 (선임비 충전)"):
-            shop_dialog()
+        # (설정·프로필·상점 버튼은 로비 장면 왼쪽 메뉴에 이미 있으므로 여기서는 뺐습니다)
 
 # =================================================================
 # 화면 라우팅  TITLE →(STORY_ASK→STORY)→ LOBBY → INPUT →(LOADING)→ DEBATE1 →(LOADING)→ DEBATE2 →(LOADING)→ VERDICT
@@ -386,7 +380,8 @@ stage = ss["stage"]
 if ss.get("toast"):
     st.toast(ss.pop("toast"))
 # 판결 연출이 끝나기 전에는 HUD를 숨겨서 결과(평판/랭크)가 미리 보이지 않게 한다
-hud_hidden = stage in ("TITLE", "STORY_ASK", "STORY", "LOADING", "QUIT") or (stage == "VERDICT" and not ss.get("show_result"))
+# 재판 중(INPUT·DEBATE·LOADING)에도 숨겨서 몰입을 높인다 → 정보 표시는 로비와 결과 화면에서만
+hud_hidden = stage in ("TITLE", "STORY_ASK", "STORY", "INPUT", "LOADING", "DEBATE1", "DEBATE2", "QUIT") or (stage == "VERDICT" and not ss.get("show_result"))
 if not hud_hidden:
     render_hud()
 
@@ -446,12 +441,27 @@ elif stage == "LOBBY":
                     shop_dialog()
                 if st.button("📖 스토리", use_container_width=True, key="nav_story"):
                     go("STORY")
-            with st.container(key="lobby_main"):
-                if st.button("⚖️ 소장 접수 (재판 시작)", use_container_width=True, key="b_court", disabled=ss["fee"] <= 0 or not key_format_ok()):
-                    reset_run()
-                    go("INPUT")
+            if not ss.get("lb_menu"):
+                # [게임 시작] → 반투명 검정 가로창(lb_menu)이 열린다
+                with st.container(key="lobby_main"):
+                    if st.button("▶ 게임 시작", use_container_width=True, key="b_gamestart"):
+                        ss["lb_menu"] = True
+                        st.rerun()
+            else:
+                # ★ 콘텐츠 메뉴창: 새 콘텐츠를 만들 땐 아래 컨테이너 안에 st.button(...) 한 개만 더 추가하면
+                #   같은 모양(세로 직사각형)으로 가로로 나란히 붙습니다. (좁은 화면에서는 가로 스크롤)
+                with st.container(key="lb_menu"):
+                    if st.button("⚖️\n소장\n접수", key="b_court", disabled=ss["fee"] <= 0 or not key_format_ok()):
+                        ss["lb_menu"] = False
+                        reset_run()
+                        go("INPUT")
+                    # 예) if st.button("🎲\n새\n콘텐츠", key="b_new"): ...
+                    if st.button("✕\n닫기", key="b_menu_close"):
+                        ss["lb_menu"] = False
+                        st.rerun()
             with st.container(key="lb_corner"):
                 if st.button("◀ 타이틀", use_container_width=True, key="b_to_title"):
+                    ss["lb_menu"] = False
                     go("TITLE")
     key_guard()
     if ss["fee"] <= 0:
