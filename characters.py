@@ -31,7 +31,7 @@ SPRITE_DATA_VERSION = 7
 # 예) "https://cdn.jsdelivr.net/gh/내아이디/ibulkick-court@main/assets/models"
 MODEL_BASE_URL = "https://cdn.jsdelivr.net/gh/hoya100/ibulkick-court@main/assets/models"
 # True 이면 화면 왼쪽 위에 3D 불러오기 진행 상황이 글자로 표시됩니다(3D 가 잘 뜨는 걸 확인하면 False 로). False 여도 오류가 나면 빨간 안내가 20초간 표시됩니다.
-MODEL_DEBUG = True
+MODEL_DEBUG = False
 # 캐릭터별 모델 파일 이름과 구도 보정(zoom: 클수록 가까이, fy: 위(+)/아래(-)로 이동)
 MODEL_FILES = {"JUDGE": {"file": "judge.vrm", "zoom": 1.0, "fy": 0.0}, "PROSECUTOR": {"file": "prosecutor.vrm", "zoom": 1.0, "fy": 0.0}, "LAWYER": {"file": "lawyer.vrm", "zoom": 1.0, "fy": 0.0}}
 
