@@ -25,7 +25,7 @@
 import os
 
 # 스프라이트 데이터 형식의 버전. templates.py 의 SPRITE_ENGINE_VERSION 과 같아야 합니다 (스타일 이름·팔레트·render.mode 등을 바꿔 형식이 달라지면 둘을 같이 올리세요).
-SPRITE_DATA_VERSION = 4
+SPRITE_DATA_VERSION = 5
 
 # =================================================================
 # 1. 캐릭터 데이터 (오리지널 캐릭터 3인방)
@@ -331,17 +331,19 @@ _validate_characters()
 # mouth : 입 모양 (grin/smile/open/flat/hmm 중 하나, None 이면 캐릭터 기본 입)
 # brow  : 눈썹 위치 (음수=위로 올림, 양수=내림)     lid : 눈꺼풀 (0=기본, 1=감음)     gx/gy : 시선 (눈동자 좌우/상하)
 # fx    : 얼굴 위에 얹는 효과 (blush 볼터치 / sweat 식은땀 / tears 눈물 / vein 분노 마크)
+# icon  : 머리 옆에 잠깐 뜨는 감정 아이콘 (anger / exclaim / drop / sparkle, 없으면 None)
 # 대사 데이터(step)에 "e": "표정이름" 을 넣으면 그 표정으로, 없으면 외침 종류(F/S/O)에 따라 자동 선택됩니다.
 EXPRESSIONS = {
     "neutral":   {"label": "기본",   "mouth": None,   "brow": 0,  "lid": 0,    "gx": 0, "gy": 0, "fx": []},
-    "smirk":     {"label": "비웃음", "mouth": "grin", "brow": -1, "lid": 0.25, "gx": 1, "gy": 0, "fx": []},
-    "aggrieved": {"label": "억울함", "mouth": "hmm",  "brow": -1, "lid": 0,    "gx": 0, "gy": 2, "fx": ["blush", "sweat"]},
-    "tears":     {"label": "눈물",   "mouth": "hmm",  "brow": 1,  "lid": 0.3,  "gx": 0, "gy": 2, "fx": ["tears", "blush"]},
-    "shock":     {"label": "충격",   "mouth": "open", "brow": -2, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"]},
-    "angry":     {"label": "분노",   "mouth": "flat", "brow": 2,  "lid": 0.2,  "gx": 0, "gy": 0, "fx": ["vein"]},
+    "smirk":     {"label": "비웃음", "mouth": "grin", "brow": -2, "lid": 0.35, "gx": 1, "gy": 0, "fx": [], "icon": "sparkle"},
+    "aggrieved": {"label": "억울함", "mouth": "hmm",  "brow": -2, "lid": 0,    "gx": 0, "gy": 2, "fx": ["blush", "sweat"], "icon": "drop"},
+    "tears":     {"label": "눈물",   "mouth": "hmm",  "brow": 1,  "lid": 0.35, "gx": 0, "gy": 2, "fx": ["tears", "blush"], "icon": "drop"},
+    "shock":     {"label": "충격",   "mouth": "open", "brow": -3, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"], "icon": "exclaim"},
+    "angry":     {"label": "분노",   "mouth": "flat", "brow": 3,  "lid": 0.25, "gx": 0, "gy": 0, "fx": ["vein"], "icon": "anger"},
 }
 EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm")
 EXPR_FX = ("blush", "sweat", "tears", "vein")
+EXPR_ICONS = (None, "anger", "exclaim", "drop", "sparkle")
 
 
 def _validate_expressions():
@@ -350,6 +352,8 @@ def _validate_expressions():
     for n, e in EXPRESSIONS.items():
         if e.get("mouth") is not None and e["mouth"] not in EXPR_MOUTHS:
             raise ValueError(f"EXPRESSIONS['{n}'] mouth='{e['mouth']}' 는 없는 입 모양입니다. 가능: {EXPR_MOUTHS}")
+        if e.get("icon") not in EXPR_ICONS:
+            raise ValueError(f"EXPRESSIONS['{n}'] icon='{e.get('icon')}' 는 없는 아이콘입니다. 가능: {EXPR_ICONS}")
         bad = [f for f in e.get("fx", []) if f not in EXPR_FX]
         if bad:
             raise ValueError(f"EXPRESSIONS['{n}'] fx 에 없는 효과가 있습니다: {bad}. 가능: {EXPR_FX}")
