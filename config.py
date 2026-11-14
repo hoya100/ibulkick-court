@@ -257,6 +257,39 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .st-key-lobby_stage .st-key-lobby_main{ width:70%; }
   .st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:72px; font-size:20px; }
 }
+/* ============ 모바일 대응 + [게임 시작] 메뉴창 ============ */
+/* 타이틀 버튼: 아래(게임 시작 버튼 자리) → 오른쪽 위로 옮기고 작게 */
+.st-key-lb_corner{ right:10px !important; top:10px !important; bottom:auto !important; width:92px !important; }
+.st-key-lb_side{ width:92px !important; }
+.st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ height:38px !important; font-size:12px !important; padding:0 4px !important; }
+/* [게임 시작] 버튼은 더 아래로 / 가운데 캐릭터를 가리지 않게 낮은 높이 */
+.st-key-lobby_stage .st-key-lobby_main{ width:min(360px,60%) !important; }
+.st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:64px !important; font-size:20px !important; }
+/* 반투명 검정 가로창: 로비 장면 맨 아래에 가로로 꽉 차게 */
+.st-key-lb_menu{ position:absolute !important; left:0; right:0; bottom:0; z-index:8; pointer-events:auto;
+  display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important; align-items:center; gap:12px !important;
+  background:rgba(0,0,0,.62); padding:12px 14px; overflow-x:auto; overflow-y:hidden; border-top:2px solid #ffffff33;
+  backdrop-filter:blur(2px); }
+.st-key-lb_menu>div{ width:auto !important; flex:0 0 auto !important; min-width:0 !important; }
+.st-key-lb_menu .stButton{ padding:0 !important; }
+/* 세로 직사각형 버튼(창 높이보다 살짝 작게) */
+.st-key-lb_menu .stButton>button{ width:84px !important; height:112px !important; min-height:112px !important; padding:4px !important;
+  font-size:14px !important; line-height:1.35 !important; white-space:pre-line !important; letter-spacing:0 !important;
+  background:#ff5b4a !important; clip-path:none !important; border:3px solid #fff !important; box-shadow:3px 3px 0 #000 !important; animation:none !important; }
+.st-key-lb_menu .stButton>button, .st-key-lb_menu .stButton>button *{ color:#fff !important; text-shadow:2px 2px 0 #7a130a; white-space:pre-line !important; }
+.st-key-lb_menu .stButton>button:disabled{ background:#8a8ea6 !important; }
+.st-key-lb_menu .stButton>button:disabled, .st-key-lb_menu .stButton>button:disabled *{ color:#3d4056 !important; text-shadow:none; }
+.st-key-lb_menu .st-key-b_menu_close .stButton>button{ width:56px !important; background:#4a5070 !important; }
+@media (max-width: 760px){
+  .st-key-lb_side, .st-key-lb_corner{ width:72px !important; }
+  .st-key-lb_side{ left:6px !important; top:6px !important; }
+  .st-key-lb_corner{ right:6px !important; top:6px !important; }
+  .st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ height:32px !important; font-size:11px !important; }
+  .st-key-lobby_stage .st-key-lobby_main{ width:62% !important; }
+  .st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:56px !important; font-size:18px !important; }
+  .st-key-lb_menu{ padding:10px; gap:10px !important; }
+  .st-key-lb_menu .stButton>button{ width:76px !important; height:100px !important; min-height:100px !important; }
+}
 /* ============ '오늘의 법정' 상태 패널 (프로필 모달 안에서만 표시) ============ */
 .court-panel{ background:#10162e; color:#fff; padding:14px 16px; margin:6px 5px 14px;
   box-shadow:0 -4px 0 var(--ink),0 4px 0 var(--ink),-4px 0 0 var(--ink),4px 0 0 var(--ink),inset 0 4px 0 #3b4a9a,0 10px 0 0 #0008; }
