@@ -25,7 +25,7 @@ VRM_VER = "2.1.0"
 
 RIG3D_HEAD = (
     '<script>(function(){var L=window.__rig3dLines=[],P=null;window.rig3dLog=function(m,bad){var t=((performance.now()/1000)|0)+"s ";L.push({m:t+m,bad:!!bad});(bad?console.error:console.log)("[rig3d] "+m);window.rig3dRender()};'
-    'window.rig3dRender=function(){if(!window.RIG3D_DEBUG||!document.body)return;if(!P){P=document.createElement("div");P.id="rig3d-dbg";P.style.cssText="position:fixed;left:4px;top:4px;z-index:2147483647;max-width:92%;max-height:46%;overflow:auto;background:#000c;color:#9f9;font:11px/1.35 monospace;padding:5px 7px;border-radius:6px;pointer-events:none;white-space:pre-wrap";document.body.appendChild(P)}'
+    'window.rig3dRender=function(){var bad=L.some(function(x){return x.bad});if(!(window.RIG3D_DEBUG||bad)||!document.body)return;if(!window.RIG3D_DEBUG&&!P&&!window.__rigHide)window.__rigHide=setTimeout(function(){if(P&&!window.RIG3D_DEBUG)P.style.display="none"},15000);if(!P){P=document.createElement("div");P.id="rig3d-dbg";P.style.cssText="position:fixed;left:4px;top:4px;z-index:2147483647;max-width:92%;max-height:46%;overflow:auto;background:#000c;color:#9f9;font:11px/1.35 monospace;padding:5px 7px;border-radius:6px;pointer-events:none;white-space:pre-wrap";document.body.appendChild(P)}'
     'P.innerHTML=L.map(function(x){return "<div style=\'color:"+(x.bad?"#ff8a8a":"#9f9")+"\'>"+String(x.m).replace(/</g,"&lt;")+"</div>"}).join("")};'
     'document.addEventListener("DOMContentLoaded",function(){window.rig3dRender()})})()</script>\n'
     '<script type="importmap">{"imports":{'
@@ -130,7 +130,7 @@ function vrmAttach(host,F,C,opts){
    const head=bone('head'),neck=bone('neck'),spine=bone('spine'),chest=bone('chest')||bone('upperChest')||spine,hips=bone('hips');
    const hp=head.getWorldPosition(new T.Vector3()),k=Math.max(.6,Math.min(1.6,hp.y/1.45));
    /* 상반신 구도: 머리 꼭대기~허리 (모델 키에 비례) */
-   const fov=22,H=.80*k/(M3.zoom||1),cy=hp.y-.17*k+(M3.fy||0)*k,dist=(H/2)/Math.tan(fov*Math.PI/360);
+   const fov=22,H=.86*k/(M3.zoom||1),cy=hp.y-.16*k+(M3.fy||0)*k,dist=(H/2)/Math.tan(fov*Math.PI/360);
    camera.fov=fov;camera.position.set(0,cy,dist);camera.lookAt(0,cy,0);camera.updateProjectionMatrix();
    const lookT=new T.Object3D();lookT.position.set(0,hp.y,2);scene.add(lookT);if(vrm.lookAt)vrm.lookAt.target=lookT;
    const pr=Math.min(3,Math.max(2,(window.devicePixelRatio||1)*2));   // 카메라 줌인에도 선명하도록 넉넉한 해상도
@@ -177,7 +177,7 @@ function vrmAttach(host,F,C,opts){
     arms.forEach(a=>{let tw=null;if(V.hands&&opts.map){const c=(a.s>0)?V.hands.R:V.hands.L;a.u.getWorldPosition(vT);tw=canvasToWorld(c,vT.z+.1*k,new T.Vector3())}
      if(!tw)tw=relaxedTarget(a,new T.Vector3());try{aim(a,tw)}catch(e){}});
     /* 시선 */
-    lookT.position.set(V.gx*.06*k,hp.y-V.gy*.05*k,1.6);
+    lookT.position.set(V.gx*.10*k,hp.y-V.gy*.08*k,1.6);
     /* 표정: 목표값으로 부드럽게 + 깜빡임 + 말하는 입 */
     bl.next-=dt;if(bl.t<0&&bl.next<=0){bl.t=0}
     if(bl.t>=0){bl.t+=dt;const p=bl.t/.2;bl.v=p<.5?p*2:Math.max(0,2-p*2);if(bl.t>.2){bl.t=-1;bl.v=0;bl.next=(C.motion&&C.motion.blink_s||4.6)*(.6+Math.random()*.9)}}
