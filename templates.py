@@ -17,7 +17,7 @@ from characters import expressions_payload, sprite_payload
 from stage import OVERLAYS, SCENE_HTML, STAGE_CSS, STAGE_JS, WAIT_HTML
 
 # 스프라이트 그리기 엔진의 버전. characters.py 의 SPRITE_DATA_VERSION 과 같아야 합니다.
-SPRITE_ENGINE_VERSION = 7
+SPRITE_ENGINE_VERSION = 5
 
 
 # =================================================================
@@ -196,8 +196,7 @@ html.wait #scene{display:none}
 #w-bench{position:absolute;left:0;right:0;bottom:0;background:#5a3a22;border-top:6px solid #8a5a34;box-shadow:inset 0 6px 0 #d9b85a55}
 #w-vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 120px #000a}
 /*__STAGE_CSS__*/
-</style>
-<!--__RIG3D__--></head><body>
+</style></head><body>
 <!--__WAIT__-->
 <div id="scene" data-cam="J">
 <!--__SCENE__-->
@@ -232,10 +231,9 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const A=(p,x,y,w,h,f,o)=>E('rect',Object.assign({x:x,y:y,width:w,height:h,fill:f},o||{}),p);
  const R=(p,dx,y,w,h,f,o)=>A(p,CX+dx,y,w,h,f,o);
  const OUT={stroke:INK,'stroke-width':2},THIN={stroke:INK,'stroke-width':1.2};
- const HDM=['pixel_hd','layered25d'].indexOf((D.cast.JUDGE.render||{}).mode)>=0;   // pixel_hd: 픽셀 단위 고해상도 도트(캔버스) / svg: 도형 도트
- let F=null,hdF=null,hdCtx=null,chairC=null,pal,SLV,st,rigW=null,rigArms=null;
- const RIGW=(D.cast.JUDGE.render||{}).mode==='layered25d'&&typeof rigBust==='function';
- if(HDM){hdF=hdBuildFigure('JUDGE');pal=hdF.pal;SLV=hdF.sleeve;st=hdF.style;const cv=g('jfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false;if(RIGW){rigW=rigBust(g('w-rig'),'JUDGE',{noArms:true,map:{x0:43.8,y0:3.0,w:113}});g('w-cw').classList.add('rigw')}}   // 의자는 법정 사진 속 의자를 씀
+ const HDM=(D.cast.JUDGE.render||{}).mode==='pixel_hd';   // pixel_hd: 픽셀 단위 고해상도 도트(캔버스) / svg: 도형 도트
+ let F=null,hdF=null,hdCtx=null,chairC=null,pal,SLV,st;
+ if(HDM){hdF=hdBuildFigure('JUDGE');pal=hdF.pal;SLV=hdF.sleeve;st=hdF.style;const cv=g('jfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false}   // 의자는 법정 사진 속 의자를 씀
  else{
   /* 의자 등받이 */
   const gChair=E('g');R(gChair,-52,10,104,8,GOLD,OUT);R(gChair,-50,16,100,130,'#5a3a22',OUT);R(gChair,-42,24,84,114,'#6b4528');
@@ -248,7 +246,6 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const SL=[CX-st.shoulder_dx,st.shoulder_y],SR=[CX+st.shoulder_dx,st.shoulder_y],L1=26,L2=27.5;
  function arm(gr,S){const w=SLV.w,w2=w-2;const up=E('g',{},gr);A(up,S[0]-w/2,104,w,28,SLV.color,OUT);A(up,S[0]-w/2,104,w,5,pal.robe_light||pal.suit_light||SLV.color);const fo=E('g',{},up);A(fo,S[0]-w2/2,130,w2,26,SLV.color,OUT);A(fo,S[0]-w2/2-1,150,w2+2,4,SLV.cuff,OUT);A(fo,S[0]-5,154,10,11,pal.skin,OUT);return {up:up,fo:fo}}
  const armL=HDM?null:arm(gArmL,SL),armR=HDM?null:arm(gArmR,SR);
- if(RIGW){const slc=pal.robe||'#17171d',sll=pal.robe_light||'#2c2c36';rigArms=[rigArm(gArmL,slc,sll,slc,pal.skin,15),rigArm(gArmR,slc,sll,slc,pal.skin,15)]}
  /* 손에 든 서류 / 돋보기 / 펜 */
  function paper(gr){A(gr,-15,-42,30,42,'#fff',OUT);const ls=[];for(let i=0;i<7;i++)ls.push(A(gr,-11,-37+i*5.4,22,1.8,'#9aa0bb'));E('polygon',{points:'15,-42 15,-34 7,-42',fill:'#dfe3f2'},gr);return ls}
  const linesL=paper(gPL),linesR=paper(gPR);
@@ -296,11 +293,7 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
   cur.gx=ap(cur.gx,gxT,10,dt);cur.gy=ap(cur.gy,gyT,10,dt);
   const a=ik(SL,[lx,ly]),b=ik(SR,[rx,ry]);
   const bob=Math.sin(t*1.6)*0.6,lidv=Math.max(cur.lid,((t%3.9)<0.12)?1:0);
-  if(RIGW){   // 레이어 분할 2.5D 판사: 머리·몸은 리그, 팔은 역기구학 결과로 소매 선을 그린다
-   rigW.setBrow(cur.brow);rigW.setGaze(cur.gx,cur.gy);rigW.setLid(lidv);rigW.showMouth(p.mouth);rigW.redraw();rigW.setTilt(cur.tilt+tiltAdd);rigW.setPitch(cur.lean*1.4+Math.max(0,cur.gy)*.5);rigW.setYaw(cur.gx*1.6);
-   rigArms[0].set(SL,[a.ex,a.ey],[a.hx,a.hy]);rigArms[1].set(SR,[b.ex,b.ey],[b.hx,b.hy]);
-   rigArms[0].vis(!rigW.vrmOn);rigArms[1].vis(!rigW.vrmOn);if(rigW.vrmOn)rigW.setHands([a.hx,a.hy],[b.hx,b.hy])
-  }else if(HDM){   // 픽셀 도화지에 의자·인물(머리·몸·팔)을 다시 칠한다. 움직임은 1픽셀 단위로 끊어서 도트다운 느낌을 낸다
+  if(HDM){   // 픽셀 도화지에 의자·인물(머리·몸·팔)을 다시 칠한다. 움직임은 1픽셀 단위로 끊어서 도트다운 느낌을 낸다
    hdF.setBrow(cur.brow);hdF.setGaze(cur.gx,cur.gy);hdF.setLid(lidv);hdF.showMouth(p.mouth);hdCtx.clearRect(0,0,200,160);if(chairC)hdCtx.drawImage(chairC,0,0);
    hdF.render(hdCtx,{tilt:cur.tilt+tiltAdd,lean:Math.round(bob+cur.lean),ty:(Math.sin(t*1.6)>0.4?1:0),cw:200,ch:160,arms:{L:{S:SL,E:[a.ex,a.ey],H:[a.hx,a.hy]},R:{S:SR,E:[b.ex,b.ey],H:[b.hx,b.hy]}}});
   }else{
@@ -719,7 +712,6 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 @keyframes blink{50%{opacity:.35}}
 #cw{position:absolute;left:50%;bottom:124px;transform:translateX(-50%);cursor:pointer}
 #cfig{position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated}
-#c-rig{position:absolute;left:22.2%;top:2.5%;width:55.6%;pointer-events:none;clip-path:inset(-20% -30% 6.5% -30%)}#cw.rigw #cfig{display:none}
 #chara{position:relative}
 #chara{display:block}
 #bubble{position:absolute;left:56%;bottom:100%;margin-bottom:12px;width:max-content;max-width:min(260px,58vw);background:#fff;color:var(--ink);font-size:14px;font-weight:700;padding:9px 14px 10px;opacity:0;transition:opacity .3s,transform .3s;transform:translateY(6px);box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink),-3px 0 0 var(--ink),3px 0 0 var(--ink),4px 8px 0 0 #0006;white-space:normal;word-break:keep-all;overflow-wrap:break-word;line-height:1.45;text-align:left}
@@ -729,15 +721,14 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #bar:before{content:"";position:absolute;left:0;right:0;top:-4px;height:4px;background:repeating-linear-gradient(90deg,#ffd23f 0 14px,#0d0f26 14px 20px)}
 #vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 90px #0008}
 @media (max-aspect-ratio:5/4){#sign{font-size:11px;padding:5px 10px}#bubble{left:50%;font-size:12px}}
-</style>
-<!--__RIG3D__--></head><body>
+</style></head><body>
 <div id="scene" class="day">
  <div id="sky"></div><div id="stars"></div><div id="sun"></div>
  <div class="cloud" style="top:14%;--d:90s;animation-delay:-20s"></div><div class="cloud" style="top:26%;--d:120s;animation-delay:-70s"></div><div class="cloud" style="top:8%;--d:105s;animation-delay:-45s"></div>
  <svg id="city" viewBox="0 0 400 100" preserveAspectRatio="xMidYMax slice" shape-rendering="crispEdges"></svg>
  <div id="plaza"></div><div id="papers"></div>
  <div id="sign"></div>
- <div id="cw"><div id="c-rig"></div><canvas id="cfig"></canvas><svg id="chara" viewBox="0 0 200 160" shape-rendering="crispEdges"></svg><div id="bubble"></div></div>
+ <div id="cw"><canvas id="cfig"></canvas><svg id="chara" viewBox="0 0 200 160" shape-rendering="crispEdges"></svg><div id="bubble"></div></div>
   <div id="bar"></div><div id="vig"></div>
 </div>
 <script>
@@ -769,17 +760,15 @@ const OUT={stroke:INK,'stroke-width':2};
 (function(){const p=$('papers');for(let i=0;i<12;i++){const e=document.createElement('div');e.className='paper';e.style.left=(Math.random()*96)+'%';e.style.setProperty('--fd',(11+Math.random()*9)+'s');e.style.setProperty('--fl',(-Math.random()*16)+'s');p.appendChild(e)}})();
 
 /* ------------------ 캐릭터: 한유리 변호사 — 머리·표정·의상은 characters.py 데이터대로 그린다 ------------------ */
-const HDM=['pixel_hd','layered25d'].indexOf((D.cast.LAWYER.render||{}).mode)>=0;     // pixel_hd: 픽셀 단위 고해상도 도트(캔버스) / svg: 도형 도트
+const HDM=(D.cast.LAWYER.render||{}).mode==='pixel_hd';     // pixel_hd: 픽셀 단위 고해상도 도트(캔버스) / svg: 도형 도트
 let F=null,gHead=null,gTorso=null,hdF=null,hdCtx=null;
-const RIGL=(D.cast.LAWYER.render||{}).mode==='layered25d'&&typeof rigBust==='function';let rigL=null,rigArmsL=null;
-if(HDM){hdF=hdBuildFigure('LAWYER');const cv=$('cfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false;if(RIGL){rigL=rigBust($('c-rig'),'LAWYER',{noArms:true,map:{x0:44.4,y0:4,w:111}});$('cw').classList.add('rigw')}}
+if(HDM){hdF=hdBuildFigure('LAWYER');const cv=$('cfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false}
 else{F=buildFigure($('chara'),'LAWYER');gHead=F.head;gTorso=F.torso;$('chara').setAttribute('shape-rendering',F.render.shape_rendering||'crispEdges')}
 const gArmL=E('g'),gArmR=E('g'),gDesk=E('g'),gMugDesk=E('g'),gMugHand=E('g');
 // (svg 모드 전용) 팔: 어깨→팔꿈치→손. 소매 색·폭은 의상 데이터(F.sleeve)를 따른다
 function arm(g,S){const w=F.sleeve.w-1,w2=w-1;const up=E('g',{},g);A(up,S[0]-w/2,100,w,24,F.sleeve.color,OUT);A(up,S[0]-w/2,100,w,5,F.pal.suit_light||F.sleeve.color);
  const fo=E('g',{},up);A(fo,S[0]-w2/2,122,w2,24,F.sleeve.color,OUT);A(fo,S[0]-w2/2,138,w2,3,F.sleeve.cuff);A(fo,S[0]-5,143,10,9,F.pal.skin,OUT);return {up:up,fo:fo}}
 const armL=HDM?null:arm(gArmL,SL),armR=HDM?null:arm(gArmR,SR);
-if(RIGL){const pl=hdF.pal,slc=pl.suit||'#23252e',sll=pl.suit_light||'#3a3d4a';rigArmsL=[rigArm(gArmL,slc,sll,slc,pl.skin,12),rigArm(gArmR,slc,sll,slc,pl.skin,12)]}
 // 책상 + 노트북 + 소품
 A(gDesk,0,138,200,22,'#8a5a34');A(gDesk,0,138,200,4,'#b88555');A(gDesk,0,154,200,6,'#6e4526');
 R(gDesk,-26,146,52,9,'#ffd23f',OUT);E('text',{x:CX,y:153,'font-size':6,'text-anchor':'middle',fill:INK,'font-weight':'bold'},gDesk).textContent=D.cast.LAWYER.name+' 법률사무소';
@@ -823,11 +812,7 @@ function render(dt){
  if(p.wave)rx+=Math.sin(t*9)*7;
  const a=ik(SL,[lx,ly]),b=ik(SR,[rx,ry]);
  const bob=Math.sin(t*2)*0.6+(tgt===P.work?Math.sin(t*9)*0.5:0),blink=((t%4.2)<0.13)?1:0,lid=Math.max(cur.lid,blink);
- if(RIGL){
-  rigL.setGaze(cur.gx,cur.gy);rigL.setLid(lid);rigL.showMouth(p.mouth);rigL.redraw();rigL.setTilt(cur.tilt*.8);rigL.setPitch(bob*1.2);rigL.setYaw(cur.gx*1.4);
-  rigArmsL[0].set(SL,[a.ex,a.ey],[a.hx,a.hy]);rigArmsL[1].set(SR,[b.ex,b.ey],[b.hx,b.hy]);
-  rigArmsL[0].vis(!rigL.vrmOn);rigArmsL[1].vis(!rigL.vrmOn);if(rigL.vrmOn)rigL.setHands([a.hx,a.hy],[b.hx,b.hy])
- }else if(HDM){   // 픽셀 도화지에 인물(머리·몸·팔)을 다시 칠한다. 움직임은 한 칸(1픽셀) 단위로 끊어서 도트다운 느낌을 낸다
+ if(HDM){   // 픽셀 도화지에 인물(머리·몸·팔)을 다시 칠한다. 움직임은 한 칸(1픽셀) 단위로 끊어서 도트다운 느낌을 낸다
   hdF.setGaze(cur.gx,cur.gy);hdF.setLid(lid);hdF.showMouth(p.mouth);hdCtx.clearRect(0,0,200,160);
   hdF.render(hdCtx,{tilt:cur.tilt,lean:Math.round(bob),ty:(Math.sin(t*1.6)>0.4?1:0),cw:200,ch:160,arms:{L:{S:SL,E:[a.ex,a.ey],H:[a.hx,a.hy]},R:{S:SR,E:[b.ex,b.ey],H:[b.hx,b.hy]}}});
  }else{
@@ -1037,7 +1022,7 @@ function buildFigure(parent,key){
  F.setBrow=dy=>F.brows.setAttribute('transform','translate(0 '+dy.toFixed(2)+')');
  F.showMouth(F.defaultMouth);F.setLid(0);return F}
 /* 재판 화면용 반신상 (viewBox 100×150) */
-function buildBust(el,key){const rs=D.cast[key].render||{};if(rs.mode==='layered25d'&&typeof rigBust==='function')return rigBust(el,key);if(rs.mode==='pixel_hd'||rs.mode==='layered25d')return hdBust(el,key);const svg=spEl('svg',{viewBox:'0 0 100 150','shape-rendering':rs.shape_rendering||'crispEdges'});el.appendChild(svg);
+function buildBust(el,key){const rs=D.cast[key].render||{};if(rs.mode==='pixel_hd')return hdBust(el,key);const svg=spEl('svg',{viewBox:'0 0 100 150','shape-rendering':rs.shape_rendering||'crispEdges'});el.appendChild(svg);
  const F=buildFigure(spEl('g',{transform:'translate(-25 -2) scale(.75)'},svg),key);F.mouths[F.defaultMouth].setAttribute('class','mouth');return F}
 /* 말풍선이 화면 밖으로 나가지 않도록 가로 위치를 보정 (글이 길면 박스가 커지고, 화면 가장자리에 닿으면 안쪽으로 밀어 준다) */
 function spPlaceBubble(b){try{if(!b.getBoundingClientRect)return;b.style.marginLeft='0px';const r=b.getBoundingClientRect(),W=document.documentElement.clientWidth;let dx=0;if(r.right>W-8)dx=W-8-r.right;if(r.left+dx<8)dx=8-r.left;b.style.marginLeft=dx.toFixed(0)+'px'}catch(e){}}
@@ -1320,15 +1305,8 @@ function hdChairLayer(){const px=new HdPx(HDW,160),w=px.w,h=px.h,br=[90,58,34],b
  hdOutline(px,[22,12,6],0.75);return px.canvas()}
 """
 
-from rig25d import RIG_JS  # noqa: E402
-from rig3d import RIG3D_HEAD, RIG3D_JS  # noqa: E402
-SPRITES_JS = SPRITES_JS + "\n" + RIG_JS + "\n" + RIG3D_JS
-
 # 공용 스프라이트 코드를 각 연출 템플릿의 표시 자리에 끼워 넣는다 (SPRITES_JS 정의 이후에 실행되어야 함)
 VN_TEMPLATE = (VN_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS + "\n" + STAGE_JS).replace("/*__STAGE_CSS__*/", STAGE_CSS)
                .replace("<!--__WAIT__-->", WAIT_HTML).replace("<!--__SCENE__-->", SCENE_HTML).replace("<!--__OVERLAYS__-->", OVERLAYS))
 STORY_TEMPLATE = STORY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
 LOBBY_TEMPLATE = LOBBY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
-# 3D 아바타용 모듈 스크립트(importmap 포함)를 재판 연출·로비의 <head> 끝에 넣는다
-VN_TEMPLATE = VN_TEMPLATE.replace("<!--__RIG3D__-->", RIG3D_HEAD)
-LOBBY_TEMPLATE = LOBBY_TEMPLATE.replace("<!--__RIG3D__-->", RIG3D_HEAD)
