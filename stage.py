@@ -128,7 +128,9 @@ const LOOK={
  J:{fx:.5,fy:.405,z:2.3,yaw:0,pitch:-3,roll:0,dur:1.15,ease:'io',arc:.55},                /* 판사: 피고인석에서 법대를 올려다보며 대각선 위로 */
  JPUSH:{fx:.5,fy:.405,z:2.65,yaw:0,pitch:-3,roll:0,dur:6,ease:'out',arc:0},               /* 막 끝: 판사 쪽으로 천천히 줌인 */
  P:{fx:.26,fy:.53,z:1.85,yaw:-3.5,pitch:0,roll:-.5,dur:.28,ease:'snap',arc:.5},          /* 검사: 빠르고 예리하게 꺾임 */
- L:{fx:.74,fy:.53,z:1.85,yaw:3.5,pitch:0,roll:.5,dur:.9,ease:'io',arc:.75}              /* 변호사: 느긋하게 곡선을 그리며 */
+ L:{fx:.74,fy:.53,z:1.85,yaw:3.5,pitch:0,roll:.5,dur:.9,ease:'io',arc:.75},             /* 변호사: 느긋하게 곡선을 그리며 */
+ PPUSH:{fx:.26,fy:.53,z:2.5,yaw:-3.5,pitch:0,roll:-.5,dur:6,ease:'out',arc:0},          /* 질문 끝(검사가 물었을 때): 검사 쪽으로 천천히 줌인 */
+ LPUSH:{fx:.74,fy:.53,z:2.5,yaw:3.5,pitch:0,roll:.5,dur:6,ease:'out',arc:0}              /* 질문 끝(변호사가 물었을 때): 변호사 쪽으로 천천히 줌인 */
 };
 const EASE={io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,out:t=>1-Math.pow(1-t,3),snap:t=>{const c=1.1,d=c+1;return 1+d*Math.pow(t-1,3)+c*Math.pow(t-1,2)},lin:t=>t};
 
@@ -157,7 +159,7 @@ function make(o){const cam={p:Object.assign({},LOOK.WIDE),raf:0,W:0,H:0,bw:0,bh:
  return cam}
 
 function look(cam,key){const p=LOOK[key]||LOOK.J;cam.go({fx:p.fx,fy:p.fy,z:p.z,yaw:p.yaw,pitch:p.pitch,roll:p.roll},p.dur,p.ease,p.arc);return p.dur}
-function push(cam){look(cam,'JPUSH')}
+function push(cam,who){look(cam,(who==='P'||who==='L')?who+'PUSH':'JPUSH')}   /* who = 마지막으로 질문한 캐릭터(P/L/J) */
 
 /* 몸을 돌려 서로 마주보기: 말하는 사람은 피고인(플레이어) 쪽으로 몸을 돌려(옆과 정면 사이의 대각선), 듣는 사람은 상대를 향한다 */
 function face(speaker){document.querySelectorAll('#pst .char').forEach(el=>{const k=el.dataset.c,f=FACE[k]||{idle:0,talk:0};el.style.setProperty('--ry',((k===speaker?f.talk:f.idle))+'deg')})}
@@ -209,8 +211,10 @@ const WAIT_PRE={
  p2:'재판관이 방금 들은 1차 변명을 곱씹으며\n다음 심문을 준비하고 있습니다.',
  verdict:'재판관이 모든 변론과 증거를 검토하며\n최종 판결을 깊이 고민하고 있습니다.'};
 let waitCam=null;
-function wait(kind){waitCam=make({view:$('wait'),pst:$('wst'),wrap:$('wcam')});
+function wait(kind,src){waitCam=make({view:$('wait'),pst:$('wst'),wrap:$('wcam')});
  const cont=(kind==='p2'||kind==='verdict');
+ /* 변명 제출 직후: 질문하던 캐릭터(검사/변호사) 얼굴에서 출발해 → 판사에게 줌 이동 → 고민 장면 */
+ if(cont&&(src==='P'||src==='L')){$('w-pre').style.display='none';waitCam.set(LOOK[src+'PUSH']);waitCam.go(LOOK.JPUSH,1.7,'io',.5);setTimeout(()=>{$('w-box').className='on'},1100);setTimeout(()=>{waitCam.go({z:LOOK.JPUSH.z+.4,fy:.45},26,'out',0)},1800);return}
  if(cont){$('w-pre').style.display='none';waitCam.set(LOOK.JPUSH);setTimeout(()=>{$('w-box').className='on'},500);waitCam.go({z:LOOK.JPUSH.z+.4,fy:.45},26,'out',0);return}
  waitCam.set(LOOK.WIDE);
  const txt=WAIT_PRE[kind]||WAIT_PRE.p1,pt=$('w-pre-t');let k=0;const iv=setInterval(()=>{k++;pt.textContent=txt.slice(0,k);if(k>=txt.length)clearInterval(iv)},55);
