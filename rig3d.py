@@ -24,19 +24,30 @@ THREE_VER = "0.160.0"
 VRM_VER = "2.1.0"
 
 RIG3D_HEAD = (
+    '<script>(function(){var L=window.__rig3dLines=[],P=null;window.rig3dLog=function(m,bad){var t=((performance.now()/1000)|0)+"s ";L.push({m:t+m,bad:!!bad});(bad?console.error:console.log)("[rig3d] "+m);window.rig3dRender()};'
+    'window.rig3dRender=function(){if(!window.RIG3D_DEBUG||!document.body)return;if(!P){P=document.createElement("div");P.id="rig3d-dbg";P.style.cssText="position:fixed;left:4px;top:4px;z-index:2147483647;max-width:92%;max-height:46%;overflow:auto;background:#000c;color:#9f9;font:11px/1.35 monospace;padding:5px 7px;border-radius:6px;pointer-events:none;white-space:pre-wrap";document.body.appendChild(P)}'
+    'P.innerHTML=L.map(function(x){return "<div style=\'color:"+(x.bad?"#ff8a8a":"#9f9")+"\'>"+String(x.m).replace(/</g,"&lt;")+"</div>"}).join("")};'
+    'document.addEventListener("DOMContentLoaded",function(){window.rig3dRender()})})()</script>\n'
     '<script type="importmap">{"imports":{'
     f'"three":"https://cdn.jsdelivr.net/npm/three@{THREE_VER}/build/three.module.js",'
     f'"three/addons/":"https://cdn.jsdelivr.net/npm/three@{THREE_VER}/examples/jsm/",'
+    f'"three/examples/jsm/":"https://cdn.jsdelivr.net/npm/three@{THREE_VER}/examples/jsm/",'
     f'"@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@{VRM_VER}/lib/three-vrm.module.min.js"'
     '}}</script>\n'
     '<script type="module">\n'
-    "/* 모델이 하나라도 설정돼 있을 때만 3D 라이브러리를 받는다 */\n"
+    "/* 모델이 하나라도 설정돼 있을 때만 3D 라이브러리를 받는다 (진행 상황은 rig3dLog 로 화면/콘솔에 남긴다) */\n"
+    "const LOG=window.rig3dLog||console.log;let stage='시작';\n"
     "try{\n"
-    " const need=typeof D!=='undefined'&&D.cast&&Object.values(D.cast).some(c=>c.rig&&c.rig.model&&c.rig.model.url);\n"
-    " if(need){const THREE=await import('three');const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');const V=await import('@pixiv/three-vrm');\n"
+    " const cast=(typeof D!=='undefined'&&D.cast)?D.cast:{};const ms=Object.values(cast).filter(c=>c.rig&&c.rig.model&&c.rig.model.url);\n"
+    " window.RIG3D_DEBUG=ms.some(c=>c.rig.model.debug);window.rig3dRender&&window.rig3dRender();\n"
+    " LOG('3D 설정 모델 수: '+ms.length+(ms[0]?'  첫 주소: '+ms[0].rig.model.url:'  (characters.py 의 MODEL_BASE_URL 이 비어 있음 → 벡터 캐릭터)'));\n"
+    " if(ms.length){\n"
+    "  stage='three 불러오기';const THREE=await import('three');LOG('three 로드 OK (r'+THREE.REVISION+')');\n"
+    "  stage='GLTFLoader 불러오기';const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');LOG('GLTFLoader 로드 OK');\n"
+    "  stage='three-vrm 불러오기';const V=await import('@pixiv/three-vrm');LOG('three-vrm 로드 OK');\n"
     "  window.VRM3D={THREE:THREE,GLTFLoader:GLTFLoader,VRMLoaderPlugin:V.VRMLoaderPlugin,VRMUtils:V.VRMUtils};window.dispatchEvent(new Event('vrm3d-ready'))}\n"
     " else window.dispatchEvent(new Event('vrm3d-fail'));\n"
-    "}catch(e){console.warn('[rig3d] 3D 라이브러리를 불러오지 못해 벡터 캐릭터로 대신합니다',e);window.dispatchEvent(new Event('vrm3d-fail'))}\n"
+    "}catch(e){LOG('라이브러리 실패 ['+stage+']: '+(e&&e.message||e),true);window.dispatchEvent(new Event('vrm3d-fail'))}\n"
     "</script>\n"
 )
 
@@ -58,7 +69,7 @@ function rig3dReady(){
  if(RIG3D_P)return RIG3D_P;
  RIG3D_P=new Promise(res=>{
   if(window.VRM3D)return res(window.VRM3D);
-  const to=setTimeout(()=>res(null),15000);
+  const to=setTimeout(()=>{(window.rig3dLog||console.warn)('라이브러리 대기 30초 초과',true);res(null)},30000);
   window.addEventListener('vrm3d-ready',()=>{clearTimeout(to);res(window.VRM3D)},{once:true});
   window.addEventListener('vrm3d-fail',()=>{clearTimeout(to);res(null)},{once:true})});
  return RIG3D_P}
@@ -89,10 +100,21 @@ function vrmAttach(host,F,C,opts){
  F.setHandsMap=function(m){opts.map=m};
 
  rig3dReady().then(async M=>{
-  if(!M){V.error='라이브러리 없음';console.warn('[rig3d] 3D 라이브러리를 쓸 수 없어 벡터 캐릭터로 대신합니다');return}
+  if(!M){V.error='라이브러리 없음';(window.rig3dLog||console.warn)('['+C.key+'] 3D 라이브러리를 쓸 수 없어 벡터 캐릭터로 대체 (위 로그 참고)',true);return}
   try{
    const T=M.THREE,loader=new M.GLTFLoader();loader.register(p=>new M.VRMLoaderPlugin(p));
-   const gltf=await loader.loadAsync(M3.url),vrm=gltf.userData.vrm;
+   const LOG=window.rig3dLog||console.log,tag='['+C.key+'] ';
+   const urls=(M3.urls&&M3.urls.length)?M3.urls:[M3.url];let buf=null,lastErr='';
+   for(const u of urls){
+    try{LOG(tag+'모델 요청: '+u);const r=await fetch(u,{mode:'cors'});
+     LOG(tag+'응답 '+r.status+' '+(r.statusText||'')+'  크기 '+(r.headers.get('content-length')?Math.round(r.headers.get('content-length')/1048576*10)/10+'MB':'?')+'  형식 '+(r.headers.get('content-type')||'?'));
+     if(!r.ok)throw new Error('HTTP '+r.status+(r.status===403?' (jsDelivr 는 20MB 넘는 GitHub 파일을 막습니다 → raw.githubusercontent 주소 사용)':r.status===404?' (파일 이름·폴더·브랜치 확인, 방금 올렸다면 jsDelivr 캐시 지연일 수 있음)':''));
+     buf=await r.arrayBuffer();LOG(tag+'다운로드 완료 '+Math.round(buf.byteLength/1048576*10)/10+'MB');
+     if(buf.byteLength<2000||String.fromCharCode.apply(null,new Uint8Array(buf.slice(0,4)))==='vers')throw new Error('VRM 이 아닌 파일입니다(Git LFS 포인터이거나 빈 파일). 실제 .vrm 파일을 올렸는지 확인');
+     break}catch(e){lastErr=String(e&&e.message||e);buf=null;LOG(tag+'실패: '+lastErr,true)}}
+   if(!buf)throw new Error('모든 주소에서 모델을 받지 못함: '+lastErr);
+   const gltf=await loader.parseAsync(buf,urls[0].replace(/[^/]*$/,'')),vrm=gltf.userData.vrm;
+   LOG(tag+'VRM 해석 OK'+(vrm&&vrm.meta?' ('+(vrm.meta.metaVersion||vrm.meta.version||'?')+')':''));
    if(!vrm)throw new Error('VRM 데이터가 없는 파일입니다 (.vrm 으로 내보냈는지 확인하세요)');
    try{M.VRMUtils.removeUnnecessaryVertices&&M.VRMUtils.removeUnnecessaryVertices(gltf.scene);M.VRMUtils.removeUnnecessaryJoints&&M.VRMUtils.removeUnnecessaryJoints(gltf.scene)}catch(e){}
    M.VRMUtils.rotateVRM0&&M.VRMUtils.rotateVRM0(vrm);
@@ -176,8 +198,8 @@ function vrmAttach(host,F,C,opts){
    if(!RIG3D_LOOP){RIG3D_LOOP=1;const loop=now=>{if(!document.hidden)for(const v of RIG3D_LIST){try{v.tick(now)}catch(e){if(!v.err){v.err=1;console.warn('[rig3d] 렌더 오류',e)}}}requestAnimationFrame(loop)};requestAnimationFrame(loop)}
    /* 성공: 벡터 캐릭터는 숨기고 3D 를 보여 준다 */
    wrap.style.display='block';if(F.rigEl)F.rigEl.style.visibility='hidden';V.on=true;F.vrmOn=true;
-   if(window.__rig3dLog)window.__rig3dLog('loaded '+C.key)
-  }catch(e){V.error=String(e&&e.message||e);console.warn('[rig3d] 모델을 불러오지 못해 벡터 캐릭터로 대신합니다:',e);wrap.style.display='none'}
+   LOG(tag+'✅ 3D 표시 시작 (벡터 캐릭터 숨김)')
+  }catch(e){V.error=String(e&&e.message||e);(window.rig3dLog||console.warn)('['+C.key+'] ❌ 3D 실패 → 벡터로 대체: '+V.error+(e&&e.stack?'\n'+String(e.stack).split('\n').slice(0,3).join('\n'):''),true);wrap.style.display='none'}
  });
  return V}
 """
