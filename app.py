@@ -533,8 +533,10 @@ elif stage == "DEBATE1":
             "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
             phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, push=True, **vn_opts(),
         )
-    if st.button("🏳️ 재판 포기 (로비로)", key="giveup1"):
-        go("LOBBY")
+    # 재판 포기는 화면 안 ⚙️ 설정창에서 누릅니다(그 버튼이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
+    with st.container(key="giveup_hidden"):
+        if st.button("재판 포기", key="giveup1"):
+            go("LOBBY")
     show_error()
     excuse_gate()
     ex1 = st.chat_input("1차 변명을 입력하세요 (최대 200자)", key="chat_ex1")
@@ -549,8 +551,10 @@ elif stage == "DEBATE2":
             "debate", ACT2_OPEN + ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
             phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", opening="act2", push=True, **vn_opts(),
         )
-    if st.button("🏳️ 재판 포기 (로비로)", key="giveup2"):
-        go("LOBBY")
+    # 재판 포기는 화면 안 ⚙️ 설정창에서 누릅니다(그 버튼이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
+    with st.container(key="giveup_hidden"):
+        if st.button("재판 포기", key="giveup2"):
+            go("LOBBY")
     show_error()
     excuse_gate()
     ex2 = st.chat_input("최후 변명을 입력하세요 (최대 200자)", key="chat_ex2")
