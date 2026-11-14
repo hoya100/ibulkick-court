@@ -48,7 +48,7 @@ import streamlit as st
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)  # app.py 와 같은 폴더의 모듈을 항상 찾을 수 있게 함
-_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py", "stage.py", "court_bg.py"]
+_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py", "stage.py", "court_bg.py", "rig25d.py", "rig3d.py"]
 _present = os.listdir(_HERE)
 _missing = []
 for _f in _REQUIRED_FILES:
@@ -65,7 +65,7 @@ if _missing:
     st.markdown("**없는 것**\n\n" + "\n".join(f"- `{m}`" for m in _missing))
     st.markdown(
         "**해결 방법**\n\n"
-        "1. `app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py` 6개를 **같은 폴더**(GitHub 저장소 최상위)에 올립니다.\n"
+        "1. `app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`, `court_bg.py`, `rig25d.py`, `rig3d.py` 10개를 **같은 폴더**(GitHub 저장소 최상위)에 올립니다.\n"
         "2. 파일 이름은 소문자 그대로여야 합니다. (리눅스 서버는 대소문자를 구분해요)\n"
         "3. `.gitignore` 에 `config.py` 등이 들어 있지 않은지 확인하고, 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
     )
@@ -117,7 +117,7 @@ if _stale:
     st.markdown("**맞지 않는 부분**\n\n" + "\n".join(f"- {m}" for m in _stale))
     st.markdown(
         "**해결 방법**\n\n"
-        "1. 같은 시점에 받은 8개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`, `court_bg.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
+        "1. 같은 시점에 받은 10개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`, `court_bg.py`, `rig25d.py`, `rig3d.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
         "2. 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
     )
     with st.expander("서버에 올라간 파일 크기(줄 수)"):
