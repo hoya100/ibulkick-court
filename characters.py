@@ -339,6 +339,9 @@ EXPRESSIONS = {
     "aggrieved": {"label": "억울함", "mouth": "hmm",  "brow": -2, "lid": 0,    "gx": 0, "gy": 2, "fx": ["blush", "sweat"], "icon": "drop"},
     "tears":     {"label": "눈물",   "mouth": "hmm",  "brow": 1,  "lid": 0.35, "gx": 0, "gy": 2, "fx": ["tears", "blush"], "icon": "drop"},
     "shock":     {"label": "충격",   "mouth": "open", "brow": -3, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"], "icon": "exclaim"},
+    "panic":     {"label": "당황",   "mouth": "open", "brow": -3, "lid": 0,    "gx": 0, "gy": 1, "fx": ["sweat"], "icon": "drop"},
+    "smug":      {"label": "능글",   "mouth": "grin", "brow": -1, "lid": 0.45, "gx": -1, "gy": 0, "fx": ["blush"], "icon": "sparkle"},
+    "asleep":    {"label": "졸음",   "mouth": "flat", "brow": 2,  "lid": 1,    "gx": 0, "gy": 0, "fx": []},
     "angry":     {"label": "분노",   "mouth": "flat", "brow": 3,  "lid": 0.25, "gx": 0, "gy": 0, "fx": ["vein"], "icon": "anger"},
 }
 EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm")
