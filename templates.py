@@ -1309,7 +1309,7 @@ const HD_OUTFIT={
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
   const J=hdRegion(px,[[-34,97],[34,97],[38,108],[39,124],[33,140],[24,154],[28,174],[35,200],[36,232],[-36,232],[-35,200],[-28,174],[-24,154],[-33,140],[-39,124],[-38,108]],S,{sd:3});
   hdPolyline(px,hdAbs([[-31,112],[-31,130],[-24,152]]),S.sh,J);hdPolyline(px,hdAbs([[31,112],[31,130],[24,152]]),S.deep,J);hdPolyline(px,hdAbs([[-28,114],[-27,132]]),S.lt,J);
-  HD_BUST(px,J,S,13,127,11,9);
+  HD_BUST(px,J,S,13,127,14,13);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-40,97],[40,97],[40,101],[-40,101]]))),S.lt);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,134]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,134]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-12,94],[-27,99],[-23,136],[-8,127]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-12,94],[-27,99],[-23,136]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-8,127],[-23,136]])),S.sh);
@@ -1324,7 +1324,7 @@ const HD_OUTFIT={
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const leg=hdRegion(px,f([[-34,186],[-1,186],[-1,232],[-30,232]]),legC,{sd:3});hdPolyline(px,hdAbs(f([[-16,190],[-15,232]])),S.lt,leg);hdPolyline(px,hdAbs(f([[-2,190],[-2,232]])),S.deep,leg)});
   const J=hdRegion(px,[[-38,97],[38,97],[42,110],[43,126],[37,142],[27,158],[31,176],[42,192],[-42,192],[-31,176],[-27,158],[-37,142],[-43,126],[-42,110]],S,{sd:3});
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-35,114],[-35,132],[-26,158]]),S.sh,J);hdPolyline(px,hdAbs([[35,114],[35,132],[26,158]]),S.deep,J);hdPolyline(px,hdAbs([[-32,116],[-31,134]]),S.lt,J);
-  HD_BUST(px,J,S,14,130,12,10);
+  HD_BUST(px,J,S,14,130,14,12);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-42,192],[42,192]]),S.deep,J);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,148]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,148]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-10,94],[-27,100],[-29,138],[-20,152],[-4,134]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-10,94],[-27,100],[-29,138],[-20,152]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-20,152],[-4,134]])),S.sh);hdPolyline(px,hdAbs(f([[-27,100],[-21,108],[-10,106]])),S.deep);
