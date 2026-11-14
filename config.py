@@ -284,6 +284,33 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   transition:transform .55s cubic-bezier(.2,1.25,.3,1), opacity .3s; }
 .stApp:has(.st-key-excuse_gate[data-open="1"]) [data-testid="stChatInput"]{ animation:exGlow 1.2s ease-out 2; }
 @keyframes exGlow{ 0%,100%{ outline:0 solid #ffd23f00; } 50%{ outline:6px solid #ffd23fcc; } }
+/* ===== 입력창 다크 고정 (시스템 다크/라이트 무관) =====
+   :where() 로 특이도를 0 으로 낮춰, 의도적으로 크림색인 .st-key-paper 는 그대로 이기게 한다. */
+:where(.stApp){ color-scheme:dark; }
+:where(.stApp) :where([data-baseweb="input"], [data-baseweb="base-input"], [data-baseweb="textarea"], [data-testid="stTextInputRootElement"], [data-testid="stTextAreaRootElement"]){
+  background:#1e1e1e !important; background-color:#1e1e1e !important; border-color:#555 !important; color:#ffffff !important; }
+:where(.stApp) :where(input, textarea, [data-testid="stChatInput"] textarea){
+  background:#1e1e1e !important; background-color:#1e1e1e !important;
+  color:#ffffff !important; -webkit-text-fill-color:#ffffff !important; caret-color:#ffffff !important; opacity:1 !important; }
+:where(.stApp) :where(input, textarea)::placeholder{ color:#9a9a9a !important; -webkit-text-fill-color:#9a9a9a !important; opacity:1 !important; }
+/* 브라우저 자동완성(노란/흰 배경) 덮어쓰기 */
+:where(.stApp) :where(input, textarea):-webkit-autofill,
+:where(.stApp) :where(input, textarea):-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px #1e1e1e inset !important; -webkit-text-fill-color:#ffffff !important; caret-color:#ffffff !important; }
+:where(.stApp) :where([data-baseweb="input"], [data-baseweb="textarea"]):focus-within{ border-color:#c9b26b !important; }
+/* 크림 종이 입력칸은 가독성을 위해 어두운 글씨 유지(위 규칙보다 특이도가 높아 우선) */
+.st-key-paper input, .st-key-paper textarea{ -webkit-text-fill-color:#2b2111 !important; caret-color:#2b2111 !important; }
+
+/* ===== 모바일 세로 배치 ===== */
+@media (max-width: 760px){
+  [data-testid="stHorizontalBlock"]{ flex-direction:column !important; gap:.6rem !important; }
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"], [data-testid="stHorizontalBlock"] > div[data-testid="column"]{ width:100% !important; min-width:100% !important; flex:1 1 100% !important; }
+  .stApp input, .stApp textarea{ font-size:16px !important; }  /* iOS 자동 확대 방지 */
+  .block-container{ padding-left:12px !important; padding-right:12px !important; }
+  .stButton > button{ width:100% !important; min-height:46px; }
+  [data-testid="stBottom"] > div{ padding-bottom:max(8px, env(safe-area-inset-bottom)) !important; }
+}
+
 """
 
 # =================================================================
