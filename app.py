@@ -101,6 +101,15 @@ for _fname in ["app.py"] + _REQUIRED_FILES:
                 f"`{_fname}` 이(가) `{_node.module}.py` 의 `{a.name}` 을(를) 쓰려는데, 서버의 `{_node.module}.py` 에는 없습니다"
                 for a in _node.names if a.name not in _have
             ]
+# 이름은 같아도 '인자(파라미터)'가 옛 버전이면 TypeError 가 나므로, render_vn 의 인자까지 소스로 확인합니다.
+try:
+    for _n in ast.parse(open(os.path.join(_HERE, "templates.py"), encoding="utf-8").read()).body:
+        if isinstance(_n, ast.FunctionDef) and _n.name == "render_vn":
+            _args = {a.arg for a in _n.args.args + _n.args.kwonlyargs}
+            if "intro" not in _args:
+                _stale.append("`templates.py` 의 `render_vn` 에 `intro` 인자가 없습니다 (서버의 templates.py 가 예전 버전)")
+except (OSError, SyntaxError, UnicodeDecodeError):
+    pass
 if _stale:
     st.set_page_config(page_title="이불킥 법정", page_icon="🏛️")
     st.error("🧩 서버에 올라간 파일들의 버전이 서로 맞지 않아요. (일부 파일이 예전 버전입니다)")
@@ -170,6 +179,15 @@ from utils import (
     vn_opts,
     watch_ad,
 )
+
+import inspect as _inspect
+
+_VN_PARAMS = set(_inspect.signature(render_vn).parameters)
+
+
+def _render_vn(*args, **kwargs):
+    """render_vn 이 모르는 인자(예: 옛 버전에 없는 intro)는 조용히 빼고 호출 — TypeError 방지."""
+    return render_vn(*args, **{k: v for k, v in kwargs.items() if k in _VN_PARAMS})
 
 
 # characters.py(그림 데이터)와 templates.py(그리는 코드)가 서로 짝이 맞는 버전인지 확인
@@ -480,7 +498,7 @@ elif stage == "LOADING":
     args, kwargs = build_call(kind)
     # 장면(iframe)을 먼저 화면에 띄운 뒤, 그 장면이 계속 연기하는 동안 AI 응답을 기다린다.
     with st.container(key="wait_stage"):
-        render_vn("wait", [], phase=kind, height=VN_H, **vn_opts())
+        _render_vn("wait", [], phase=kind, height=VN_H, **vn_opts())
     try:
         raw = call_llm_json(*args, **kwargs)
         nxt = apply_result(kind, raw)
@@ -494,7 +512,7 @@ elif stage == "LOADING":
 
 # ---------------- DEBATE1 ----------------
 elif stage == "DEBATE1":
-    render_vn(
+    _render_vn(
         "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
         phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, **vn_opts(),
     )
@@ -510,7 +528,7 @@ elif stage == "DEBATE1":
 
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
-    render_vn(
+    _render_vn(
         "debate", ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
         phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", **vn_opts(),
     )
@@ -536,7 +554,7 @@ elif stage == "VERDICT":
             "rank_before": res["rank_before"], "rank_after": res["rank_after"], "dir": res["dir"], "streak": res["streak"],
         } if res else None,
     }
-    render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", **vn_opts())
+    _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", **vn_opts())
     if res and not ss.get("show_result"):
         st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
         _, show_col, _ = st.columns([1, 2, 1])
