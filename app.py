@@ -48,7 +48,7 @@ import streamlit as st
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)  # app.py 와 같은 폴더의 모듈을 항상 찾을 수 있게 함
-_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py", "stage.py"]
+_REQUIRED_FILES = ["config.py", "characters.py", "utils.py", "templates.py", "llm_handler.py", "stage.py", "court_bg.py"]
 _present = os.listdir(_HERE)
 _missing = []
 for _f in _REQUIRED_FILES:
@@ -106,8 +106,9 @@ try:
     for _n in ast.parse(open(os.path.join(_HERE, "templates.py"), encoding="utf-8").read()).body:
         if isinstance(_n, ast.FunctionDef) and _n.name == "render_vn":
             _args = {a.arg for a in _n.args.args + _n.args.kwonlyargs}
-            if "intro" not in _args:
-                _stale.append("`templates.py` 의 `render_vn` 에 `intro` 인자가 없습니다 (서버의 templates.py 가 예전 버전)")
+            for _need in ("intro", "opening", "push"):
+                if _need not in _args:
+                    _stale.append(f"`templates.py` 의 `render_vn` 에 `{_need}` 인자가 없습니다 (서버의 templates.py 가 예전 버전)")
 except (OSError, SyntaxError, UnicodeDecodeError):
     pass
 if _stale:
@@ -116,7 +117,7 @@ if _stale:
     st.markdown("**맞지 않는 부분**\n\n" + "\n".join(f"- {m}" for m in _stale))
     st.markdown(
         "**해결 방법**\n\n"
-        "1. 같은 시점에 받은 7개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
+        "1. 같은 시점에 받은 8개 파일(`app.py`, `config.py`, `characters.py`, `utils.py`, `templates.py`, `llm_handler.py`, `stage.py`, `court_bg.py`)을 **전부** 최신 버전으로 다시 올립니다. 특히 위에 나온 파일을 확인하세요.\n"
         "2. 커밋/푸시한 뒤 앱을 **Reboot** 하세요."
     )
     with st.expander("서버에 올라간 파일 크기(줄 수)"):
@@ -181,6 +182,9 @@ from utils import (
 )
 
 import inspect as _inspect
+
+# 2막 첫 장면: 판사가 외치며 카메라가 줌아웃 + '제 2 막' 타이틀 (화면 전환/암전 없이 이어짐)
+ACT2_OPEN = [{"s": "JUDGE", "t": "2막을 시작합니다!", "k": "act2", "cam": "WIDE"}]
 
 _VN_PARAMS = set(_inspect.signature(render_vn).parameters)
 
@@ -514,7 +518,7 @@ elif stage == "LOADING":
 elif stage == "DEBATE1":
     _render_vn(
         "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
-        phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, **vn_opts(),
+        phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, push=True, **vn_opts(),
     )
     st.caption("▶ 화면을 클릭(터치)하거나 Space/Enter로 대사를 넘기세요. 천천히 읽고, 심문이 끝나면 변명 입력창이 아래에서 올라옵니다.")
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup1"):
@@ -529,8 +533,8 @@ elif stage == "DEBATE1":
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
     _render_vn(
-        "debate", ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
-        phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", **vn_opts(),
+        "debate", ACT2_OPEN + ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
+        phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", opening="act2", push=True, **vn_opts(),
     )
     st.caption("▶ 1차 변명을 두고 벌어지는 공방입니다. 마지막 질문이 끝나면 변명 입력창이 올라옵니다. 사실에 맞고 진심이 담길수록 무죄에 가까워요!")
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup2"):
@@ -554,7 +558,7 @@ elif stage == "VERDICT":
             "rank_before": res["rank_before"], "rank_after": res["rank_after"], "dir": res["dir"], "streak": res["streak"],
         } if res else None,
     }
-    _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", **vn_opts())
+    _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict", **vn_opts())
     if res and not ss.get("show_result"):
         st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
         _, show_col, _ = st.columns([1, 2, 1])
