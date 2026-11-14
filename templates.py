@@ -14,10 +14,10 @@ import json
 import streamlit.components.v1 as components
 
 from characters import expressions_payload, sprite_payload
-from stage import LAYER_FAR, LAYER_NEAR, OVERLAYS, STAGE_CSS, STAGE_JS, WAIT_HTML
+from stage import OVERLAYS, SCENE_HTML, STAGE_CSS, STAGE_JS, WAIT_HTML
 
 # 스프라이트 그리기 엔진의 버전. characters.py 의 SPRITE_DATA_VERSION 과 같아야 합니다.
-SPRITE_ENGINE_VERSION = 4
+SPRITE_ENGINE_VERSION = 5
 
 
 # =================================================================
@@ -74,7 +74,6 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 .char.j{bottom:36%}
 .who{width:clamp(120px,34vw,200px);transform-origin:50% 100%;transition:transform .7s}
 .who svg,.who canvas{display:block;width:100%;height:auto}.hdc{image-rendering:pixelated}
-#scene[data-cam=J] .char.j .who{transform:scale(1.22)}
 .talk svg,.talk canvas{animation:bob .3s steps(2) infinite}
 .mouth{transform-box:fill-box;transform-origin:center}
 .talk .mouth{animation:mouth .22s steps(2) infinite}
@@ -162,7 +161,6 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 @media (min-aspect-ratio:5/4){
 .who{width:clamp(130px,38vh,260px)}
 .char.j{bottom:32%}
-#scene[data-cam=J] .char.j .who{transform:scale(1.1)}
 .seal{width:96px;height:96px;font-size:46px}
 #dlg{left:10%;right:10%;height:36%;min-height:150px}
 #txt{font-size:clamp(16px,3.7vh,22px);padding:22px 52px 14px 28px}
@@ -201,14 +199,7 @@ html.wait #scene{display:none}
 </style></head><body>
 <!--__WAIT__-->
 <div id="scene" data-cam="J">
- <div id="shk"><div id="brt"><div id="camwrap"><!--__FAR__--><div class="lay" data-l="w"><div class="lz"><div id="world" class="lp">
-  <div class="panel"><div class="wood"></div><div class="pil" style="left:4%"></div><div class="floor"></div>
-   <div class="char" data-c="P"><div class="who" id="svgP"></div></div><div class="desk"></div></div>
-  <div class="panel"><div class="wood"></div><div class="pil" style="left:6%"></div><div class="pil" style="right:6%"></div><div class="seal">法</div><div class="floor"></div>
-   <div class="char j" data-c="J"><div class="who" id="svgJ"></div></div><div class="bench"></div><div class="book">🔍 돋보기 · ☕ 보리차</div></div>
-  <div class="panel"><div class="wood"></div><div class="pil" style="right:4%"></div><div class="floor"></div>
-   <div class="char" data-c="L"><div class="who" id="svgL"></div></div><div class="desk"></div></div>
- </div></div></div><!--__NEAR__--></div></div></div>
+<!--__SCENE__-->
 <!--__OVERLAYS__-->
  <div id="hint"></div><div id="phase"></div><div id="shout"></div><div id="frame"></div>
  <div id="dlg"><div id="tag"><div id="tagin">재판관</div></div><div id="box"></div><div id="boxin"><div id="txt"></div></div><div id="arrow">»</div></div>
@@ -242,7 +233,7 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const OUT={stroke:INK,'stroke-width':2},THIN={stroke:INK,'stroke-width':1.2};
  const HDM=(D.cast.JUDGE.render||{}).mode==='pixel_hd';   // pixel_hd: 픽셀 단위 고해상도 도트(캔버스) / svg: 도형 도트
  let F=null,hdF=null,hdCtx=null,chairC=null,pal,SLV,st;
- if(HDM){hdF=hdBuildFigure('JUDGE');pal=hdF.pal;SLV=hdF.sleeve;st=hdF.style;const cv=g('jfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false;chairC=hdChairLayer()}
+ if(HDM){hdF=hdBuildFigure('JUDGE');pal=hdF.pal;SLV=hdF.sleeve;st=hdF.style;const cv=g('jfig');cv.width=200;cv.height=160;hdCtx=cv.getContext('2d');hdCtx.imageSmoothingEnabled=false}   // 의자는 법정 사진 속 의자를 씀
  else{
   /* 의자 등받이 */
   const gChair=E('g');R(gChair,-52,10,104,8,GOLD,OUT);R(gChair,-50,16,100,130,'#5a3a22',OUT);R(gChair,-42,24,84,114,'#6b4528');
@@ -303,7 +294,7 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
   const a=ik(SL,[lx,ly]),b=ik(SR,[rx,ry]);
   const bob=Math.sin(t*1.6)*0.6,lidv=Math.max(cur.lid,((t%3.9)<0.12)?1:0);
   if(HDM){   // 픽셀 도화지에 의자·인물(머리·몸·팔)을 다시 칠한다. 움직임은 1픽셀 단위로 끊어서 도트다운 느낌을 낸다
-   hdF.setBrow(cur.brow);hdF.setGaze(cur.gx,cur.gy);hdF.setLid(lidv);hdF.showMouth(p.mouth);hdCtx.clearRect(0,0,200,160);hdCtx.drawImage(chairC,0,0);
+   hdF.setBrow(cur.brow);hdF.setGaze(cur.gx,cur.gy);hdF.setLid(lidv);hdF.showMouth(p.mouth);hdCtx.clearRect(0,0,200,160);if(chairC)hdCtx.drawImage(chairC,0,0);
    hdF.render(hdCtx,{tilt:cur.tilt+tiltAdd,lean:Math.round(bob+cur.lean),ty:(Math.sin(t*1.6)>0.4?1:0),cw:200,ch:160,arms:{L:{S:SL,E:[a.ex,a.ey],H:[a.hx,a.hy]},R:{S:SR,E:[b.ex,b.ey],H:[b.hx,b.hy]}}});
   }else{
    armL.up.setAttribute('transform','rotate('+a.t1.toFixed(2)+' '+SL[0]+' 106)');armL.fo.setAttribute('transform','rotate('+a.t2.toFixed(2)+' '+SL[0]+' 132)');
@@ -331,8 +322,7 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
   const lines=(e[0]==='ponder')?(W.ponder&&W.ponder[kind]):W[e[0]];if(lines&&lines.length&&Math.random()<0.8)say(rnd(lines),Math.min(e[1]-300,3200))}
  function tick(dtMs){const dt=Math.min(dtMs,64)/1000;t+=dt;if(!step||t>=stepEnd)nextStep();if(bubbleOff&&t>bubbleOff){say(null);bubbleOff=0}render(dt)}
  /* 크기 맞춤 + 먼지 입자 */
- function fit(){const de=document.documentElement,Wd=de.clientWidth||800,H=de.clientHeight||600;let h=H*0.46,w=h*1.25;if(w>Wd*0.78){w=Wd*0.78;h=w/1.25}
-  svg.style.width=w+'px';svg.style.height=h+'px';const bb=H*0.2,b=g('w-bench');g('w-cw').style.bottom=bb+'px';b.style.height=(h*26/160)+'px';b.style.width=(w*1.45)+'px';b.style.bottom=bb+'px';if(window.Stage)Stage.relayout()}
+ function fit(){if(window.Stage)Stage.relayout()}
  window.addEventListener('resize',fit);fit();Stage.wait(kind);
  (function(){const d=g('w-dust');for(let i=0;i<18;i++){const e=document.createElement('div');e.className='dust';e.style.left=(Math.random()*96)+'%';e.style.top=(30+Math.random()*60)+'%';e.style.setProperty('--d',(9+Math.random()*8)+'s');e.style.setProperty('--l',(-Math.random()*12)+'s');d.appendChild(e)}})();
  window.__wait={tick:tick,pose:function(n){tgt=P[n];step=n;stepEnd=1e9;idx=0},poses:Object.keys(P),fig:F||hdF};
@@ -350,7 +340,8 @@ BUST.J=buildBust($('svgJ'),'JUDGE');
 BUST.P=buildBust($('svgP'),'PROSECUTOR');
 BUST.L=buildBust($('svgL'),'LAWYER');
 const EXPR=D.expr||{};
-const VCAM=(D.mode!=='wait')?Stage.make($('camwrap')):null;   // 파노라마 카메라 (stage.py)
+const VCAM=(D.mode!=='wait')?Stage.make({view:$('scene'),pst:$('pst'),wrap:$('camwrap')}):null;   // 사진 법정 + 곡선 카메라 (stage.py)
+if(VCAM)VCAM.set(D.opening?Stage.LOOK.JPUSH:Stage.LOOK.WIDE);   // 막 사이 연결 장면은 '판사 줌' 그대로 이어서 시작
 /* 표정: 대사에 e 값이 있으면 그 표정, 없으면 외침(c)에 따라 — 검사 팩폭=비웃음 / 변호사 쉴드=억울함 / 판사 정숙=분노 */
 function exprFor(st){if(st.e&&EXPR[st.e])return st.e;return {F:'smirk',S:'aggrieved',O:'angry'}[st.c]||'neutral'}
 function applyExpr(c,st){for(const k in BUST){const F=BUST[k];if(F&&F.setExpr){F.setExpr(k===c?exprFor(st):'neutral');if(F.redraw)F.redraw()}}}
@@ -373,17 +364,18 @@ let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',end
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
 function stopType(){clearInterval(timer);typing=false;$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
- if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen()}}}
+ if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push)Stage.push(VCAM)}}}
 function type(text){typing=true;full=text;let k=0;$('txt').textContent='';timer=setInterval(()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length)stopType()},D.speed||32)}
 const SHOUT={F:D.cast.PROSECUTOR.shout.text,S:D.cast.LAWYER.shout.text,O:D.cast.JUDGE.shout.text};
 function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' on';[520,780,1040].forEach((f,j)=>setTimeout(()=>beep(f,.16,.07),j*90));Stage.impact(k);setTimeout(()=>{e.className='';cb()},950)}
-function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,c);applyExpr(c,st);$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
- const speak=()=>{busy=false;setTalk(c);type(st.t)};
+function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
+ const speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t)};
  setTimeout(()=>{if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+140:150)}
 function adv(){if(!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
 $('start').addEventListener('click',e=>{e.stopPropagation();ac();beep(880,.12);$('start').style.display='none';const go0=()=>{started=true;i=0;show(0)};if(D.intro&&D.mode==='debate')Stage.intro(VCAM,go0);else go0()});
+if(D.opening){$('start').style.display='none';started=true;i=0;setTimeout(()=>show(0),450)}   /* 막 사이 연결: 시작 화면 없이 바로 이어짐 */
 
 /* ---- 탕! 탕! 탕! → 판결문 ---- */
 function hit(){thud();scene.classList.remove('shake');void scene.offsetWidth;scene.classList.add('shake');const f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
@@ -393,8 +385,8 @@ function showCard(){$('hint').style.display='none';const w=$('cardwrap');w.style
  for(let k=0;k<18;k++){const s=document.createElement('span');s.className='spark';s.textContent='✦';s.style.left=(Math.random()*92)+'%';s.style.top=(Math.random()*92)+'%';s.style.fontSize=(10+Math.random()*18)+'px';s.style.animationDelay=(Math.random()*1.2)+'s';w.appendChild(s)}}
 </script></body></html>"""
 
-def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False):
-    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
+def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False):
+    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
     payload = payload.replace("</", "<\\/")  # </script> 깨짐 방지
     components.html(VN_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
 
@@ -599,15 +591,15 @@ const S=[
  {v:'court',k:'t',x:'…와.'},
  {v:'court',k:'t',x:'눈앞에 거대한 법원이 우뚝 서 있다. 고개를 한참 젖혀야 꼭대기가 보인다.'},
  {v:'court',k:'t',x:'명함에 적힌 곳이 틀림없다. 저 둥근 문양 아래에서, 누군가 나를 기다리고 있다.'},
- {v:'court',k:'s',x:'뚜벅… 계단이 생각보다 높다.'},
- {v:'court',k:'s',x:'뚜벅… 이 명함, 장난이 아니길 바랄 뿐이다.'},
- {v:'court',k:'s',x:'뚜벅… 그날 올린 그 글, 그 한마디가 자꾸 떠오른다.'},
- {v:'court',k:'s',x:'뚜벅… 지금도 생각하면 발가락이 오그라든다.'},
- {v:'court',k:'s',x:'뚜벅… 다들 이미 잊었길 바랐는데.'},
- {v:'court',k:'s',x:'뚜벅… 누군가는 분명 캡처해 뒀겠지.'},
- {v:'court',k:'s',x:'뚜벅… 내 평판은 그날 이후로 바닥을 기고 있다.'},
- {v:'court',k:'s',x:'뚜벅… 이제 도망칠 곳도 없다. 한 계단만 더.'},
- {v:'court',k:'s',x:'뚜벅… 드디어, 문 앞이다.'},
+ {v:'court',k:'s',x:'계단이 생각보다 높다.'},
+ {v:'court',k:'s',x:'이 명함, 장난이 아니길 바랄 뿐이다.'},
+ {v:'court',k:'s',x:'그날 올린 그 글, 그 한마디가 자꾸 떠오른다.'},
+ {v:'court',k:'s',x:'지금도 생각하면 발가락이 오그라든다.'},
+ {v:'court',k:'s',x:'다들 이미 잊었길 바랐는데.'},
+ {v:'court',k:'s',x:'누군가는 분명 캡처해 뒀겠지.'},
+ {v:'court',k:'s',x:'내 평판은 그날 이후로 바닥을 기고 있다.'},
+ {v:'court',k:'s',x:'이제 도망칠 곳도 없다. 한 계단만 더.'},
+ {v:'court',k:'s',x:'드디어, 문 앞이다.'},
  {v:'hall',k:'d',x:'끼이이익—! 무겁고 커다란 문이 천천히 열렸다.'},
  {v:'hall',k:'t',x:'환하게 쏟아지는 빛 속에서, 세 사람의 그림자가 나를 바라보고 있었다.'},
  {v:'judge',k:'t',x:'가운데에는 '+NJ+' 판사. 졸린 눈으로 나를 보는데, 벌써 퇴근 시간을 세고 있는 눈치다.'},
@@ -669,7 +661,7 @@ function show(n){const e=S[n];busy=true;clearTimeout(at);setTag(e);$('txt').text
  else if(e.k==='d'){$('stepbar').style.display='none';const d=$('door');d.style.display='block';void d.offsetWidth;d.classList.add('open');creak();wait=1900}
  else if(e.k==='g'){flash();popText(e.v==='goal'?'🎯 목표!':'👑 최고 랭크!',0);[660,880,1320].forEach((f,j)=>setTimeout(()=>beep(f,.22,.06),j*140));wait=Math.max(wait,800)}
  if(e.fx)doFx(e.fx);
- setTimeout(()=>{busy=false;type(e.x)},wait)}
+ setTimeout(()=>{busy=false;type(String(e.x).replace(/^(뚜벅|저벅)[…\.!]*\s*/,''))},wait)}   /* 효과음 글자는 대사에 넣지 않고, 위의 popText 자막으로만 보여 준다 */
 function adv(){if(!started||busy||ended)return;clearTimeout(at);if(typing){stopType();return}if(i<S.length-1){i++;show(i)}}
 function reset(){clearTimeout(at);clearInterval(tm);sn=0;ended=false;typing=false;busy=false;curV='bed';scene.style.setProperty('--k',0);
  $('door').style.display='none';$('door').classList.remove('open');setScene('bed');rev([]);
@@ -1282,8 +1274,24 @@ function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRam
     const cx2=c.getContext('2d');cx2.clearRect(0,0,c.width,c.height);cx2.putImageData(new ImageData(px.d,bw,bh),0,0);ctx.drawImage(c,0,0,bw,bh,x0,y0,bw,bh)})}};
  return F}
 /* 재판/스토리용 반신상: 134×200 픽셀 도화지에 그리고, 말하는 동안 입을 여닫는다 */
-function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=134;cvs.height=200;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
- const draw=()=>{ctx.clearRect(0,0,134,200);F.render(ctx,{cx:33,cy:3})};draw();let tm=null;
+/* ----- 2배 해상도 보정(2.5D): 그림을 2배로 키운 뒤 '반 칸 단위'로 입체 음영(디더) · 윤곽 안쪽 림라이트 · 얇은 윤곽선을 더한다 ----- */
+const HD_BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function hdEnhance(src,dst){const w=src.width,h=src.height,sd=src.getContext('2d').getImageData(0,0,w,h).data,W2=w*2,H2=h*2,dx=dst.getContext('2d'),out=dx.createImageData(W2,H2),o=out.data;
+ const al=(x,y)=>(x<0||y<0||x>=w||y>=h)?0:sd[(y*w+x)*4+3],px=(x,y,c)=>sd[(y*w+x)*4+c];
+ for(let y=0;y<H2;y++){const sy=y>>1;for(let x=0;x<W2;x++){const sx=x>>1,i=(sy*w+sx)*4,a=sd[i+3];if(!a)continue;let r=sd[i],g=sd[i+1],b=sd[i+2];
+  const q=(y*W2+x)*4,fx=x&1,fy=y&1,bay=HD_BAYER[(y&3)*4+(x&3)]/16;
+  const eL=al(sx-1,sy)===0,eR=al(sx+1,sy)===0,eT=al(sx,sy-1)===0,eB=al(sx,sy+1)===0,edge=eL||eR||eT||eB;
+  if(edge&&r+g+b<170){let nx=sx,ny=sy;if(eL&&fx===1)nx=sx+1;else if(eR&&fx===0)nx=sx-1;else if(eT&&fy===1)ny=sy+1;else if(eB&&fy===0)ny=sy-1;
+   if((nx!==sx||ny!==sy)&&al(nx,ny)){r=px(nx,ny,0);g=px(nx,ny,1);b=px(nx,ny,2)}}
+  else if(!edge){const sh=(x/W2-.46)*.75+(y/H2-.5)*.9;
+   if(sh>0){if(sh*1.35>bay){r*=.8;g*=.8;b*=.84}}else if(-sh*1.1>bay){r=Math.min(255,r*1.13+6);g=Math.min(255,g*1.13+6);b=Math.min(255,b*1.09+6)}
+   if((al(sx-2,sy)===0||al(sx,sy-2)===0)&&fx+fy===0){r=Math.min(255,r+44);g=Math.min(255,g+40);b=Math.min(255,b+34)}
+   else if((al(sx+2,sy)===0||al(sx,sy+2)===0)&&fx+fy===2){r*=.72;g*=.72;b*=.78}}
+  o[q]=r;o[q+1]=g;o[q+2]=b;o[q+3]=a}}
+ dx.putImageData(out,0,0)}
+function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=268;cvs.height=400;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
+ const tmp=document.createElement('canvas');tmp.width=134;tmp.height=200;const tctx=tmp.getContext('2d',{willReadFrequently:true});
+ const draw=()=>{tctx.clearRect(0,0,134,200);F.render(tctx,{cx:33,cy:3});hdEnhance(tmp,cvs)};draw();let tm=null;
  F.setTalking=on=>{if(on&&!tm){let o=false;tm=setInterval(()=>{o=!o;F.state.mouth=o?'open':(F.state.baseMouth||F.defaultMouth);draw()},220)}else if(!on&&tm){clearInterval(tm);tm=null;F.state.mouth=F.state.baseMouth||F.defaultMouth;draw()}};F.redraw=draw;return F}
 
 /* ----- 대기 장면: 판사석 의자 등받이(가죽 + 금 단추 + 접힌 무늬)를 픽셀로 칠한 배경 ----- */
@@ -1299,6 +1307,6 @@ function hdChairLayer(){const px=new HdPx(HDW,160),w=px.w,h=px.h,br=[90,58,34],b
 
 # 공용 스프라이트 코드를 각 연출 템플릿의 표시 자리에 끼워 넣는다 (SPRITES_JS 정의 이후에 실행되어야 함)
 VN_TEMPLATE = (VN_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS + "\n" + STAGE_JS).replace("/*__STAGE_CSS__*/", STAGE_CSS)
-               .replace("<!--__WAIT__-->", WAIT_HTML).replace("<!--__FAR__-->", LAYER_FAR).replace("<!--__NEAR__-->", LAYER_NEAR).replace("<!--__OVERLAYS__-->", OVERLAYS))
+               .replace("<!--__WAIT__-->", WAIT_HTML).replace("<!--__SCENE__-->", SCENE_HTML).replace("<!--__OVERLAYS__-->", OVERLAYS))
 STORY_TEMPLATE = STORY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
 LOBBY_TEMPLATE = LOBBY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
