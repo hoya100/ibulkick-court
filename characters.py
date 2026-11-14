@@ -30,8 +30,8 @@ SPRITE_DATA_VERSION = 7
 # 3D 모델(.vrm) 파일이 올라가 있는 인터넷 주소(폴더). 비워 두면 지금의 벡터 캐릭터를 씁니다. 설정 방법은 rig3d.py 맨 위 설명을 보세요.
 # 예) "https://cdn.jsdelivr.net/gh/내아이디/ibulkick-court@main/assets/models"
 MODEL_BASE_URL = "https://cdn.jsdelivr.net/gh/hoya100/ibulkick-court@main/assets/models"
-# True 이면 재판 화면 왼쪽 위에 3D 불러오기 진행 상황이 항상 표시됩니다. False 여도 오류가 나면 빨간 안내가 15초간 표시됩니다.
-MODEL_DEBUG = False
+# True 이면 화면 왼쪽 위에 3D 불러오기 진행 상황이 글자로 표시됩니다(3D 가 잘 뜨는 걸 확인하면 False 로). False 여도 오류가 나면 빨간 안내가 20초간 표시됩니다.
+MODEL_DEBUG = True
 # 캐릭터별 모델 파일 이름과 구도 보정(zoom: 클수록 가까이, fy: 위(+)/아래(-)로 이동)
 MODEL_FILES = {"JUDGE": {"file": "judge.vrm", "zoom": 1.0, "fy": 0.0}, "PROSECUTOR": {"file": "prosecutor.vrm", "zoom": 1.0, "fy": 0.0}, "LAWYER": {"file": "lawyer.vrm", "zoom": 1.0, "fy": 0.0}}
 
