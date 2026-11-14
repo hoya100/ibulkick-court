@@ -348,6 +348,8 @@ const BUST={};   // 인물 반신상 (HD 도트는 말하는 동안 입을 직�
 BUST.J=buildBust($('svgJ'),'JUDGE');
 BUST.P=buildBust($('svgP'),'PROSECUTOR');
 BUST.L=buildBust($('svgL'),'LAWYER');
+const BASEP={J:'main',P:'main',L:'smug'},KEYN={J:'JUDGE',P:'PROSECUTOR',L:'LAWYER'};
+for(const k in BASEP)if(BUST[k]&&BUST[k].pose)BUST[k].pose(BASEP[k],{snap:true});
 const EXPR=D.expr||{};
 const VCAM=(D.mode!=='wait')?Stage.make({view:$('scene'),pst:$('pst'),wrap:$('camwrap')}):null;   // 사진 법정 + 곡선 카메라 (stage.py)
 if(VCAM)VCAM.set(D.opening?Stage.LOOK.JPUSH:Stage.LOOK.WIDE);   // 막 사이 연결 장면은 '판사 줌' 그대로 이어서 시작
@@ -384,14 +386,70 @@ smq.onclick=e=>{e.stopPropagation();if(!smq.classList.contains('sure')){smq.clas
 let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',ended=false;
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
-function stopType(){clearInterval(timer);typing=false;$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
+function stopType(){clearInterval(timer);typing=false;if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
  if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push){const ls=D.steps[last()];Stage.push(VCAM,(ls&&ls.cam)||CAM[ls&&ls.s]||'J')}}}}
 function type(text){typing=true;full=text;let k=0;$('txt').textContent='';timer=setInterval(()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length)stopType()},D.speed||32)}
 const SHOUT={F:D.cast.PROSECUTOR.shout.text,S:D.cast.LAWYER.shout.text,O:D.cast.JUDGE.shout.text};
 function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' on';[520,780,1040].forEach((f,j)=>setTimeout(()=>beep(f,.16,.07),j*90));Stage.impact(k);setTimeout(()=>{e.className='';cb()},950)}
-function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
+
+/* =========================================================
+   연계 연출 감독 — 대사에 맞춰 '자세(팔·고개·소품)' + 표정 + 카메라 줌 + 화면 진동 + 효과음을 박자(beat)로 이어 붙인다.
+   COMBO 표에 한 줄 추가하면 새 연계 동작이 생깁니다.  d = 시작 후 ms, pose = HD_POSES 의 자세 이름, rate = 움직이는 속도(클수록 빠름)
+   ========================================================= */
+const CEL=c=>document.querySelector('#pst .char[data-c="'+c+'"]');
+function yawTo(c,deg,fast){const el=CEL(c);if(!el)return;const w=el.querySelector('.who');if(w)w.style.transitionDuration=fast?'.15s':'';el.style.setProperty('--ry',deg+'deg')}
+function sfx(n){({gasp:()=>{beep(420,.08,.06);setTimeout(()=>beep(900,.12,.06),70)},sparkle:()=>[1320,1760,2217].forEach((f,i)=>setTimeout(()=>beep(f,.1,.04),i*70)),cut:()=>beep(1300,.05,.06),whoosh:()=>beep(260,.16,.04),rumble:()=>beep(90,.45,.06),sigh:()=>beep(300,.4,.04)}[n]||(()=>{}))()}
+const HDXj=HDX;
+const COMBO={
+ /* 변호사 한유리: 여유(턱 괴기) → 팔짱 반격 → 당황 */
+ l_smug:[{d:0,pose:'smug',rate:6,yaw:12}],
+ l_cross:[{d:0,pose:'smug',rate:6},{d:380,pose:'cross',rate:7,expr:'smug',look:'LCROSS',yaw:24,sfx:'sparkle',icon:'sparkle'}],
+ l_panic:[{d:0,pose:'panic',rate:22,expr:'panic',look:'LPAN',yaw:8,fast:1,flinch:.3,sfx:'gasp',icon:'drop'},{d:520,jit:1.6}],
+ /* 검사 차냉정: 냉철 → 책상 쾅 + 속사포 삿대질 → 당황 멈칫 */
+ p_main:[{d:0,pose:'main',rate:6}],
+ p_slam:[{d:0,pose:'windup',rate:15,yaw:-5,sfx:'whoosh'},
+  {d:170,pose:'slam',rate:44,look:'PSLAM',yaw:-26,fast:1,flinch:1,thud:1,expr:'angry',icon:'anger'},
+  {d:560,set:{lx:HDXj-74,ly:84,pa:-8},rate:38,flinch:.4,sfx:'cut'},
+  {d:860,rapid:1}],
+ p_panic:[{d:0,pose:'panic',rate:24,expr:'panic',look:'PPAN',yaw:-6,fast:1,flinch:.25,sfx:'gasp',icon:'exclaim'},{d:700,jit:1.4}],
+ /* 판사 서판결: 서류 더미에 파묻힘 → 이마 박기 → 망치 */
+ j_main:[{d:0,pose:'main',rate:5}],
+ j_sigh:[{d:0,pose:'sigh',rate:6,sfx:'sigh'}],
+ j_sleep:[{d:0,pose:'sigh',rate:6,sfx:'sigh'},{d:850,pose:'sleep',rate:10,expr:'asleep',look:'JSLEEP',yaw:-4,thud:1,flinch:.55}],
+ j_gavel:[{d:0,pose:'gavUp',rate:9,look:'JGAV',yaw:-6,sfx:'rumble'},{d:520,pose:'gavHit',rate:55,look:'JGHIT',yaw:-10,fast:1,flinch:1,thud:1,expr:'angry',icon:'anger'},{d:1150,pose:'main',rate:5,look:'J'}]};
+let CH=[],RAP=null;
+function clearCH(){CH.forEach(clearTimeout);CH=[];if(RAP){clearInterval(RAP);RAP=null}}
+function beat(c,b){const F=BUST[c];if(!F)return;
+ if(F.pose){if(b.pose)F.pose(b.pose,{rate:b.rate});else if(b.set)F.pose(b.set,{rate:b.rate})}
+ if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
+ if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
+ if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-64,ly:92,pa:-14}:{lx:HDXj-76,ly:82,pa:-4},{rate:40});Stage.flinch(.16);sfx('cut')},300)}}
+function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
+/* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
+function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
+function chooseCombo(st,n){
+ if(st.pose&&COMBO[st.pose])return st.pose;
+ const c=CAM[st.s]||'J',t=st.t||'',prev=n>0?D.steps[n-1]:null,h=heat(n);
+ if(c==='P'){
+  if(st.c==='F')return 'p_slam';
+  if(/헉|뭐라|설마|말도 안|윽|큭|그럴 리|이럴 수|당황|아니 그게/.test(t)||(prev&&prev.c==='S'))return 'p_panic';
+  if(/[!?]{2}|!.*!/.test(t))return 'p_slam';
+  return 'p_main'}
+ if(c==='L'){
+  if(D.mode==='verdict'&&D.card)return D.card.ruling==='유죄'?'l_panic':'l_cross';
+  if(/헉|당황|식은땀|그,?\s?그건|어…|아…|곤란|들켰|불리/.test(t))return 'l_panic';
+  if(st.c==='S'||/허를|유리|당연|뻔|보시죠|정리|논리|ㅋ|훗|흐음|입증|반박|사실은|아무리/.test(t))return 'l_cross';
+  if(prev&&prev.c==='F')return /…|\.\.\./.test(t)?'l_panic':'l_cross';
+  return 'l_smug'}
+ if(st.c==='O'||/정숙|조용히|선고|판결합니다|개정|휴정/.test(t))return 'j_gavel';
+ const tired=/피곤|하품|퇴근|졸|하아|하…|귀찮|지치/.test(t);
+ if((tired&&h>=2)||(h>=4&&/…/.test(t)))return 'j_sleep';
+ if(tired)return 'j_sigh';
+ return 'j_main'}
+function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
  const speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t)};
- setTimeout(()=>{if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+140:150)}
+ setTimeout(()=>{runCombo(c,pk);if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+140:150)}
 function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
@@ -401,7 +459,7 @@ if(D.opening){$('start').style.display='none';started=true;i=0;setTimeout(()=>sh
 /* ---- 탕! 탕! 탕! → 판결문 ---- */
 function hit(){thud();scene.classList.remove('shake');void scene.offsetWidth;scene.classList.add('shake');const f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
  const h=document.createElement('div');h.className='hit';h.textContent='탕!';h.style.left=(18+Math.random()*40)+'%';h.style.top=(12+Math.random()*30)+'%';scene.appendChild(h);setTimeout(()=>h.remove(),850)}
-function gavel(){[0,750,1500].forEach(d=>setTimeout(hit,d));setTimeout(showCard,2900)}
+function gavel(){if(VCAM)Stage.look(VCAM,'J');[0,750,1500].forEach(d=>setTimeout(()=>{if(BUST.J&&BUST.J.pose){BUST.J.pose('gavUp',{rate:30});setTimeout(()=>{BUST.J.pose('gavHit',{rate:55});hit()},170)}else hit()},d));setTimeout(showCard,2900)}
 function showCard(){$('hint').style.display='none';const w=$('cardwrap');w.style.display='flex';[660,880,1320].forEach((f,k)=>setTimeout(()=>beep(f,.25,.06),k*140));
  for(let k=0;k<18;k++){const s=document.createElement('span');s.className='spark';s.textContent='✦';s.style.left=(Math.random()*92)+'%';s.style.top=(Math.random()*92)+'%';s.style.fontSize=(10+Math.random()*18)+'px';s.style.animationDelay=(Math.random()*1.2)+'s';w.appendChild(s)}}
 </script></body></html>"""
@@ -1278,15 +1336,17 @@ function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRam
  const fxc={},fxCanvas=k=>fxc[k]||(fxc[k]=(()=>{const p=new HdPx(W,H);k.split(',').forEach(n=>n&&hdPaintFx(p,R,st,n));return p.canvas()})());
  F.setLid=v=>{F.state.lid=v};F.setGaze=(a,b)=>{F.state.gx=a;F.state.gy=b};F.setBrow=d=>{F.state.brow=d};F.showMouth=n=>{F.state.mouth=n};
  let headKey='';
- F.composeHead=function(){const s=F.state;
-  const rows=Math.max(0,Math.round(st.lid_min+Math.max(0,Math.min(1,s.lid))*(st.eye_h+1-st.lid_min))),gx=Math.max(-2,Math.min(2,Math.round(s.gx*0.5))),gy=Math.max(-1,Math.min(1,Math.round(s.gy*0.4))),key=rows+'|'+gx+'|'+gy+'|'+Math.round(s.brow)+'|'+s.mouth+'|'+s.fx;if(key===headKey)return;headKey=key;hx.clearRect(0,0,W,H);hx.drawImage(cv.face,0,0);
-  [-1,1].forEach(side=>{const e=eyeAt(side,rows,gx,gy);hx.drawImage(e.c,e.ox,e.oy)});
-  hx.drawImage(brow.c,brow.ox,brow.oy+Math.round(s.brow));if(mouths[s.mouth])hx.drawImage(mouths[s.mouth],0,0);if(s.fx)hx.drawImage(fxCanvas(s.fx),0,0);hx.drawImage(cv.hairF,0,0)};
+ F.composeHead=function(fs){fs=fs||0;const s=F.state;
+  const rows=Math.max(0,Math.round(st.lid_min+Math.max(0,Math.min(1,s.lid))*(st.eye_h+1-st.lid_min))),gx=Math.max(-2,Math.min(2,Math.round(s.gx*0.5))),gy=Math.max(-1,Math.min(1,Math.round(s.gy*0.4))),key=rows+'|'+gx+'|'+gy+'|'+Math.round(s.brow)+'|'+s.mouth+'|'+s.fx+'|'+fs;if(key===headKey)return;headKey=key;hx.clearRect(0,0,W,H);hx.drawImage(cv.face,0,0);
+  [-1,1].forEach(side=>{const e=eyeAt(side,rows,gx,gy);hx.drawImage(e.c,e.ox+fs,e.oy)});
+  hx.drawImage(brow.c,brow.ox+fs,brow.oy+Math.round(s.brow));if(mouths[s.mouth])hx.drawImage(mouths[s.mouth],fs,0);if(s.fx)hx.drawImage(fxCanvas(s.fx),fs,0)};
  /* 표정 적용: characters.py 의 EXPRESSIONS 표(D.expr)에 적힌 값(입·눈썹·눈꺼풀·시선·효과)을 한 번에 바꾼다 */
  F.setExpr=function(name){const E=(D.expr||{})[name]||(D.expr||{}).neutral||{},S=F.state;S.baseMouth=(E.mouth&&mouths[E.mouth])?E.mouth:md.def;S.mouth=S.baseMouth;S.brow=E.brow||0;S.lid=E.lid||0;S.gx=E.gx||0;S.gy=E.gy||0;S.fx=(E.fx||[]).join(',');F.expr=name};
  F.render=function(ctx,o){o=o||{};ctx.imageSmoothingEnabled=false;const cx=o.cx||0,cy=o.cy||0,ty=Math.round(o.ty||0),lean=Math.round(o.lean||0),tilt=o.tilt||0;
-  ctx.drawImage(cv.back,-cx,ty-cy);ctx.drawImage(cv.torso,-cx,ty-cy);F.composeHead();
-  if(Math.abs(tilt)<0.6)ctx.drawImage(headC,-cx,ty+lean-cy);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)ctx.drawImage(headC,0,y,W,1,-cx+Math.round((96-y)*t),ty+lean+y-cy,W,1);ctx.drawImage(headC,0,104,W,H-104,-cx,ty+lean+104-cy,W,H-104)}
+  const tn=o.turn||0,dB=Math.round(-tn*.5),dT=Math.round(tn*.3),dF=Math.round(tn),dH=Math.round(tn*.6);   /* 3/4 반측면: 머리·얼굴·앞머리·몸을 서로 다른 양만큼 밀어 시차로 '고개 돌림' 입체감을 낸다 */
+  ctx.drawImage(cv.back,-cx+dB,ty+Math.round(lean*.85)-cy);ctx.drawImage(cv.torso,-cx+dT,ty-cy);F.composeHead(Math.round(tn*.6));
+  const dh=(img,dx)=>{if(Math.abs(tilt)<0.6)ctx.drawImage(img,-cx+dx,ty+lean-cy);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)ctx.drawImage(img,0,y,W,1,-cx+dx+Math.round((96-y)*t),ty+lean+y-cy,W,1);ctx.drawImage(img,0,104,W,H-104,-cx+dx,ty+lean+104-cy,W,H-104)}};
+  dh(headC,dF);dh(cv.hairF,dH);
   if(o.arms){const cw=o.cw||W,ch=o.ch||H;F._arc=F._arc||{};
    ['L','R'].forEach(k=>{const a=o.arms[k];if(!a)return;const pts=[a.S,a.E,a.H].map(q=>[q[0]-cx,q[1]-cy]),xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]),
     x0=Math.max(0,Math.floor(Math.min.apply(null,xs))-12),y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-12),x1=Math.min(cw,Math.ceil(Math.max.apply(null,xs))+12),y1=Math.min(ch,Math.ceil(Math.max.apply(null,ys))+12),bw=x1-x0,bh=y1-y0;if(bw<=0||bh<=0)return;
@@ -1310,10 +1370,68 @@ function hdEnhance(src,dst){const w=src.width,h=src.height,sd=src.getContext('2d
    else if((al(sx+2,sy)===0||al(sx,sy+2)===0)&&fx+fy===2){r*=.72;g*=.72;b*=.78}}
   o[q]=r;o[q+1]=g;o[q+2]=b;o[q+3]=a}}
  dx.putImageData(out,0,0)}
+/* ===== 포즈 장치: 같은 캐릭터(도트 인물)가 팔(역기구학)·고개 기울임·몸 숙임·소품(서류 더미·책상·망치·삿대질)으로 연속 동작을 한다 =====
+   HD_POSES[캐릭터][자세이름] = { la/ra: 왼팔/오른팔 사용, lx,ly / rx,ry: 손 위치(캐릭터 도화지 좌표), tilt: 고개 기울기, lean: 고개 숙임(px), ty: 몸 내려앉음(px),
+   turn: 3/4 반측면 시차(px, +는 오른쪽을 봄), docs: 서류 더미 높이(0~1), desk: 책상 올라옴(0~1), gon/gv: 망치 들기/각도, pl/pa: 왼손 삿대질(길이/각도), burst: 타격 이펙트, doze: 꾸벅임, jit: 떨림 }
+   새 자세를 만들려면 이 표에 한 줄만 추가하세요. */
+const HD_POSES={
+ JUDGE:{
+  main:{docs:1,ty:12,lean:3,tilt:4,turn:-3,doze:2.4,la:1,lx:HDX-46,ly:156,ra:1,rx:HDX+46,ry:156},
+  sigh:{docs:1,ty:14,lean:7,tilt:7,turn:-3,doze:.9,la:1,lx:HDX-46,ly:156,ra:1,rx:HDX+20,ry:64},
+  sleep:{docs:1,desk:1,ty:22,lean:70,tilt:8,turn:-2,la:1,lx:HDX-30,ly:166,ra:1,rx:HDX+30,ry:166},
+  gavUp:{docs:.5,desk:1,ty:0,lean:-3,tilt:-3,turn:-4,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+56,ry:78,gon:1,gv:24},
+  gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
+ PROSECUTOR:{
+  main:{turn:-3,la:1,lx:HDX+8,ly:140,ra:1,rx:HDX-8,ry:146},
+  windup:{turn:-4,lean:-4,tilt:-2,ty:-2,la:1,lx:HDX-46,ly:80,pl:1,pa:-70,ra:1,rx:HDX+30,ry:120},
+  slam:{turn:-9,lean:14,tilt:-3,ty:8,la:1,lx:HDX-60,ly:92,pl:1,pa:-15,ra:1,rx:HDX+34,ry:168,burst:1},
+  panic:{turn:-3,lean:-5,tilt:-4,ty:2,la:1,lx:HDX-12,ly:116,ra:1,rx:HDX+12,ry:116}},
+ LAWYER:{
+  smug:{turn:5,lean:3,tilt:-5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
+  cross:{turn:8,lean:-2,tilt:4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
+  panic:{turn:4,lean:4,tilt:-3,ty:2,la:1,lx:HDX-26,ly:104,ra:1,rx:HDX+26,ry:104}}};
+HD_POSES.LAWYER.main=HD_POSES.LAWYER.smug;
+const HD_BASE_POSE={tilt:0,lean:0,ty:0,turn:0,desk:0,docs:0,gv:0,gon:0,pl:0,pa:0,doze:0,jit:0};
 function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=268;cvs.height=400;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
- const tmp=document.createElement('canvas');tmp.width=134;tmp.height=200;const tctx=tmp.getContext('2d',{willReadFrequently:true});
- const draw=()=>{tctx.clearRect(0,0,134,200);F.render(tctx,{cx:33,cy:3});hdEnhance(tmp,cvs)};draw();let tm=null;
- F.setTalking=on=>{if(on&&!tm){let o=false;tm=setInterval(()=>{o=!o;F.state.mouth=o?'open':(F.state.baseMouth||F.defaultMouth);draw()},220)}else if(!on&&tm){clearInterval(tm);tm=null;F.state.mouth=F.state.baseMouth||F.defaultMouth;draw()}};F.redraw=draw;return F}
+ const tmp=document.createElement('canvas');tmp.width=134;tmp.height=200;const tctx=tmp.getContext('2d',{willReadFrequently:true});tctx.imageSmoothingEnabled=false;
+ const sd=F.style,CXo=33,CYo=3,SLx=HDX-sd.shoulder_dx,SRx=HDX+sd.shoulder_dx,SYo=sd.shoulder_y,L1=26,L2=27.5,REST={L:[SLx-4,SYo+54],R:[SRx+4,SYo+54]};
+ const NUM=['lx','ly','rx','ry','tilt','lean','ty','turn','desk','docs','gv','gon','pl','pa','doze','jit','burst'];
+ const base0=()=>Object.assign({},HD_BASE_POSE,{lx:REST.L[0],ly:REST.L[1],rx:REST.R[0],ry:REST.R[1],burst:0});
+ const cur=base0(),tgt=base0();let armL=false,armR=false,laT=false,raT=false,rate=9,t=0,raf=0,lastTs=0,lastDraw=0,hl=[0,0],hr=[0,0],talk=null;
+ function ik2(S,T){const dx=T[0]-S[0],dy=T[1]-S[1],d=Math.hypot(dx,dy),maxd=L1+L2-.6,mind=Math.abs(L1-L2)+2,reach=Math.max(mind,Math.min(maxd,d)),base=Math.atan2(dy,dx),cb=(L1*L1+reach*reach-L2*L2)/(2*L1*reach),b=Math.acos(Math.max(-1,Math.min(1,cb)));
+  const c=[base+b,base-b].map(a=>({ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>q.ey-p.ey)[0];return {ex:c.ex,ey:c.ey,hx:S[0]+reach*Math.cos(base),hy:S[1]+reach*Math.sin(base)}}
+ const rgb=c=>'rgb('+c[0]+','+c[1]+','+c[2]+')',SK=F.R.skin;
+ function props(){const c=tctx;
+  if(cur.docs>.02){const pile=(x0,w,hh,seed)=>{const n=Math.max(1,Math.round(hh/6));for(let i=0;i<n;i++){const yy=200-(i+1)*6,off=((i*37+seed)%7)-3,ww=w-((i*11+seed)%9);c.fillStyle='#2a1a10';c.fillRect(x0+off-1,yy-1,ww+2,8);c.fillStyle=i%2?'#efe6c6':'#fffaf0';c.fillRect(x0+off,yy,ww,6);c.fillStyle='#9aa0bb';c.fillRect(x0+off+3,yy+3,Math.max(2,ww-9),1)}};pile(-2,40,64*cur.docs,3);pile(96,40,52*cur.docs,11)}
+  if(cur.desk>.02){const top=Math.round(200-cur.desk*46);c.fillStyle='#2a1608';c.fillRect(-2,top-2,140,206-top);c.fillStyle='#8f5a30';c.fillRect(-2,top,140,206-top);c.fillStyle='#e0a86e';c.fillRect(-2,top,140,3);c.fillStyle='#6f4222';c.fillRect(-2,top+16,140,2)}
+  if(cur.gon>.5){const x=hr[0]-CXo,y=hr[1]-CYo;c.save();c.translate(x,y);c.rotate(cur.gv*Math.PI/180);c.fillStyle='#2a1608';c.fillRect(-4,-34,8,38);c.fillStyle='#8a5a2c';c.fillRect(-2.5,-33,5,36);
+   c.fillStyle='#2a1608';c.fillRect(-14,-46,28,14);c.fillStyle='#b07a3e';c.fillRect(-12.5,-44.5,25,11);c.fillStyle='#e8c25a';c.fillRect(-9,-44.5,3,11);c.fillRect(6,-44.5,3,11);c.fillStyle='#ffffff55';c.fillRect(-12.5,-44.5,25,3);c.restore()}
+  if(cur.pl>.5){const x=hl[0]-CXo,y=hl[1]-CYo,a=cur.pa*Math.PI/180,len=17;c.lineCap='round';c.strokeStyle='#2a1020';c.lineWidth=6;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke();c.strokeStyle=rgb(SK.base);c.lineWidth=3.2;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke()}
+  if(cur.burst>.03){const x=hr[0]-CXo,y=hr[1]-CYo,b=cur.burst;c.lineCap='butt';for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r0=7+(1-b)*10,r1=r0+8+b*12;c.strokeStyle=i%2?'#fff':'#ffd23f';c.lineWidth=2;c.beginPath();c.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);c.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.stroke()}}}
+ function draw(){const tn=cur.turn,dT=Math.round(tn*.3),ty=Math.round(cur.ty);let ln=cur.lean,tl=cur.tilt,jx=0,jy=0;
+  if(cur.doze>.02){ln+=Math.sin(t*1.5)*cur.doze;tl+=Math.sin(t*1.1)*cur.doze*.6}
+  if(cur.jit>.02){jx=(Math.random()-.5)*cur.jit*2;jy=(Math.random()-.5)*cur.jit*2;tl+=(Math.random()-.5)*cur.jit}
+  tctx.clearRect(0,0,134,200);const arms={};
+  if(armL){const S=[SLx+dT,SYo+ty],r=ik2(S,[cur.lx+jx,cur.ly+jy]);arms.L={S:S,E:[r.ex,r.ey],H:[r.hx,r.hy]};hl=[r.hx,r.hy]}
+  if(armR){const S=[SRx+dT,SYo+ty],r=ik2(S,[cur.rx-jx,cur.ry+jy]);arms.R={S:S,E:[r.ex,r.ey],H:[r.hx,r.hy]};hr=[r.hx,r.hy]}
+  F.render(tctx,{cx:CXo,cy:CYo,tilt:tl,lean:Math.round(ln),ty:ty,turn:tn,arms:(armL||armR)?arms:null});props();hdEnhance(tmp,cvs)}
+ function tick(ts){raf=0;const dt=Math.min(.06,(ts-lastTs)/1000||.016);lastTs=ts;t+=dt;const k=1-Math.exp(-rate*dt);let mv=0;
+  for(const n of NUM){const d=tgt[n]-cur[n];cur[n]+=d*k;mv=Math.max(mv,Math.abs(d))}
+  if(cur.burst>0)cur.burst=Math.max(0,cur.burst-dt*2.6);
+  if(laT)armL=true;else if(armL&&Math.hypot(cur.lx-REST.L[0],cur.ly-REST.L[1])<3)armL=false;
+  if(raT)armR=true;else if(armR&&Math.hypot(cur.rx-REST.R[0],cur.ry-REST.R[1])<3)armR=false;
+  if(mv>1.5||ts-lastDraw>=40){lastDraw=ts;draw()}
+  if(mv>.12||tgt.doze>0||tgt.jit>0||cur.burst>.03||cur.doze>.03||cur.jit>.03||(armL&&!laT)||(armR&&!raT))raf=requestAnimationFrame(tick);else draw()}
+ function kick(){if(!raf){lastTs=performance.now();raf=requestAnimationFrame(tick)}}
+ /* 자세 바꾸기: F.pose('slam',{rate:40}) / 일부만 덮어쓰기 F.pose({lx:-70},{rate:30}) / {snap:true}=즉시 */
+ F.pose=function(p,o){o=o||{};const named=typeof p==='string',P=named?((HD_POSES[key]||{})[p]||(HD_POSES[key]||{}).main||{}):p;
+  if(named)Object.assign(tgt,base0(),P);else Object.assign(tgt,P);
+  if(named||('la' in P))laT=!!P.la;if(named||('ra' in P))raT=!!P.ra;if(o.over)Object.assign(tgt,o.over);
+  rate=o.rate||9;if(P.burst)cur.burst=P.burst;tgt.burst=0;if(named)F.poseName=p;
+  if(o.snap){for(const n of NUM)cur[n]=tgt[n];if(laT)armL=true;if(raT)armR=true;cur.burst=P.burst||0}kick()};
+ F.setJit=v=>{tgt.jit=v;kick()};
+ draw();
+ F.setTalking=on=>{if(on&&!talk){let o=false;talk=setInterval(()=>{o=!o;F.state.mouth=o?'open':(F.state.baseMouth||F.defaultMouth);draw()},220)}else if(!on&&talk){clearInterval(talk);talk=null;F.state.mouth=F.state.baseMouth||F.defaultMouth;draw()}};F.redraw=draw;return F}
 
 /* ----- 대기 장면: 판사석 의자 등받이(가죽 + 금 단추 + 접힌 무늬)를 픽셀로 칠한 배경 ----- */
 function hdChairLayer(){const px=new HdPx(HDW,160),w=px.w,h=px.h,br=[90,58,34],br2=[112,72,42],gold=[222,188,92],deep=hdMix(br,[10,6,4],.55),gs=hdMix(gold,[70,44,10],.5),gh=hdMix(gold,HD_WHITE,.55);
