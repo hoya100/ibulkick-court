@@ -323,7 +323,7 @@ if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  function tick(dtMs){const dt=Math.min(dtMs,64)/1000;t+=dt;if(!step||t>=stepEnd)nextStep();if(bubbleOff&&t>bubbleOff){say(null);bubbleOff=0}render(dt)}
  /* 크기 맞춤 + 먼지 입자 */
  function fit(){if(window.Stage)Stage.relayout()}
- window.addEventListener('resize',fit);fit();Stage.wait(kind);
+ window.addEventListener('resize',fit);fit();Stage.wait(kind,D.src);
  (function(){const d=g('w-dust');for(let i=0;i<18;i++){const e=document.createElement('div');e.className='dust';e.style.left=(Math.random()*96)+'%';e.style.top=(30+Math.random()*60)+'%';e.style.setProperty('--d',(9+Math.random()*8)+'s');e.style.setProperty('--l',(-Math.random()*12)+'s');d.appendChild(e)}})();
  window.__wait={tick:tick,pose:function(n){tgt=P[n];step=n;stepEnd=1e9;idx=0},poses:Object.keys(P),fig:F||hdF};
  let last=0;function loop(ts){if(last)tick(ts-last);last=ts;requestAnimationFrame(loop)}requestAnimationFrame(loop);
@@ -364,7 +364,7 @@ let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',end
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
 function stopType(){clearInterval(timer);typing=false;$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
- if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push)Stage.push(VCAM)}}}
+ if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push){const ls=D.steps[last()];Stage.push(VCAM,(ls&&ls.cam)||CAM[ls&&ls.s]||'J')}}}}
 function type(text){typing=true;full=text;let k=0;$('txt').textContent='';timer=setInterval(()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length)stopType()},D.speed||32)}
 const SHOUT={F:D.cast.PROSECUTOR.shout.text,S:D.cast.LAWYER.shout.text,O:D.cast.JUDGE.shout.text};
 function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' on';[520,780,1040].forEach((f,j)=>setTimeout(()=>beep(f,.16,.07),j*90));Stage.impact(k);setTimeout(()=>{e.className='';cb()},950)}
@@ -385,8 +385,8 @@ function showCard(){$('hint').style.display='none';const w=$('cardwrap');w.style
  for(let k=0;k<18;k++){const s=document.createElement('span');s.className='spark';s.textContent='✦';s.style.left=(Math.random()*92)+'%';s.style.top=(Math.random()*92)+'%';s.style.fontSize=(10+Math.random()*18)+'px';s.style.animationDelay=(Math.random()*1.2)+'s';w.appendChild(s)}}
 </script></body></html>"""
 
-def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False):
-    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
+def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False, src=""):
+    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
     payload = payload.replace("</", "<\\/")  # </script> 깨짐 방지
     components.html(VN_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
 
