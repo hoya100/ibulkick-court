@@ -502,7 +502,10 @@ elif stage == "LOADING":
     args, kwargs = build_call(kind)
     # 장면(iframe)을 먼저 화면에 띄운 뒤, 그 장면이 계속 연기하는 동안 AI 응답을 기다린다.
     with st.container(key="wait_stage"):
-        _render_vn("wait", [], phase=kind, height=VN_H, **vn_opts())
+        # 변명 제출 직후 카메라: 마지막으로 질문한 캐릭터에서 출발해 판사에게 줌 이동
+        _prev = ss.get("p1", {}).get("steps") if kind == "p2" else (ACT2_OPEN + ss.get("p2", {}).get("steps", [])) if kind == "verdict" else None
+        _src = _prev[-1].get("s", "") if _prev else ""
+        _render_vn("wait", [], phase=kind, height=VN_H, src=_src, **vn_opts())
     try:
         raw = call_llm_json(*args, **kwargs)
         nxt = apply_result(kind, raw)
