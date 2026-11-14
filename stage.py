@@ -130,7 +130,14 @@ const LOOK={
  P:{fx:.26,fy:.53,z:1.85,yaw:-3.5,pitch:0,roll:-.5,dur:.28,ease:'snap',arc:.5},          /* 검사: 빠르고 예리하게 꺾임 */
  L:{fx:.74,fy:.53,z:1.85,yaw:3.5,pitch:0,roll:.5,dur:.9,ease:'io',arc:.75},             /* 변호사: 느긋하게 곡선을 그리며 */
  PPUSH:{fx:.26,fy:.53,z:2.5,yaw:-3.5,pitch:0,roll:-.5,dur:6,ease:'out',arc:0},          /* 질문 끝(검사가 물었을 때): 검사 쪽으로 천천히 줌인 */
- LPUSH:{fx:.74,fy:.53,z:2.5,yaw:3.5,pitch:0,roll:.5,dur:6,ease:'out',arc:0}              /* 질문 끝(변호사가 물었을 때): 변호사 쪽으로 천천히 줌인 */
+ LPUSH:{fx:.74,fy:.53,z:2.5,yaw:3.5,pitch:0,roll:.5,dur:6,ease:'out',arc:0},             /* 질문 끝(변호사가 물었을 때): 변호사 쪽으로 천천히 줌인 */
+ PSLAM:{fx:.26,fy:.52,z:2.35,yaw:-6.5,pitch:2,roll:-1.3,dur:.16,ease:'snap',arc:0},        /* 검사 책상 쾅: 순간 줌인 */
+ PPAN:{fx:.26,fy:.53,z:2.1,yaw:-4,pitch:1,roll:-.6,dur:.2,ease:'snap',arc:0},              /* 검사 당황 멈칫 */
+ LCROSS:{fx:.74,fy:.52,z:1.7,yaw:7,pitch:0,roll:.8,dur:1.4,ease:'io',arc:.6},              /* 변호사 팔짱: 뒤로 빠지며 여유 */
+ LPAN:{fx:.74,fy:.53,z:2.15,yaw:2,pitch:1,roll:-.6,dur:.2,ease:'snap',arc:0},              /* 변호사 움찔 */
+ JSLEEP:{fx:.5,fy:.47,z:2.45,yaw:0,pitch:3,roll:0,dur:1.1,ease:'out',arc:.2},              /* 판사 널부러짐 */
+ JGAV:{fx:.5,fy:.42,z:2.5,yaw:0,pitch:-2,roll:0,dur:.5,ease:'io',arc:.2},                  /* 망치 들기 */
+ JGHIT:{fx:.5,fy:.43,z:2.85,yaw:0,pitch:-4,roll:.6,dur:.14,ease:'snap',arc:0}              /* 망치 내리치기: 순간 줌인 */
 };
 const EASE={io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,out:t=>1-Math.pow(1-t,3),snap:t=>{const c=1.1,d=c+1;return 1+d*Math.pow(t-1,3)+c*Math.pow(t-1,2)},lin:t=>t};
 
