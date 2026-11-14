@@ -91,6 +91,14 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 @keyframes blink{50%{opacity:.15}}
 #hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:12;display:none;white-space:nowrap;background:#b3121c;color:#fff;padding:6px 14px;font-weight:700;font-size:13px;border:2px solid #fff;animation:blink 1s steps(2) infinite}
 #mute{position:absolute;top:8px;right:8px;z-index:30;background:#000a;color:#fff;border:2px solid #fff6;padding:3px 8px;font-size:14px;cursor:pointer}
+#sm{display:none;position:absolute;inset:0;z-index:60;background:#000b;align-items:center;justify-content:center;cursor:default}
+#sm.on{display:flex}
+#smbox{width:min(300px,84%);background:#151b4a;border:4px solid #ffd23f;box-shadow:6px 6px 0 #000;padding:16px 14px;color:#fff;text-align:center}
+#smbox h3{margin:0 0 12px;font-size:18px;color:#ffe066;letter-spacing:2px}
+#smbox button{display:block;width:100%;margin:8px 0;padding:11px 6px;font:inherit;font-size:15px;color:#fff;background:#3a4a9a;border:3px solid #0d0f26;box-shadow:3px 3px 0 #000;cursor:pointer}
+#smbox button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+#smbox #sm_go{background:#2f9e57}#smbox #sm_quit{background:#b5382e}#smbox #sm_quit.sure{background:#ff2b1c;animation:smblink .6s infinite alternate}
+@keyframes smblink{to{filter:brightness(1.4)}}
 /* 효과 */
 #scene.shake{animation:shake .5s}
 @keyframes shake{0%,100%{transform:translate(0)}20%{transform:translate(-9px,6px)}40%{transform:translate(8px,-7px)}60%{transform:translate(-7px,-5px)}80%{transform:translate(6px,7px)}}
@@ -204,7 +212,8 @@ html.wait #scene{display:none}
  <div id="hint"></div><div id="phase"></div><div id="shout"></div><div id="frame"></div>
  <div id="dlg"><div id="tag"><div id="tagin">재판관</div></div><div id="box"></div><div id="boxin"><div id="txt"></div></div><div id="arrow">»</div></div>
  <div id="flash"></div><div id="crt"></div>
- <div id="mute">🔊</div>
+ <div id="mute">⚙️</div>
+ <div id="sm"><div id="smbox"><h3>⚙️ 설 정</h3><button id="sm_snd">🔊 효과음 켜짐</button><button id="sm_go">▶ 계속하기</button><button id="sm_quit">🏳️ 재판 포기 (로비로)</button></div></div>
  <div id="cardwrap"><div class="card"><div class="card-in"><div class="stamp" id="c_stamp">유죄</div>
   <div class="ctitle">― 이불킥 법정 ―</div><h2>공 식 판 결 문</h2><div class="csub" id="c_title"></div>
   <div class="row"><b>피 고 인</b><span id="c_name"></span></div>
@@ -357,7 +366,19 @@ let AC=null,muted=!!D.mute;
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
 function beep(f,d,v){if(muted)return;const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=f;g.gain.value=v||.04;o.connect(g);g.connect(a.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.stop(a.currentTime+d)}
 function thud(){if(muted)return;const a=ac();if(!a)return;const n=Math.floor(a.sampleRate*.25),b=a.createBuffer(1,n,a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const s=a.createBufferSource();s.buffer=b;const g=a.createGain();g.gain.value=.5;s.connect(g);g.connect(a.destination);s.start();const o=a.createOscillator(),g2=a.createGain();o.frequency.setValueAtTime(170,a.currentTime);o.frequency.exponentialRampToValueAtTime(40,a.currentTime+.2);g2.gain.setValueAtTime(.7,a.currentTime);g2.gain.exponentialRampToValueAtTime(.001,a.currentTime+.25);o.connect(g2);g2.connect(a.destination);o.start();o.stop(a.currentTime+.26)}
-$('mute').textContent=muted?'🔇':'🔊';$('mute').onclick=e=>{e.stopPropagation();muted=!muted;$('mute').textContent=muted?'🔇':'🔊'};
+/* ---- ⚙️ 설정창: 열면 재판이 멈추고(대사 넘김 차단) 소리 설정 / 계속하기 / 재판 포기가 뜬다 ---- */
+let paused=false;const sm=$('sm'),smq=$('sm_quit');
+const smSnd=()=>{$('sm_snd').textContent=muted?'🔇 효과음 꺼짐':'🔊 효과음 켜짐'};
+function smOpen(){paused=true;sm.classList.add('on');smq.classList.remove('sure');smq.textContent='🏳️ 재판 포기 (로비로)';smSnd();document.getElementById('scene').classList.add('paused')}
+function smClose(){paused=false;sm.classList.remove('on');document.getElementById('scene').classList.remove('paused')}
+$('mute').onclick=e=>{e.stopPropagation();smOpen()};
+sm.addEventListener('click',e=>e.stopPropagation());
+$('sm_go').onclick=e=>{e.stopPropagation();smClose()};
+$('sm_snd').onclick=e=>{e.stopPropagation();muted=!muted;smSnd();if(!muted)beep(880,.1)};
+if(D.mode!=='debate')smq.style.display='none';
+smq.onclick=e=>{e.stopPropagation();if(!smq.classList.contains('sure')){smq.classList.add('sure');smq.textContent='⚠️ 정말 포기? 한 번 더 누르세요';return}
+ try{const b=window.parent.document.querySelector('.st-key-giveup_hidden button');if(b){b.click();return}}catch(err){}
+ smq.textContent='포기 버튼을 찾지 못했어요 — 새로고침 해주세요'};
 
 /* ---- 진행 엔진 ---- */
 let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',ended=false;
@@ -371,7 +392,7 @@ function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' o
 function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
  const speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t)};
  setTimeout(()=>{if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+140:150)}
-function adv(){if(!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
+function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
 $('start').addEventListener('click',e=>{e.stopPropagation();ac();beep(880,.12);$('start').style.display='none';const go0=()=>{started=true;i=0;show(0)};if(D.intro&&D.mode==='debate')Stage.intro(VCAM,go0);else go0()});
