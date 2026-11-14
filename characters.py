@@ -25,7 +25,7 @@
 import os
 
 # 스프라이트 데이터 형식의 버전. templates.py 의 SPRITE_ENGINE_VERSION 과 같아야 합니다 (스타일 이름·팔레트·render.mode 등을 바꿔 형식이 달라지면 둘을 같이 올리세요).
-SPRITE_DATA_VERSION = 3
+SPRITE_DATA_VERSION = 4
 
 # =================================================================
 # 1. 캐릭터 데이터 (오리지널 캐릭터 3인방)
@@ -324,6 +324,44 @@ def _validate_characters():
 
 
 _validate_characters()
+
+# =================================================================
+# 1-B. 표정 표 (EXPRESSIONS) — 표정을 늘리고 싶으면 여기에 한 줄만 추가하세요 (엔진 코드는 건드릴 필요 없음)
+# =================================================================
+# mouth : 입 모양 (grin/smile/open/flat/hmm 중 하나, None 이면 캐릭터 기본 입)
+# brow  : 눈썹 위치 (음수=위로 올림, 양수=내림)     lid : 눈꺼풀 (0=기본, 1=감음)     gx/gy : 시선 (눈동자 좌우/상하)
+# fx    : 얼굴 위에 얹는 효과 (blush 볼터치 / sweat 식은땀 / tears 눈물 / vein 분노 마크)
+# 대사 데이터(step)에 "e": "표정이름" 을 넣으면 그 표정으로, 없으면 외침 종류(F/S/O)에 따라 자동 선택됩니다.
+EXPRESSIONS = {
+    "neutral":   {"label": "기본",   "mouth": None,   "brow": 0,  "lid": 0,    "gx": 0, "gy": 0, "fx": []},
+    "smirk":     {"label": "비웃음", "mouth": "grin", "brow": -1, "lid": 0.25, "gx": 1, "gy": 0, "fx": []},
+    "aggrieved": {"label": "억울함", "mouth": "hmm",  "brow": -1, "lid": 0,    "gx": 0, "gy": 2, "fx": ["blush", "sweat"]},
+    "tears":     {"label": "눈물",   "mouth": "hmm",  "brow": 1,  "lid": 0.3,  "gx": 0, "gy": 2, "fx": ["tears", "blush"]},
+    "shock":     {"label": "충격",   "mouth": "open", "brow": -2, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"]},
+    "angry":     {"label": "분노",   "mouth": "flat", "brow": 2,  "lid": 0.2,  "gx": 0, "gy": 0, "fx": ["vein"]},
+}
+EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm")
+EXPR_FX = ("blush", "sweat", "tears", "vein")
+
+
+def _validate_expressions():
+    if "neutral" not in EXPRESSIONS:
+        raise ValueError("EXPRESSIONS 에 'neutral' 이 있어야 합니다")
+    for n, e in EXPRESSIONS.items():
+        if e.get("mouth") is not None and e["mouth"] not in EXPR_MOUTHS:
+            raise ValueError(f"EXPRESSIONS['{n}'] mouth='{e['mouth']}' 는 없는 입 모양입니다. 가능: {EXPR_MOUTHS}")
+        bad = [f for f in e.get("fx", []) if f not in EXPR_FX]
+        if bad:
+            raise ValueError(f"EXPRESSIONS['{n}'] fx 에 없는 효과가 있습니다: {bad}. 가능: {EXPR_FX}")
+
+
+_validate_expressions()
+
+
+def expressions_payload():
+    """화면 연출(templates.py)에 넘기는 표정 표 (JSON 직렬화 가능)"""
+    return {n: dict(e) for n, e in EXPRESSIONS.items()}
+
 
 # =================================================================
 # 2. 기존 모듈과 호환되는 파생 상수 (위 데이터에서 자동 생성)
