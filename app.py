@@ -416,7 +416,6 @@ elif stage == "STORY_ASK":
 elif stage == "STORY":
     ss["story_asked"] = True  # 스토리를 한 번이라도 열었다면 이후 [시작]에서 다시 묻지 않는다
     render_story(height=VN_H, **vn_opts())
-    st.caption("▶ 화면을 클릭하면 빨리 넘어가요. 이야기가 끝나면 아래 버튼으로 입장하세요.")
     with st.container(key="story_nav"):
         s1, s2 = st.columns([1, 1.4])
         if s1.button("◀ 타이틀", use_container_width=True, key="st_back"):
@@ -529,11 +528,11 @@ elif stage == "LOADING":
 
 # ---------------- DEBATE1 ----------------
 elif stage == "DEBATE1":
-    _render_vn(
-        "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
-        phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, push=True, **vn_opts(),
-    )
-    st.caption("▶ 화면을 클릭(터치)하거나 Space/Enter로 대사를 넘기세요. 천천히 읽고, 심문이 끝나면 변명 입력창이 아래에서 올라옵니다.")
+    with st.container(key="vn_stage"):
+        _render_vn(
+            "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
+            phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, push=True, **vn_opts(),
+        )
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup1"):
         go("LOBBY")
     show_error()
@@ -545,11 +544,11 @@ elif stage == "DEBATE1":
 
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
-    _render_vn(
-        "debate", ACT2_OPEN + ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
-        phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", opening="act2", push=True, **vn_opts(),
-    )
-    st.caption("▶ 1차 변명을 두고 벌어지는 공방입니다. 마지막 질문이 끝나면 변명 입력창이 올라옵니다. 사실에 맞고 진심이 담길수록 무죄에 가까워요!")
+    with st.container(key="vn_stage"):
+        _render_vn(
+            "debate", ACT2_OPEN + ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
+            phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", opening="act2", push=True, **vn_opts(),
+        )
     if st.button("🏳️ 재판 포기 (로비로)", key="giveup2"):
         go("LOBBY")
     show_error()
@@ -571,7 +570,8 @@ elif stage == "VERDICT":
             "rank_before": res["rank_before"], "rank_after": res["rank_after"], "dir": res["dir"], "streak": res["streak"],
         } if res else None,
     }
-    _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict", **vn_opts())
+    with st.container(key="vn_stage"):
+        _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict", **vn_opts())
     if res and not ss.get("show_result"):
         st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
         _, show_col, _ = st.columns([1, 2, 1])
