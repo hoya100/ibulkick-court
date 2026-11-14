@@ -25,7 +25,13 @@
 import os
 
 # 스프라이트 데이터 형식의 버전. templates.py 의 SPRITE_ENGINE_VERSION 과 같아야 합니다 (스타일 이름·팔레트·render.mode 등을 바꿔 형식이 달라지면 둘을 같이 올리세요).
-SPRITE_DATA_VERSION = 5
+SPRITE_DATA_VERSION = 7
+
+# 3D 모델(.vrm) 파일이 올라가 있는 인터넷 주소(폴더). 비워 두면 지금의 벡터 캐릭터를 씁니다. 설정 방법은 rig3d.py 맨 위 설명을 보세요.
+# 예) "https://cdn.jsdelivr.net/gh/내아이디/ibulkick-court@main/assets/models"
+MODEL_BASE_URL = ""
+# 캐릭터별 모델 파일 이름과 구도 보정(zoom: 클수록 가까이, fy: 위(+)/아래(-)로 이동)
+MODEL_FILES = {"JUDGE": {"file": "judge.vrm", "zoom": 1.0, "fy": 0.0}, "PROSECUTOR": {"file": "prosecutor.vrm", "zoom": 1.0, "fy": 0.0}, "LAWYER": {"file": "lawyer.vrm", "zoom": 1.0, "fy": 0.0}}
 
 # =================================================================
 # 1. 캐릭터 데이터 (오리지널 캐릭터 3인방)
@@ -115,7 +121,9 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "messy_short", "eyes": "sleepy_half", "brows": "low_tired", "mouth": "weary", "outfit": "judge_robe",
                       "eye_h": 9, "eye_top": 50, "lid_min": 3.8,   # 눈 높이 / 눈 세로 위치 / 평소 눈꺼풀 내려온 정도(졸림)
                       "shoulder_dx": 44, "shoulder_y": 106, "sleeve_w": 17},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 1},
+            "rig": {"body": "broad", "hair": "messy", "jaw": "tidy", "outfit": "judge_robe", "iris": "#3b3b5c", "iris2": "#8a8ab4", "lash": "#08080c",
+                    "tilt": 3, "eyeW": 1.0, "eyeH": 0.92, "mouth": "weary", "sleepy": 0.42, "blushA": 0.35, "pin": "bunny", "rim": "#9fb4e8"},
+            "render": {"mode": "layered25d", "rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 5.2, "idle": ["yawn", "check_watch", "rub_eyes", "slump"], "breath_amp": 0.5},
         },
         "illustration": {"portrait": "assets/characters/judge_portrait.png", "bust": "assets/characters/judge_bust.png", "use_illustration": False},
@@ -170,7 +178,9 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "layered_medium", "eyes": "cool_half", "brows": "straight_sharp", "mouth": "thin_cool", "outfit": "charcoal_suit",
                       "eye_h": 8, "eye_top": 55, "lid_min": 2,
                       "shoulder_dx": 38, "shoulder_y": 106, "sleeve_w": 14},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
+            "rig": {"body": "slim", "hair": "medium", "jaw": "sharp", "outfit": "charcoal_suit", "iris": "#26263e", "iris2": "#6f82c4", "lash": "#0a0a12",
+                    "tilt": 5, "eyeW": 1.0, "eyeH": 0.98, "mouth": "flat", "sleepy": 0.10, "blushA": 0.25, "pin": None, "rim": "#a8c4ff"},
+            "render": {"mode": "layered25d", "rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 4.6, "idle": ["straighten_papers", "adjust_cuff", "slam_desk", "stare"], "breath_amp": 0.35},
         },
         "illustration": {"portrait": "assets/characters/prosecutor_portrait.png", "bust": "assets/characters/prosecutor_bust.png", "use_illustration": False},
@@ -235,7 +245,9 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "long_wavy", "eyes": "crescent_smile", "brows": "arched_raised", "mouth": "smirk", "outfit": "slim_suit",
                       "eye_h": 10, "eye_top": 53, "lid_min": 2,
                       "shoulder_dx": 34, "shoulder_y": 106, "sleeve_w": 12},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
+            "rig": {"body": "curvy", "hair": "long_wavy", "jaw": "soft", "outfit": "slim_suit", "iris": "#7a3f22", "iris2": "#f0b070", "lash": "#2a1410", "star": True,
+                    "tilt": 1, "eyeW": 1.07, "eyeH": 1.1, "mouth": "smile", "sleepy": 0.0, "blushA": 0.6, "pin": "scale", "rim": "#ffd9b0"},
+            "render": {"mode": "layered25d", "rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 4.0, "idle": ["head_tilt", "wink", "hair_flip", "lean_on_hand"], "breath_amp": 0.6},
         },
         "illustration": {"portrait": "assets/characters/lawyer_portrait.png", "bust": "assets/characters/lawyer_bust.png", "use_illustration": False},
@@ -334,15 +346,19 @@ _validate_characters()
 # icon  : 머리 옆에 잠깐 뜨는 감정 아이콘 (anger / exclaim / drop / sparkle, 없으면 None)
 # 대사 데이터(step)에 "e": "표정이름" 을 넣으면 그 표정으로, 없으면 외침 종류(F/S/O)에 따라 자동 선택됩니다.
 EXPRESSIONS = {
-    "neutral":   {"label": "기본",   "mouth": None,   "brow": 0,  "lid": 0,    "gx": 0, "gy": 0, "fx": []},
-    "smirk":     {"label": "비웃음", "mouth": "grin", "brow": -2, "lid": 0.35, "gx": 1, "gy": 0, "fx": [], "icon": "sparkle"},
-    "aggrieved": {"label": "억울함", "mouth": "hmm",  "brow": -2, "lid": 0,    "gx": 0, "gy": 2, "fx": ["blush", "sweat"], "icon": "drop"},
-    "tears":     {"label": "눈물",   "mouth": "hmm",  "brow": 1,  "lid": 0.35, "gx": 0, "gy": 2, "fx": ["tears", "blush"], "icon": "drop"},
-    "shock":     {"label": "충격",   "mouth": "open", "brow": -3, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"], "icon": "exclaim"},
-    "angry":     {"label": "분노",   "mouth": "flat", "brow": 3,  "lid": 0.25, "gx": 0, "gy": 0, "fx": ["vein"], "icon": "anger"},
+    "neutral":   {"label": "기본",        "mouth": None,    "brow": 0,  "lid": 0,    "gx": 0, "gy": 0, "fx": []},
+    # 킹받는 표정: 반쯤 감은 눈 + 한쪽 눈썹만 치켜올림 + 비스듬한 능글 미소 + 고개 살짝 젖힘
+    "smirk":     {"label": "킹받는 비웃음", "mouth": "grin", "brow": -1, "bs": 0.6, "lid": 0.32, "gx": 1, "gy": 0, "fx": [], "smug": 1, "tilt": 4, "pitch": -3, "icon": "sparkle"},
+    # 억울해서 눈물 그렁그렁: 팔자 눈썹 + 눈가에 물이 찬 눈 + 파르르 떠는 입 + 홍조·식은땀
+    "aggrieved": {"label": "억울함",       "mouth": "hmm",   "brow": 0,  "bs": -2.6, "lid": 0.05, "gx": 0, "gy": 2, "fx": ["welling", "blush", "sweat"], "tilt": -3, "pitch": 4, "icon": "drop"},
+    "tears":     {"label": "눈물 폭발",     "mouth": "wail",  "brow": 0,  "bs": -3,   "lid": 0.22, "gx": 0, "gy": 2, "fx": ["tears", "welling", "blush"], "tilt": -2, "pitch": 5, "icon": "drop"},
+    "shock":     {"label": "충격",         "mouth": "open",  "brow": -3, "bs": -0.5, "lid": 0,    "gx": 0, "gy": 0, "fx": ["sweat"], "pitch": -2, "icon": "exclaim"},
+    "angry":     {"label": "분노",         "mouth": "grit",  "brow": 2,  "bs": 3.2,  "lid": 0.22, "gx": 0, "gy": 0, "fx": ["vein"], "pitch": 3, "icon": "anger"},
+    "pout":      {"label": "삐짐",         "mouth": "pout",  "brow": 1,  "bs": 1.0,  "lid": 0.12, "gx": 2, "gy": 1, "fx": ["blush"], "tilt": 3},
+    "shy":       {"label": "당황·부끄",     "mouth": "hmm",   "brow": -1, "bs": -1.4, "lid": 0.1,  "gx": -2, "gy": 2, "fx": ["blush", "sweat"], "tilt": -4},
 }
-EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm")
-EXPR_FX = ("blush", "sweat", "tears", "vein")
+EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm", "smirk", "pout", "wail", "weary", "grit")
+EXPR_FX = ("blush", "sweat", "tears", "vein", "welling", "gloom")
 EXPR_ICONS = (None, "anger", "exclaim", "drop", "sparkle")
 
 
@@ -446,6 +462,8 @@ def sprite_payload():
             "key": k, "name": c["name"], "title": c["title"], "display": c["display"],
             "palette": dict(c["sprite"]["palette"]), "style": dict(c["sprite"]["style"]),
             "render": {k2: (list(v) if isinstance(v, tuple) else v) for k2, v in render_settings(k).items()},
+            "rig": dict(c["sprite"].get("rig", {}), **({"model": dict(MODEL_FILES[k], url=MODEL_BASE_URL.rstrip("/") + "/" + MODEL_FILES[k]["file"])} if MODEL_BASE_URL.strip() and k in MODEL_FILES else {})),
+            "motion": dict(c["sprite"].get("motion", {})),
             "shout": dict(c["shout"]),
             "lines": {"ambient": list(persona.get("ambient_lines", [])), "lobby": persona.get("lobby_lines", {}), "wait": persona.get("wait_lines", {})},
         }
