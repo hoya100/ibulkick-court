@@ -290,6 +290,23 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .st-key-lb_menu{ padding:10px; gap:10px !important; }
   .st-key-lb_menu .stButton>button{ width:76px !important; height:100px !important; min-height:100px !important; }
 }
+/* ============ 로비 왼쪽/타이틀 버튼: 글자가 두 줄로 꺾이지 않게 ============ */
+.st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ white-space:nowrap !important; letter-spacing:0 !important; padding:0 2px !important; font-size:12px !important; }
+.st-key-lb_side .stButton>button *, .st-key-lb_corner .stButton>button *{ white-space:nowrap !important; letter-spacing:0 !important; font-size:12px !important; margin:0 !important; }
+.st-key-lb_side, .st-key-lb_corner{ width:84px !important; }
+@media (max-width: 760px){
+  .st-key-lb_side, .st-key-lb_corner{ width:76px !important; }
+  .st-key-lb_side .stButton>button, .st-key-lb_side .stButton>button *, .st-key-lb_corner .stButton>button, .st-key-lb_corner .stButton>button *{ font-size:11px !important; }
+}
+/* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
+.stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
+.st-key-vn_stage{ margin:0 0 6px !important; }
+.st-key-vn_stage iframe{ height:min(calc(100vh - 70px), 820px) !important; height:min(calc(100dvh - 70px), 820px) !important; min-height:460px; display:block; }
+@media (max-width: 760px){
+  .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-left:4px !important; padding-right:4px !important; }
+  .st-key-vn_stage{ margin:0 !important; }
+  .st-key-vn_stage iframe{ height:calc(100dvh - 64px) !important; }
+}
 /* ============ '오늘의 법정' 상태 패널 (프로필 모달 안에서만 표시) ============ */
 .court-panel{ background:#10162e; color:#fff; padding:14px 16px; margin:6px 5px 14px;
   box-shadow:0 -4px 0 var(--ink),0 4px 0 var(--ink),-4px 0 0 var(--ink),4px 0 0 var(--ink),inset 0 4px 0 #3b4a9a,0 10px 0 0 #0008; }
