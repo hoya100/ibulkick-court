@@ -298,6 +298,7 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .st-key-lb_side, .st-key-lb_corner{ width:76px !important; }
   .st-key-lb_side .stButton>button, .st-key-lb_side .stButton>button *, .st-key-lb_corner .stButton>button, .st-key-lb_corner .stButton>button *{ font-size:11px !important; }
 }
+.st-key-giveup_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
 /* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
 .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
 .st-key-vn_stage{ margin:0 0 6px !important; }
