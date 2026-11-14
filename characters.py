@@ -29,7 +29,9 @@ SPRITE_DATA_VERSION = 7
 
 # 3D 모델(.vrm) 파일이 올라가 있는 인터넷 주소(폴더). 비워 두면 지금의 벡터 캐릭터를 씁니다. 설정 방법은 rig3d.py 맨 위 설명을 보세요.
 # 예) "https://cdn.jsdelivr.net/gh/내아이디/ibulkick-court@main/assets/models"
-MODEL_BASE_URL = "https://cdn.jsdelivr.net/gh/hoya100/ibulkick-court@main/assets/models"
+MODEL_BASE_URL = ""
+# True 이면 재판 화면 왼쪽 위에 3D 불러오기 진행 상황/오류가 글자로 표시됩니다(원인 확인용). 잘 뜨면 False 로 바꾸세요.
+MODEL_DEBUG = True
 # 캐릭터별 모델 파일 이름과 구도 보정(zoom: 클수록 가까이, fy: 위(+)/아래(-)로 이동)
 MODEL_FILES = {"JUDGE": {"file": "judge.vrm", "zoom": 1.0, "fy": 0.0}, "PROSECUTOR": {"file": "prosecutor.vrm", "zoom": 1.0, "fy": 0.0}, "LAWYER": {"file": "lawyer.vrm", "zoom": 1.0, "fy": 0.0}}
 
@@ -452,6 +454,23 @@ def display_name(key):
     return CHARACTERS[key]["display"]
 
 
+
+def _model_urls(base, fname):
+    """모델 주소 후보. jsDelivr 는 20MB 초과 GitHub 파일을 막으므로, 같은 파일의 raw.githubusercontent 주소를 두 번째 후보로 자동 추가한다(반대도 마찬가지)."""
+    import re as _re
+    b = base.strip().rstrip("/")
+    first = b + "/" + fname
+    out = [first]
+    m = _re.match(r"https://cdn\.jsdelivr\.net/gh/([^/]+)/([^/@]+)@([^/]+)/?(.*)$", b)
+    if m:
+        o, r, br, p = m.groups()
+        out.append("https://raw.githubusercontent.com/%s/%s/%s/%s%s" % (o, r, br, (p + "/") if p else "", fname))
+    m = _re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/?(.*)$", b)
+    if m:
+        o, r, br, p = m.groups()
+        out.append("https://cdn.jsdelivr.net/gh/%s/%s@%s/%s%s" % (o, r, br, (p + "/") if p else "", fname))
+    return out
+
 def sprite_payload():
     """화면 연출(templates.py)에 넘기는 캐릭터 데이터: 이름·팔레트·스타일·외침 문구·말풍선 대사. JSON 으로 바로 직렬화할 수 있다."""
     out = {}
@@ -462,7 +481,7 @@ def sprite_payload():
             "key": k, "name": c["name"], "title": c["title"], "display": c["display"],
             "palette": dict(c["sprite"]["palette"]), "style": dict(c["sprite"]["style"]),
             "render": {k2: (list(v) if isinstance(v, tuple) else v) for k2, v in render_settings(k).items()},
-            "rig": dict(c["sprite"].get("rig", {}), **({"model": dict(MODEL_FILES[k], url=MODEL_BASE_URL.rstrip("/") + "/" + MODEL_FILES[k]["file"])} if MODEL_BASE_URL.strip() and k in MODEL_FILES else {})),
+            "rig": dict(c["sprite"].get("rig", {}), **({"model": dict(MODEL_FILES[k], url=_model_urls(MODEL_BASE_URL, MODEL_FILES[k]["file"])[0], urls=_model_urls(MODEL_BASE_URL, MODEL_FILES[k]["file"]), debug=MODEL_DEBUG)} if MODEL_BASE_URL.strip() and k in MODEL_FILES else {})),
             "motion": dict(c["sprite"].get("motion", {})),
             "shout": dict(c["shout"]),
             "lines": {"ambient": list(persona.get("ambient_lines", [])), "lobby": persona.get("lobby_lines", {}), "wait": persona.get("wait_lines", {})},
