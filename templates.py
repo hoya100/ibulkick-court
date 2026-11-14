@@ -386,9 +386,12 @@ smq.onclick=e=>{e.stopPropagation();if(!smq.classList.contains('sure')){smq.clas
 let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',ended=false;
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
-function stopType(){clearInterval(timer);typing=false;if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
+function stopType(){clearTimeout(timer);clearInterval(timer);typing=false;if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
  if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push){const ls=D.steps[last()];Stage.push(VCAM,(ls&&ls.cam)||CAM[ls&&ls.s]||'J')}}}}
-function type(text){typing=true;full=text;let k=0;$('txt').textContent='';timer=setInterval(()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length)stopType()},D.speed||32)}
+function type(text,tp){tp=tp||{m:1,p:1};typing=true;full=text;let k=0;$('txt').textContent='';const base=(D.speed||32)*tp.m;
+ const step=()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length){stopType();return}
+  const ch=text[k-1];let d=base;if(ch===','||ch==='，')d+=base*3*tp.p;else if(ch==='.'||ch==='…')d+=base*5*tp.p;else if(ch==='?'||ch==='!')d+=base*4*tp.p;timer=setTimeout(step,d)};
+ timer=setTimeout(step,base)}
 const SHOUT={F:D.cast.PROSECUTOR.shout.text,S:D.cast.LAWYER.shout.text,O:D.cast.JUDGE.shout.text};
 function shout(k,cb){const e=$('shout');e.textContent=SHOUT[k];e.className=k+' on';[520,780,1040].forEach((f,j)=>setTimeout(()=>beep(f,.16,.07),j*90));Stage.impact(k);setTimeout(()=>{e.className='';cb()},950)}
 
@@ -403,20 +406,28 @@ const HDXj=HDX;
 const COMBO={
  /* 변호사 한유리: 여유(턱 괴기) → 팔짱 반격 → 당황 */
  l_smug:[{d:0,pose:'smug',rate:6,yaw:12}],
- l_cross:[{d:0,pose:'smug',rate:6},{d:380,pose:'cross',rate:7,expr:'smug',look:'LCROSS',yaw:24,sfx:'sparkle',icon:'sparkle'}],
- l_panic:[{d:0,pose:'panic',rate:22,expr:'panic',look:'LPAN',yaw:8,fast:1,flinch:.3,sfx:'gasp',icon:'drop'},{d:520,jit:1.6}],
- /* 검사 차냉정: 냉철 → 책상 쾅 + 속사포 삿대질 → 당황 멈칫 */
+ l_cross:[{d:0,pose:'smug',rate:6},{d:380,pose:'cross',rate:7,expr:'smug',look:'LCROSS',yaw:22,sfx:'sparkle'}],
+ l_panic:[{d:0,pose:'panic',rate:16,expr:'panic',yaw:8,flinch:.12,sfx:'gasp',icon:'drop'},{d:500,jit:.9},{d:1300,jit:0}],
+ /* 검사 차냉정: 냉철 → (질문은 약한 삿대질) → 책상 쾅 + 속사포 삿대질 → 뜨끔 */
  p_main:[{d:0,pose:'main',rate:6}],
+ p_ask:[{d:0,pose:'ask',rate:9,yaw:-10}],
  p_slam:[{d:0,pose:'windup',rate:15,yaw:-5,sfx:'whoosh'},
-  {d:170,pose:'slam',rate:44,look:'PSLAM',yaw:-26,fast:1,flinch:1,thud:1,expr:'angry',icon:'anger'},
-  {d:560,set:{lx:HDXj-74,ly:84,pa:-8},rate:38,flinch:.4,sfx:'cut'},
+  {d:170,pose:'slam',rate:44,look:'PSLAM',yaw:-24,fast:1,flinch:.55,thud:1,expr:'angry'},
+  {d:560,set:{lx:HDXj-74,ly:84,pa:-8},rate:38,sfx:'cut'},
   {d:860,rapid:1}],
- p_panic:[{d:0,pose:'panic',rate:24,expr:'panic',look:'PPAN',yaw:-6,fast:1,flinch:.25,sfx:'gasp',icon:'exclaim'},{d:700,jit:1.4}],
+ p_panic:[{d:0,pose:'panic',rate:14,expr:'panic',yaw:-6,sfx:'gasp'},{d:250,jit:.5},{d:750,jit:0}],
  /* 판사 서판결: 서류 더미에 파묻힘 → 이마 박기 → 망치 */
  j_main:[{d:0,pose:'main',rate:5}],
  j_sigh:[{d:0,pose:'sigh',rate:6,sfx:'sigh'}],
- j_sleep:[{d:0,pose:'sigh',rate:6,sfx:'sigh'},{d:850,pose:'sleep',rate:10,expr:'asleep',look:'JSLEEP',yaw:-4,thud:1,flinch:.55}],
- j_gavel:[{d:0,pose:'gavUp',rate:9,look:'JGAV',yaw:-6,sfx:'rumble'},{d:520,pose:'gavHit',rate:55,look:'JGHIT',yaw:-10,fast:1,flinch:1,thud:1,expr:'angry',icon:'anger'},{d:1150,pose:'main',rate:5,look:'J'}]};
+ j_sleep:[{d:0,pose:'sigh',rate:6,sfx:'sigh'},{d:850,pose:'sleep',rate:10,expr:'asleep',look:'JSLEEP',yaw:-4,thud:1,flinch:.3}],
+ j_gavel:[{d:0,pose:'gavUp',rate:9,look:'JGAV',yaw:-6,sfx:'rumble'},{d:520,pose:'gavHit',rate:55,look:'JGHIT',yaw:-10,fast:1,flinch:.6,thud:1,expr:'angry'},{d:1150,pose:'main',rate:5,look:'J'}]};
+/* ---- 말하는 속도(템포): 캐릭터 성격(검사=빠르고 날카롭게 / 변호사=여유 / 판사=느리고 무겁게) × 동작 × 대사 분위기.
+        m = 글자 간격 배수(작을수록 빠름), p = 쉼표·마침표 뒤 멈춤 배수, gap = 말 시작 전 뜸(ms) ---- */
+const TEMPO0={P:{m:.85,p:.6,gap:90},L:{m:1,p:1,gap:200},J:{m:1.3,p:1.5,gap:380}};
+const TEMPOC={p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
+function tempoFor(c,pk,st){const b=Object.assign({},TEMPO0[c]||TEMPO0.L,TEMPOC[pk]||{}),t=st.t||'';
+ if(!TEMPOC[pk]){const ex=(t.match(/!/g)||[]).length,el=(t.match(/…|\.\.\./g)||[]).length;if(ex>=2)b.m*=.88;if(el>=2)b.m*=1.15}
+ if(typeof st.tempo==='number')b.m*=st.tempo;return b}
 let CH=[],RAP=null;
 function clearCH(){CH.forEach(clearTimeout);CH=[];if(RAP){clearInterval(RAP);RAP=null}}
 function beat(c,b){const F=BUST[c];if(!F)return;
@@ -424,32 +435,36 @@ function beat(c,b){const F=BUST[c];if(!F)return;
  if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
  if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
  if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
- if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-64,ly:92,pa:-14}:{lx:HDXj-76,ly:82,pa:-4},{rate:40});Stage.flinch(.16);sfx('cut')},300)}}
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-64,ly:92,pa:-14}:{lx:HDXj-76,ly:82,pa:-4},{rate:40});Stage.flinch(.06);sfx('cut')},260)}}
 function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
 /* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
 function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
 function chooseCombo(st,n){
  if(st.pose&&COMBO[st.pose])return st.pose;
- const c=CAM[st.s]||'J',t=st.t||'',prev=n>0?D.steps[n-1]:null,h=heat(n);
+ const c=CAM[st.s]||'J',t=(st.t||'').trim(),prev=n>0?D.steps[n-1]:null,h=heat(n);
+ const ask=/\?\s*$|\?[)"'”’\s]*$/.test(t)||/말해|대답|설명해|해명|변명|인정하|입니까|합니까|인가요|있습니까|맞습니까|겁니까/.test(t);   // 상대(피고인)에게 묻는 말
+ const hesitate=/헉|윽|큭|으윽|그,?\s?그건|설마|말도 안|그럴 리|이럴 수|뜨끔|뭐…|어…|아…/.test(t);                               // 말문이 막힌 말
  if(c==='P'){
   if(st.c==='F')return 'p_slam';
-  if(/헉|뭐라|설마|말도 안|윽|큭|그럴 리|이럴 수|당황|아니 그게/.test(t)||(prev&&prev.c==='S'))return 'p_panic';
-  if(/[!?]{2}|!.*!/.test(t))return 'p_slam';
+  if(hesitate&&!ask)return 'p_panic';
+  if(ask&&!/!\s*!/.test(t))return 'p_ask';
+  if((h>=2&&/!/.test(t))||/!.*!|[!?]{2}/.test(t))return 'p_slam';
+  if(ask)return 'p_ask';
   return 'p_main'}
  if(c==='L'){
-  if(D.mode==='verdict'&&D.card)return D.card.ruling==='유죄'?'l_panic':'l_cross';
-  if(/헉|당황|식은땀|그,?\s?그건|어…|아…|곤란|들켰|불리/.test(t))return 'l_panic';
-  if(st.c==='S'||/허를|유리|당연|뻔|보시죠|정리|논리|ㅋ|훗|흐음|입증|반박|사실은|아무리/.test(t))return 'l_cross';
-  if(prev&&prev.c==='F')return /…|\.\.\./.test(t)?'l_panic':'l_cross';
+  if(D.mode==='verdict'&&D.card)return D.card.ruling==='유죄'?'l_panic':(D.card.ruling==='무죄'?'l_cross':'l_smug');
+  if(/헉|당황|식은땀|그,?\s?그건|어…|아…|곤란|들켰|불리|큰일/.test(t))return 'l_panic';
+  if(st.c==='S'||/허를|유리|당연|뻔|보시죠|정리하|논리|ㅋ|훗|흐음|입증|반박|사실은|아무리|명백/.test(t))return 'l_cross';
   return 'l_smug'}
  if(st.c==='O'||/정숙|조용히|선고|판결합니다|개정|휴정/.test(t))return 'j_gavel';
  const tired=/피곤|하품|퇴근|졸|하아|하…|귀찮|지치/.test(t);
- if((tired&&h>=2)||(h>=4&&/…/.test(t)))return 'j_sleep';
+ if(tired&&h>=2)return 'j_sleep';
  if(tired)return 'j_sigh';
  return 'j_main'}
 function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
- const speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t)};
- setTimeout(()=>{runCombo(c,pk);if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+140:150)}
+ const tp=tempoFor(c,pk,st),speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t,tp)};
+ const pv=n>0?(D.steps[n-1].t||''):'',slow=/…\s*$/.test(pv)?1.5:1,gap=Math.round(tp.gap*slow);
+ setTimeout(()=>{runCombo(c,pk);if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+Math.round(gap*.6):gap)}
 function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
@@ -1385,7 +1400,8 @@ const HD_POSES={
   main:{turn:-3,la:1,lx:HDX+8,ly:140,ra:1,rx:HDX-8,ry:146},
   windup:{turn:-4,lean:-4,tilt:-2,ty:-2,la:1,lx:HDX-46,ly:80,pl:1,pa:-70,ra:1,rx:HDX+30,ry:120},
   slam:{turn:-9,lean:14,tilt:-3,ty:8,la:1,lx:HDX-60,ly:92,pl:1,pa:-15,ra:1,rx:HDX+34,ry:168,burst:1},
-  panic:{turn:-3,lean:-5,tilt:-4,ty:2,la:1,lx:HDX-12,ly:116,ra:1,rx:HDX+12,ry:116}},
+  ask:{turn:-6,lean:3,tilt:-2,la:1,lx:HDX-56,ly:100,pl:1,pa:-20,ra:1,rx:HDX-8,ry:146},
+  panic:{turn:-4,lean:-3,tilt:-3,ty:1,la:1,lx:HDX+8,ly:134,ra:1,rx:HDX-8,ry:140}},
  LAWYER:{
   smug:{turn:5,lean:3,tilt:-5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
   cross:{turn:8,lean:-2,tilt:4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
