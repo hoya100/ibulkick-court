@@ -190,6 +190,7 @@ import inspect as _inspect
 
 # 2막 첫 장면: 판사가 외치며 카메라가 줌아웃 + '제 2 막' 타이틀 (화면 전환/암전 없이 이어짐)
 ACT2_OPEN = [{"s": "JUDGE", "t": "2막을 시작합니다!", "k": "act2", "cam": "WIDE"}]
+LS_OPEN = [{"s": "JUDGE", "t": "…좋습니다. 최후의 변론을 허가합니다. 기회는 딱 한 번뿐이니, 가진 진심을 전부 쏟아 보세요. 저는 점심 생각을 잠시 접어 두겠습니다.", "k": "act2", "cam": "J"}]
 
 _VN_PARAMS = set(_inspect.signature(render_vn).parameters)
 
@@ -551,7 +552,7 @@ elif stage == "DEBATE1":
         _render_vn(
             "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
             phase="제1막 ▸ 1차 심문", hint="🚨 태도를 고르고 변명을 제출하세요 ▼", intro=True, push=True,
-            gauge={"from": 0, "to": ss.get("guilt", GUILT_START), "delay": 2600}, timer=TIMER_SEC, **vn_opts(),
+            gauge={"from": GUILT_START, "to": GUILT_START, "delay": 0}, timer=TIMER_SEC, ls_at=LAST_STAND_AT, **vn_opts(),
         )
     # 재판 포기 / 시간 초과는 화면 안에서 누릅니다(연출이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
     with st.container(key="giveup_hidden"):
@@ -578,17 +579,21 @@ elif stage == "DEBATE1":
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
     p2 = ss["p2"]
-    g0, g1 = p2.get("gauge", (ss.get("guilt", GUILT_START),) * 2)
-    can_ls = ss.get("guilt", GUILT_START) >= LAST_STAND_AT and not ss.get("ls_used")
-    ls_mode = bool(ss.get("ls_mode")) and can_ls
+    ls_mode = bool(ss.get("ls_mode")) and not ss.get("cut")
+    ls_info = None
     if ls_mode:
         with st.container(key="last_on"):  # 이 표식이 있으면 연출 속 타이머가 멈춘다(집중 모드)
             st.empty()
+        vsteps, g_from, ls_title = LS_OPEN, ss.get("guilt", GUILT_START), "최후의 변론"
+    else:
+        vsteps, g_from, ls_title = ACT2_OPEN + p2["steps"], ss.get("g0", GUILT_START), "제2막 · 변명 공방 & 최후 심문"
+        if p2.get("ls_idx") is not None:  # 게이지가 90을 넘는 순간: 판사가 법봉을 내려치려 하고, 그 전에 [최후의 변론]을 누를 수 있다
+            ls_info = {"idx": p2["ls_idx"] + len(ACT2_OPEN), "avail": not ss.get("ls_used")}
     with st.container(key="vn_stage"):
         _render_vn(
-            "debate", ACT2_OPEN + p2["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
+            "debate", vsteps, height=VN_H, title=ls_title,
             phase="제2막 ▸ 최후 심문", hint="🔥 앞뒤가 맞게 다시 해명하세요 ▼", opening="act2", push=True,
-            gauge={"from": g0, "to": g1, "delay": 3600}, timer=TIMER_SEC, ls_at=LAST_STAND_AT, **vn_opts(),
+            gauge={"from": g_from, "to": g_from, "delay": 0}, timer=TIMER_SEC, ls_at=LAST_STAND_AT, ls=ls_info, **vn_opts(),
         )
     with st.container(key="giveup_hidden"):
         if st.button("재판 포기", key="giveup2"):
@@ -601,13 +606,20 @@ elif stage == "DEBATE2":
                 ss["ex2"], ss["timeout2"], ss["stance2"] = STUTTER, True, None
             ss.pop("ls_mode", None)
             start_job("verdict", "DEBATE2")
+    with st.container(key="ls_go_hidden"):  # 연출 속 [최후의 변론] 버튼이 대신 누르는 숨김 버튼
+        if st.button("최후의 변론", key="ls_go"):
+            ss["ls_mode"] = True
+            ss["guilt"] = ss["g0"] = p2.get("ls_g", ss.get("guilt", GUILT_START))
+            st.rerun()
+    with st.container(key="ls_cut_hidden"):  # 법봉이 끝까지 내려쳐졌을 때(변론 못 함) 연출이 누르는 숨김 버튼
+        if st.button("판결 강행", key="ls_cut"):
+            ss["cut"] = True
+            ss["guilt"] = p2.get("ls_g", 100)
+            ss["ex2"], ss["stance2"] = "(변론할 기회를 얻지 못하고 판결이 내려짐)", None
+            ss.pop("ls_mode", None)
+            start_job("verdict", "DEBATE2")
     show_error()
     excuse_gate()
-    if can_ls and not ls_mode:  # 패배 직전 긴급 발동: [최후의 변론] (1회 한정)
-        with st.container(key="ls_bar"):
-            if st.button("🔥 최후의 변론 (1회 한정)", key="b_last_stand", use_container_width=True):
-                ss["ls_mode"] = True
-                st.rerun()
     if not ls_mode:
         pick = stance_bar()
         if pick:
@@ -646,12 +658,12 @@ elif stage == "VERDICT":
         _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict",
                    gauge={"from": _g[0], "to": _g[1], "delay": 2500} if _g else None, **vn_opts())
     if res and not ss.get("show_result"):
-        st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
         _, show_col, _ = st.columns([1, 2, 1])
         with show_col:
             if st.button("📊 평판 · 랭크 결과 확인", use_container_width=True, key="b_show_result"):
                 ss["show_result"] = True
                 st.rerun()
+            st.markdown('<div class="res-hint">🎬 판결 연출을 다 보셨다면 위 버튼으로 평판·랭크 변화를 확인하세요</div>', unsafe_allow_html=True)
     elif res:
         st.markdown(result_panel_html(res), unsafe_allow_html=True)
         if res["dir"] > 0 and res["rank_after"].startswith("👑"):
