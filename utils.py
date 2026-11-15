@@ -186,15 +186,16 @@ def gauge_delta(q, stance, timeout=False):
     - 눈물로 호소하기: 안정형 (-14 ~ +8)
     - 논리적 팩트체크: 품질에 비례 (-22 ~ +22)"""
     if timeout:
-        return 18
+        return 12
     q = 40 if q is None else q
     if stance == "bold":
-        return -round(15 + (q - 60) * 0.6) if q >= 60 else round(2 * max(8, (60 - q) * 0.5))
+        return -round(10 + (q - 60) * 0.4) if q >= 60 else round(1.4 * max(6, (60 - q) * 0.45))
     if stance == "tears":
-        return max(-14, min(8, round((50 - q) * 0.3 - 4)))
+        return max(-10, min(6, round((50 - q) * 0.22 - 3)))
     if stance == "logic":
-        return max(-22, min(22, round((50 - q) * 0.5)))
-    return round((50 - q) * 0.4)
+        return max(-15, min(15, round((50 - q) * 0.35)))
+    return 0
+
 
 def reaction_steps(stance, q, timeout):
     """변명 직후 캐릭터들이 보이는 반응 대사 + 연기(pose)·표정(e). 태도와 결과에 따라 달라진다."""
