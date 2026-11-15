@@ -49,6 +49,7 @@ STAGE_CSS = r"""
 .emo.on{animation:emo 2.6s ease-out forwards}
 @keyframes emo{0%{opacity:0;transform:scale(.2) translateY(10px)}18%{opacity:1;transform:scale(1.25)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 .who canvas,.hdc{image-rendering:pixelated;transform:translateZ(0);backface-visibility:hidden}
+.pst .who canvas.hdc,.who canvas.hdc{width:129.85%!important;max-width:none!important;margin-left:-14.93%}
 /* ===== 연출 덮개 ===== */
 #cover{position:absolute;inset:0;z-index:18;background:#000;opacity:0;pointer-events:none;transition:opacity .7s}
 #vig{position:absolute;inset:0;z-index:17;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 50%,#0000 38%,#b3121ccc 100%)}
