@@ -43,7 +43,7 @@ RENDER_DEFAULT = {
     "shading": "3-tone",                   # 기본색 / 밝은 면 / 어두운 면
     "light_dir": "top-left",
     "rim_light": True,                     # 머리카락·어깨 가장자리 보조광
-    "eye_highlight_px": 2,                 # 눈 하이라이트(도트 수)
+    "eye_highlight_px": 3,                 # 눈 하이라이트(도트 수)
     "layers": ("back_hair", "torso", "neck", "head", "face", "front_hair", "arms", "props"),
 }
 
@@ -115,7 +115,7 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "messy_short", "eyes": "sleepy_half", "brows": "low_tired", "mouth": "weary", "outfit": "judge_robe",
                       "eye_h": 9, "eye_top": 50, "lid_min": 3.8,   # 눈 높이 / 눈 세로 위치 / 평소 눈꺼풀 내려온 정도(졸림)
                       "shoulder_dx": 44, "shoulder_y": 106, "sleeve_w": 17},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 1},
+            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 5.2, "idle": ["yawn", "check_watch", "rub_eyes", "slump"], "breath_amp": 0.5},
         },
         "illustration": {"portrait": "assets/characters/judge_portrait.png", "bust": "assets/characters/judge_bust.png", "use_illustration": False},
@@ -170,7 +170,7 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "layered_medium", "eyes": "cool_half", "brows": "straight_sharp", "mouth": "thin_cool", "outfit": "charcoal_suit",
                       "eye_h": 8, "eye_top": 55, "lid_min": 2,
                       "shoulder_dx": 33, "shoulder_y": 106, "sleeve_w": 14},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
+            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 3},
             "motion": {"blink_s": 4.6, "idle": ["straighten_papers", "adjust_cuff", "slam_desk", "stare"], "breath_amp": 0.35},
         },
         "illustration": {"portrait": "assets/characters/prosecutor_portrait.png", "bust": "assets/characters/prosecutor_bust.png", "use_illustration": False},
@@ -235,7 +235,7 @@ CHARACTERS = {
             "style": {"face": "jaw_tidy", "hair": "long_wavy", "eyes": "crescent_smile", "brows": "arched_raised", "mouth": "smirk", "outfit": "slim_suit",
                       "eye_h": 10, "eye_top": 53, "lid_min": 2,
                       "shoulder_dx": 30, "shoulder_y": 106, "sleeve_w": 12},
-            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
+            "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 3},
             "motion": {"blink_s": 4.0, "idle": ["head_tilt", "wink", "hair_flip", "lean_on_hand"], "breath_amp": 0.6},
         },
         "illustration": {"portrait": "assets/characters/lawyer_portrait.png", "bust": "assets/characters/lawyer_bust.png", "use_illustration": False},
