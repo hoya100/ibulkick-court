@@ -296,8 +296,7 @@ def normalize_phase2(data):
     if not steps:
         raise ValueError("대사가 비어 있습니다")
     fq = data.get("final_question") or {}
-    sp = to_speaker(fq.get("speaker"))
-    sp = sp if sp in ("JUDGE", "PROSECUTOR") else "JUDGE"
+    sp = "PROSECUTOR"  # 같은 쟁점을 검사가 한 번 더 묻는다(꼬리물기 2번째 질문)
     text = str(fq.get("text") or "").strip() or "마지막으로 묻겠습니다. 지금 돌아보면 그 선택을 어떻게 평가하십니까?"
     steps.append({"s": sp, "t": text, "c": ""})
     return {"steps": steps, "question": text, "quality": parse_score(data.get("defense_quality"))}
