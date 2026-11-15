@@ -341,15 +341,20 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .st-key-ls_bar button{ background:#b3121c !important; animation:lsPulse .8s steps(2) infinite; }
 .st-key-ls_bar button p{ font-size:13px !important; }
 @keyframes lsPulse{ 50%{ box-shadow:0 0 0 3px #ffd23f, 0 0 18px #ff3b30; } }
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, .main{ scrollbar-width:none !important; -ms-overflow-style:none !important; }
+::-webkit-scrollbar{ display:none !important; width:0 !important; height:0 !important; }
 .res-hint{ text-align:center; font-size:12px; color:#9fb0d8; margin:6px 0 2px; line-height:1.4; word-break:keep-all; }
 .st-key-timeout_hidden,.st-key-ls_go_hidden,.st-key-ls_cut_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
 /* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
 .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
 .st-key-vn_stage{ margin:0 0 6px !important; }
+.st-key-vn_stage{ height:min(calc(100vh - 64px), 826px); min-height:466px; }
+.st-key-vn_stage{ height:min(calc(100dvh - 64px), 826px); }
 .st-key-vn_stage iframe{ height:min(calc(100vh - 70px), 820px) !important; height:min(calc(100dvh - 70px), 820px) !important; min-height:460px; display:block; }
 @media (max-width: 760px){
   .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-left:4px !important; padding-right:4px !important; }
   .st-key-vn_stage{ margin:0 !important; }
+  .st-key-vn_stage{ height:calc(100dvh - 58px); }
   .st-key-vn_stage iframe{ height:calc(100dvh - 64px) !important; }
 }
 /* ============ '오늘의 법정' 상태 패널 (프로필 모달 안에서만 표시) ============ */
