@@ -460,7 +460,7 @@ function beat(c,b){const F=BUST[c];if(!F)return;
  if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
  if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
  if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
- if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{rx:HDXj+36,ry:136}:{rx:HDXj+36,ry:166},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{rx:HDXj+40,ry:136}:{rx:HDXj+36,ry:166},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
 function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
 /* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
 function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
@@ -1442,11 +1442,11 @@ const HD_POSES={
   gavUp:{docs:.5,desk:1,ty:0,lean:-3,tilt:-3,turn:-4,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+56,ry:78,gon:1,gv:24},
   gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
  PROSECUTOR:{
-  main:{desk:.65,ty:3,turn:3,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+37,ry:164},
-  windup:{desk:.65,turn:5,lean:-5,tilt:2,ty:0,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+40,ry:84},
-  slam:{desk:.65,turn:10,lean:10,tilt:3,ty:8,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+36,ry:166,burst:1},
-  ask:{desk:.65,turn:0,lean:2,tilt:-1,ty:3,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+46,ry:118},
-  panic:{desk:.65,turn:4,lean:-3,tilt:3,ty:4,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+14,ry:124}},
+  main:{desk:.65,ty:3,turn:3,la:1,lx:HDX+22,ly:132,ra:1,rx:HDX-22,ry:136},
+  windup:{desk:.65,turn:5,lean:-5,tilt:2,ty:0,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:86},
+  slam:{desk:.65,turn:10,lean:10,tilt:3,ty:8,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+36,ry:166,burst:1},
+  ask:{desk:.65,turn:0,lean:5,tilt:0,ty:4,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:164},
+  panic:{desk:.65,turn:4,lean:-3,tilt:3,ty:4,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:164}},
  LAWYER:{
   smug:{turn:-5,lean:3,tilt:5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
   cross:{turn:-8,lean:-2,tilt:-4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
@@ -1460,7 +1460,7 @@ function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('c
  const base0=()=>Object.assign({},HD_BASE_POSE,{lx:REST.L[0],ly:REST.L[1],rx:REST.R[0],ry:REST.R[1],burst:0});
  const cur=base0(),tgt=base0();let armL=false,armR=false,laT=false,raT=false,rate=9,t=0,raf=0,lastTs=0,lastDraw=0,hl=[0,0],hr=[0,0],talk=null;
  function ik2(S,T){const dx=T[0]-S[0],dy=T[1]-S[1],d=Math.hypot(dx,dy),maxd=L1+L2-.6,mind=Math.abs(L1-L2)+2,reach=Math.max(mind,Math.min(maxd,d)),base=Math.atan2(dy,dx),cb=(L1*L1+reach*reach-L2*L2)/(2*L1*reach),b=Math.acos(Math.max(-1,Math.min(1,cb)));
-  const c=[base+b,base-b].map(a=>({ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>Math.abs(q.ey-p.ey)<7?((S[0]<HDX?-1:1)*(q.ex-p.ex))*-1:q.ey-p.ey)[0];return {ex:c.ex,ey:c.ey,hx:S[0]+reach*Math.cos(base),hy:S[1]+reach*Math.sin(base)}}
+  const c=[base+b,base-b].map(a=>({ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>{const sd=S[0]<HDX?-1:1,sc=o=>sd*(o.ex-S[0])+.5*(o.ey-S[1]);return sc(q)-sc(p)})[0];return {ex:c.ex,ey:c.ey,hx:S[0]+reach*Math.cos(base),hy:S[1]+reach*Math.sin(base)}}
  const rgb=c=>'rgb('+c[0]+','+c[1]+','+c[2]+')',SK=F.R.skin;
  function props(){const c=tctx;
   if(cur.docs>.02){const pile=(x0,w,hh,seed)=>{const n=Math.max(1,Math.round(hh/6));for(let i=0;i<n;i++){const yy=200-(i+1)*6,off=((i*37+seed)%7)-3,ww=w-((i*11+seed)%9);c.fillStyle='#2a1a10';c.fillRect(x0+off-1,yy-1,ww+2,8);c.fillStyle=i%2?'#efe6c6':'#fffaf0';c.fillRect(x0+off,yy,ww,6);c.fillStyle='#9aa0bb';c.fillRect(x0+off+3,yy+3,Math.max(2,ww-9),1)}};pile(18,40,64*cur.docs,3);pile(116,40,52*cur.docs,11)}
