@@ -61,7 +61,7 @@ VN_TEMPLATE = r"""<!doctype html><html><head><meta charset="utf-8">
 @import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent}
-#scene{position:relative;width:100%;height:100%;overflow:hidden;cursor:pointer}
+#scene{background:linear-gradient(#24100e,#12090a);position:relative;width:100%;height:100%;overflow:hidden;cursor:pointer}
 #world{display:flex;width:300%;height:100%;transform:translateX(-33.3334%);transition:transform .85s cubic-bezier(.65,0,.35,1)}
 .panel{position:relative;width:33.3334%;height:100%;overflow:hidden;background:linear-gradient(#f1e5b7,#d6c488)}
 .floor{position:absolute;left:0;right:0;bottom:0;height:38%;border-top:5px solid #6b4423;background:repeating-conic-gradient(#d7e9de 0 25%,#aecbbb 0 50%) 0 0/54px 54px}
@@ -109,6 +109,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #hbi{font-size:18px;display:inline-block;animation:hbp var(--hbs,1s) ease-in-out infinite}#hbn{font-size:17px;min-width:24px;text-align:right}
 #hb.low{background:#7a0e16cc}#hb.off{opacity:.45}#hb.off #hbi{animation:none}
 @keyframes hbp{0%,100%{transform:scale(1)}18%{transform:scale(1.35)}36%{transform:scale(1)}54%{transform:scale(1.2)}}
+#hint.tipbar{top:auto !important;bottom:16px;left:50% !important;right:auto !important;transform:translateX(-50%) !important;max-width:92%;background:#10162e;color:#ffe9a8;border-color:#c9b26b;animation:none;font-size:12.5px;white-space:normal;width:max-content;z-index:30}
 #hint{position:absolute;top:46px !important;left:auto !important;right:8px;transform:none !important;max-width:calc(100% - 198px);text-align:center;line-height:1.25;z-index:12;display:none;white-space:normal;background:#b3121c;color:#fff;padding:5px 9px;font-weight:700;font-size:12px;border:2px solid #fff;animation:blink 1s steps(2) infinite}
 #mute{position:absolute;top:8px;right:8px;z-index:30;background:#000a;color:#fff;border:2px solid #fff6;padding:3px 8px;font-size:14px;cursor:pointer}
 #sm{display:none;position:absolute;inset:0;z-index:60;background:#000b;align-items:center;justify-content:center;cursor:default}
@@ -185,6 +186,10 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 .res-s{margin-top:6px;font-size:14px;color:#9fe8ff}
 #start h2{text-shadow:3px 3px 0 #b3121c}
 
+/* 세로 폰: 대화창을 조금 낮춰 캐릭터가 더 보이게 */
+@media (max-aspect-ratio:5/4){#dlg{height:32%;min-height:128px}#txt{font-size:15px}}
+/* 가로로 돌린 폰(화면 높이가 낮을 때): 대화창을 납작하게 */
+@media (max-height:430px) and (min-aspect-ratio:5/4){#dlg{height:34% !important;min-height:96px !important;bottom:2% !important}#txt{font-size:14px !important;padding:14px 40px 8px 22px !important}.who{width:clamp(90px,30vh,200px)}#gg{top:40px;transform:scale(.85);transform-origin:left top}.seal{width:70px;height:70px;font-size:34px}}
 /* ---- 가로 화면: iframe 비율이 가로형(5:4 이상)일 때 적용. 세로 폰에서는 위 기본값을 그대로 사용 ---- */
 @media (min-aspect-ratio:5/4){
 .who{width:clamp(130px,38vh,260px)}
@@ -256,6 +261,7 @@ function exSet(attr,after){let n=0;const go=()=>{n++;let m=null;try{m=window.par
  if(m){if(attr==='data-gate'){m.removeAttribute('data-open')}m.setAttribute(attr,'1');if(after)after();return true}return n>25};if(!go()){const iv=setInterval(()=>{if(go())clearInterval(iv)},200)}}
 function exOpen(){if(D.mode!=='debate')return;exSet('data-open',()=>{startTimer();setTimeout(()=>{try{const ta=window.parent.document.querySelector('[data-testid="stChatInput"] textarea');if(ta)ta.focus({preventScroll:true})}catch(e){}},650)})}
 if(D.mode==='debate')exSet('data-gate');
+if(D.mode==='wait'&&D.hint){const h=document.getElementById('hint');h.textContent='💡 '+D.hint;h.className='tipbar';h.style.display='block'}
 if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const NS='http://www.w3.org/2000/svg',CX=100,INK='#0d0f26',GOLD='#d9b85a';
  const g=id=>document.getElementById(id),svg=g('jchara');
@@ -880,6 +886,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #bar:before{content:"";position:absolute;left:0;right:0;top:-4px;height:4px;background:repeating-linear-gradient(90deg,#ffd23f 0 14px,#0d0f26 14px 20px)}
 #vig{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0001 2px 3px);box-shadow:inset 0 0 90px #0008}
 @media (max-aspect-ratio:5/4){#sign{font-size:11px;padding:5px 10px}#bubble{left:50%;font-size:12px}}
+@media (min-aspect-ratio:5/4) and (max-height:430px){#sign{font-size:11px;padding:4px 10px}}
 </style></head><body>
 <div id="scene" class="day">
  <div id="sky"></div><div id="stars"></div><div id="sun"></div>
