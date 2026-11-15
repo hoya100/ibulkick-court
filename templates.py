@@ -92,6 +92,16 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #gg{position:absolute;left:8px;top:46px;z-index:13;width:min(44%,176px);display:none;pointer-events:none;font-weight:700;color:#fff;text-shadow:1px 1px 0 #000}
 #gglab{font-size:11px;margin-bottom:3px;letter-spacing:.3px}#gglab b{font-size:13px;color:#ffe27a}
 #ggbar{position:relative;height:12px;background:#0b0d1ecc;border:2px solid #0d0f26;box-shadow:0 0 0 1px #ffffff40}
+#ggd{margin-left:6px;opacity:0;transition:opacity .3s;font-size:11px}#ggd.on{opacity:1}#ggd.up{color:#ff6b5e}#ggd.dn{color:#7dffb0}
+#lsrp{position:absolute;left:50%;top:46%;width:0;height:0;z-index:58;display:none;pointer-events:none}#lsrp.on{display:block}
+#lsrp i{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border:4px solid #ff6b5e;border-radius:50%;opacity:0;animation:lsRp 1.5s ease-out infinite}
+#lsrp i:nth-child(2){animation-delay:.5s}#lsrp i:nth-child(3){animation-delay:1s}
+@keyframes lsRp{0%{transform:scale(.7);opacity:.95}100%{transform:scale(9);opacity:0}}
+#lsbtn{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:60;display:none;border:3px solid #fff;background:linear-gradient(#ff4b3e,#b3121c);color:#fff;font:900 clamp(16px,4.6vw,24px) inherit;font-family:inherit;padding:13px 24px;border-radius:0;box-shadow:0 0 0 3px #0d0f26,0 0 28px #ff4b3e;cursor:pointer;letter-spacing:1px;text-shadow:2px 2px 0 #000;white-space:nowrap}
+#lsbtn.on{display:block;animation:lsPop .35s cubic-bezier(.2,1.5,.3,1),lsThrob .55s ease-in-out .35s infinite}
+@keyframes lsPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+@keyframes lsThrob{50%{transform:translate(-50%,-50%) scale(1.08)}}
+#scene.slowmo #camwrap{filter:saturate(.7) contrast(1.1) brightness(.92);transition:filter 1s}
 #ggfill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#3fd16a,#e8d23a 55%,#ff3b30);background-size:176px 100%;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 #ggmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;left:85%;opacity:.85}
 #gg.danger #ggbar{animation:ggd .5s steps(2) infinite}@keyframes ggd{50%{box-shadow:0 0 0 2px #ff3b30,0 0 10px #ff3b30}}
@@ -220,8 +230,9 @@ html.wait #scene{display:none}
 <!--__SCENE__-->
 <!--__OVERLAYS__-->
  <div id="hint"></div><div id="phase"></div><div id="shout"></div><div id="frame"></div>
- <div id="gg"><div id="gglab">⚖️ 유죄 게이지 <b id="ggv">0</b>%</div><div id="ggbar"><i id="ggfill"></i><s id="ggmark"></s></div></div>
+ <div id="gg"><div id="gglab">⚖️ 유죄 게이지 <b id="ggv">0</b>%<b id="ggd"></b></div><div id="ggbar"><i id="ggfill"></i><s id="ggmark"></s></div></div>
  <div id="hb"><span id="hbi">💓</span><b id="hbn">30</b></div>
+ <div id="lsrp"><i></i><i></i><i></i></div><button id="lsbtn" type="button">🔥 최후의 변론!</button>
  <div id="dlg"><div id="tag"><div id="tagin">재판관</div></div><div id="box"></div><div id="boxin"><div id="txt"></div></div><div id="arrow">»</div></div>
  <div id="flash"></div><div id="crt"></div>
  <div id="mute">⚙️</div>
@@ -363,10 +374,11 @@ BUST.L=buildBust($('svgL'),'LAWYER');
 const BASEP={J:'main',P:'main',L:'smug'},KEYN={J:'JUDGE',P:'PROSECUTOR',L:'LAWYER'};
 for(const k in BASEP)if(BUST[k]&&BUST[k].pose)BUST[k].pose(BASEP[k],{snap:true});
 /* ---- 유죄 게이지: 값이 바뀌면 막대가 차오르고(오르면 화면이 살짝 흔들림), 85%부터는 붉게 깜빡임 ---- */
-let ggCur=0,ggIv=null;function ggSet(v,slow){v=Math.max(0,Math.min(100,Math.round(v)));const fill=$('ggfill'),num=$('ggv');if(ggIv){clearInterval(ggIv);ggIv=null}
+let ggCur=0,ggIv=null,ggTgt=0;function ggSet(v,slow,ms0){v=Math.max(0,Math.min(100,Math.round(v)));ggTgt=v;const fill=$('ggfill'),num=$('ggv');if(ggIv){clearInterval(ggIv);ggIv=null}
  if(!slow||v===ggCur){fill.style.transition='none';fill.style.width=v+'%';void fill.offsetWidth;ggCur=v;num.textContent=v;$('gg').classList.toggle('danger',v>=(D.ls_at||85));return}
- const d=Math.abs(v-ggCur),ms=Math.min(16000,Math.max(5000,d*420)),from=ggCur,t0=performance.now();fill.style.transition='width '+ms+'ms linear';fill.style.width=v+'%';let last=-1;
- ggIv=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms),cur=Math.round(from+(v-from)*k);num.textContent=cur;if(cur!==last&&v>from){beep(150+cur*3,.03,.04)}last=cur;$('gg').classList.toggle('danger',cur>=(D.ls_at||85));if(k>=1){clearInterval(ggIv);ggIv=null;ggCur=v}},60)}
+ const d=Math.abs(v-ggCur),ms=ms0||Math.min(16000,Math.max(5000,d*420)),from=ggCur,t0=performance.now();fill.style.transition='width '+ms+'ms linear';fill.style.width=v+'%';let last=-1;
+ ggIv=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms),cur=Math.round(from+(v-from)*k);num.textContent=cur;ggCur=cur;if(cur!==last&&v>from){beep(150+cur*3,.03,.04)}last=cur;$('gg').classList.toggle('danger',cur>=(D.ls_at||85));if(k>=1){clearInterval(ggIv);ggIv=null;ggCur=v}},60)}
+function ggStep(v){v=Math.max(0,Math.min(100,Math.round(v)));const d=v-ggTgt;if(!d)return;const t=$('ggd');t.textContent=(d>0?'▲ +':'▼ ')+d;t.className=(d>0?'up':'dn')+' on';setTimeout(()=>t.classList.remove('on'),1700);ggSet(v,true,900+Math.abs(d)*240);if(d>=5){try{Stage.flinch(.12)}catch(e){}}}
 (function(){const G=D.gauge;if(!G||(D.mode!=='debate'&&D.mode!=='verdict'))return;$('gg').style.display='block';$('ggmark').style.left=(D.ls_at||85)+'%';ggSet(G.from);
  setTimeout(()=>{ggSet(G.to,true)},G.delay||1900)})();
 /* ---- 심박수 타이머: 변명 차례가 되면 카운트다운. 0이 되면 숨겨진 '시간 초과' 버튼을 눌러 자폭 대사를 낸다. 최후의 변론 모드에서는 멈춘다 ---- */
@@ -415,6 +427,8 @@ let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',end
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
 function stopType(){clearTimeout(timer);clearInterval(timer);typing=false;if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
+ if(window.__lsAfter){window.__lsAfter=false;setTimeout(goLs,1500)}
+ if(D.ls&&i===D.ls.idx&&!evDone&&D.mode==='debate'){evDone=true;ended=true;setTimeout(lsEvent,700);return}
  if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push){const ls=D.steps[last()];Stage.push(VCAM,(ls&&ls.cam)||CAM[ls&&ls.s]||'J')}}}}
 function type(text,tp){tp=tp||{m:1,p:1};typing=true;full=text;let k=0;$('txt').textContent='';const base=(D.speed||32)*tp.m;
  const step=()=>{k++;$('txt').textContent=text.slice(0,k);$('boxin').scrollTop=$('boxin').scrollHeight;if(k%2===0)beep(480+Math.random()*140,.04);if(k>=text.length){stopType();return}
@@ -490,7 +504,7 @@ function chooseCombo(st,n){
  if(tired)return 'j_sigh';
  return 'j_main'}
 function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
- const tp=tempoFor(c,pk,st),speak=()=>{busy=false;setTalk(c);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t,tp)};
+ const tp=tempoFor(c,pk,st),speak=()=>{busy=false;setTalk(c);if(st.gv!=null&&D.mode==='debate')ggStep(st.gv);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t,tp)};
  const pv=n>0?(D.steps[n-1].t||''):'',slow=/…\s*$/.test(pv)?1.5:1,gap=Math.round(tp.gap*slow);
  setTimeout(()=>{runCombo(c,pk);if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+Math.round(gap*.6):gap)}
 function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
@@ -502,15 +516,37 @@ if(D.opening){$('start').style.display='none';started=true;i=0;setTimeout(()=>sh
 /* ---- 탕! 탕! 탕! → 판결문 ---- */
 function hit(){thud();scene.classList.remove('shake');void scene.offsetWidth;scene.classList.add('shake');const f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
  const h=document.createElement('div');h.className='hit';h.textContent='탕!';h.style.left=(18+Math.random()*40)+'%';h.style.top=(12+Math.random()*30)+'%';scene.appendChild(h);setTimeout(()=>h.remove(),850)}
+/* ---- 최후의 변론 이벤트: 게이지가 90을 넘으면 판사가 법봉을 '슬로모션'으로 내려치려 하고, 그 전에 가운데 버튼(파동)을 누르면 변론 기회를 얻는다 ---- */
+let evDone=false,evT=[],lsPicked=false;
+const later=(f,ms)=>evT.push(setTimeout(f,ms));
+function clickHidden(k){try{const b=window.parent.document.querySelector('.st-key-'+k+' button');if(b)b.click()}catch(e){}}
+function goLs(){clickHidden('ls_go_hidden')}
+function lsEvent(){const L=D.ls,avail=!!L.avail;busy=true;curCam='J';scene.dataset.cam='J';if(VCAM)Stage.look(VCAM,'JGAV');Stage.face('J');applyExpr('J',{e:'angry'});setTalk('J');$('tagin').textContent=NAMES.J;
+ type(avail?'…더 들을 필요가 없겠군요. 이만 판결을 내리겠습니다.':'이미 충분히 들었습니다. 판결을 내리겠습니다.',{m:1.2,p:1.1,gap:0});
+ sfx('rumble');const gh=Object.assign({},HD_POSES.JUDGE.gavHit);delete gh.burst;
+ if(BUST.J&&BUST.J.pose)BUST.J.pose('gavUp',{rate:2.4});
+ scene.classList.add('slowmo');const v=$('vig');if(v){v.style.transition='opacity 1.2s';v.style.opacity=.55}
+ const T0=2300,FALL=4800;
+ later(()=>{if(BUST.J&&BUST.J.pose)BUST.J.pose(gh,{rate:.6})},T0);
+ if(avail){later(()=>{$('lsbtn').classList.add('on');$('lsrp').classList.add('on');beep(880,.12,.07);setTimeout(()=>beep(1175,.16,.07),120)},T0-500);
+  for(let k=0;k<9;k++)later(()=>{if(!lsPicked)beep(110,.1,.08)},T0+k*520)}
+ later(()=>{if(lsPicked)return;$('lsbtn').classList.remove('on');$('lsrp').classList.remove('on');if(BUST.J&&BUST.J.pose)BUST.J.pose('gavHit',{rate:60});hit();if(v)v.style.opacity=0;scene.classList.remove('slowmo');later(()=>clickHidden('ls_cut_hidden'),1600)},T0+FALL)}
+$('lsbtn').onclick=e=>{e.stopPropagation();if(lsPicked)return;lsPicked=true;evT.forEach(clearTimeout);$('lsbtn').classList.remove('on');$('lsrp').classList.remove('on');scene.classList.remove('slowmo');const v=$('vig');if(v)v.style.opacity=0;
+ if(BUST.J&&BUST.J.pose)BUST.J.pose('gavUp',{rate:6});beep(1320,.12,.07);
+ setTimeout(()=>{curCam='L';scene.dataset.cam='L';if(VCAM)Stage.look(VCAM,'L');Stage.face('L');applyExpr('L',{e:'panic'});$('tagin').textContent=NAMES.L;
+  shout('S',()=>{setTalk('L');window.__lsAfter=true;type('재판장님, 잠깐만요!! 최후의 변론 기회를 주십시오! 이 사건, 아직 끝나지 않았습니다!',{m:.9,p:1})})},500)};
 function gavel(){if(VCAM)Stage.look(VCAM,'J');[0,750,1500].forEach(d=>setTimeout(()=>{if(BUST.J&&BUST.J.pose){BUST.J.pose('gavUp',{rate:30});setTimeout(()=>{BUST.J.pose('gavHit',{rate:55});hit()},170)}else hit()},d));setTimeout(showCard,2900)}
 function showCard(){$('hint').style.display='none';const w=$('cardwrap');w.style.display='flex';[660,880,1320].forEach((f,k)=>setTimeout(()=>beep(f,.25,.06),k*140));
  for(let k=0;k<18;k++){const s=document.createElement('span');s.className='spark';s.textContent='✦';s.style.left=(Math.random()*92)+'%';s.style.top=(Math.random()*92)+'%';s.style.fontSize=(10+Math.random()*18)+'px';s.style.animationDelay=(Math.random()*1.2)+'s';w.appendChild(s)}}
 </script></body></html>"""
 
-def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False, src="", gauge=None, timer=0, ls_at=85):
-    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "gauge": gauge, "timer": int(timer or 0), "ls_at": ls_at, "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
+def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False, src="", gauge=None, timer=0, ls_at=90, ls=None):
+    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "gauge": gauge, "timer": int(timer or 0), "ls_at": ls_at, "ls": ls, "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
     payload = payload.replace("</", "<\\/")  # </script> 깨짐 방지
-    components.html(VN_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
+    html_ = VN_TEMPLATE.replace("__DATA__", payload)
+    if opening:  # 막 사이 연결 장면은 시작 화면(검은 창)이 깜빡 보이지 않도록 처음부터 숨긴다
+        html_ = html_.replace("</style>", "#start{display:none!important}</style>", 1)
+    components.html(html_, height=height, scrolling=False)
 
 # =================================================================
 # 1인칭 법원 스토리 (iframe: 침실 → 명함 → 법원 계단 → 문 열림 → 게임 목적)
@@ -1458,7 +1494,7 @@ HD_POSES.LAWYER.main=HD_POSES.LAWYER.smug;
 const HD_BASE_POSE={tilt:0,lean:0,ty:0,turn:0,desk:0,docs:0,gv:0,gon:0,pl:0,pa:0,doze:0,jit:0};
 function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=348;cvs.height=400;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
  const tmp=document.createElement('canvas');tmp.width=174;tmp.height=200;const tctx=tmp.getContext('2d',{willReadFrequently:true});tctx.imageSmoothingEnabled=false;
- const sd=F.style,CXo=13,CYo=3,SLx=HDX-sd.shoulder_dx,SRx=HDX+sd.shoulder_dx,SYo=sd.shoulder_y,L1=32,L2=34,REST={L:[SLx-4,SYo+64],R:[SRx+4,SYo+64]};
+ const sd=F.style,CXo=13,CYo=3,SLx=HDX-sd.shoulder_dx,SRx=HDX+sd.shoulder_dx,SYo=sd.shoulder_y,L1=35,L2=37,REST={L:[SLx-4,SYo+64],R:[SRx+4,SYo+64]};
  const NUM=['lx','ly','rx','ry','tilt','lean','ty','turn','desk','docs','gv','gon','pl','pa','doze','jit','burst'];
  const base0=()=>Object.assign({},HD_BASE_POSE,{lx:REST.L[0],ly:REST.L[1],rx:REST.R[0],ry:REST.R[1],burst:0});
  const cur=base0(),tgt=base0();let armL=false,armR=false,laT=false,raT=false,rate=9,t=0,raf=0,lastTs=0,lastDraw=0,hl=[0,0],hr=[0,0],talk=null;
