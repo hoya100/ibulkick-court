@@ -8,6 +8,10 @@ import time
 import streamlit as st
 
 from config import (
+    GUILT_START,
+    STANCE_NAME,
+    STUTTER,
+    TIMER_SEC,
     FEE_MAX,
     RANKS,
     REGEN_SEC,
@@ -167,6 +171,60 @@ def load_record(rec):
 def vn_opts():
     return {"mute": not ss["sound_on"], "speed": SPEED_MS.get(ss["speed_label"], 30)}
 
+# ---------------- 공방 시스템: 유죄 게이지 / 태도 / 반응 연출 ----------------
+def clamp(v, lo=0, hi=100):
+    return max(lo, min(hi, int(round(v))))
+
+def fallback_quality(text):
+    n = len(str(text).strip())
+    return 15 if n < 10 else min(70, 40 + n // 5)
+
+def gauge_delta(q, stance, timeout=False):
+    """변명 품질 q(0~100)와 태도에 따라 유죄 게이지 증감(음수 = 감소)을 계산한다.
+    - 시간 초과: +18 자폭
+    - 뻔뻔하게 우기기: 하이리스크 하이리턴 (성공 -15~-39 / 실패 시 증가폭 2배)
+    - 눈물로 호소하기: 안정형 (-14 ~ +8)
+    - 논리적 팩트체크: 품질에 비례 (-22 ~ +22)"""
+    if timeout:
+        return 18
+    q = 40 if q is None else q
+    if stance == "bold":
+        return -round(15 + (q - 60) * 0.6) if q >= 60 else round(2 * max(8, (60 - q) * 0.5))
+    if stance == "tears":
+        return max(-14, min(8, round((50 - q) * 0.3 - 4)))
+    if stance == "logic":
+        return max(-22, min(22, round((50 - q) * 0.5)))
+    return round((50 - q) * 0.4)
+
+def reaction_steps(stance, q, timeout):
+    """변명 직후 캐릭터들이 보이는 반응 대사 + 연기(pose)·표정(e). 태도와 결과에 따라 달라진다."""
+    L, P, J = "LAWYER", "PROSECUTOR", "JUDGE"
+    def stp(s, t, pose="", e="", c=""):
+        d = {"s": s, "t": t, "c": c}
+        if pose:
+            d["pose"] = pose
+        if e:
+            d["e"] = e
+        return d
+    if timeout:
+        return [stp(L, "피, 피고인?! 지금 뭐라도 말씀하셔야죠…! 이러면 제가 변호를 못 해요…", "l_panic", "panic"),
+                stp(P, "시간 초과입니다. 말을 더듬으셨다는 건, 인정한 것으로 보겠습니다!!", "", "smirk", "F")]
+    ok = q >= 60 if stance == "bold" else q >= 45
+    if stance == "bold":
+        return ([stp(L, "후훗, 이 정도로 당당하면 오히려 설득력이 생기는 법이죠. 검사님, 반박해 보시겠어요?", "l_cross", "smug", "S"),
+                 stp(P, "…당당함만으로 넘어갈 사안이 아닙니다만… 크윽…", "p_panic", "panic")] if ok else
+                [stp(P, "뻔뻔함도 정도가 있습니다!! 방금 그 주장은 사실과 전혀 맞지 않아요!", "", "angry", "F"),
+                 stp(L, "아, 아니 그건… 좀 무리수였네요… 식은땀이 나는데요…", "l_panic", "panic")])
+    if stance == "tears":
+        return ([stp(L, "…피고인의 눈물에 진심이 느껴지네요. 재판장님도 마음이 흔들리실 거예요.", "l_smug", "aggrieved"),
+                 stp(J, "음… 솔직하게 말씀하시니, 조금 마음이 움직이긴 하네요.", "j_main")] if ok else
+                [stp(P, "눈물로 사실이 바뀌지는 않습니다. 증거를 보십시오.", "p_main", "angry"),
+                 stp(L, "그래도 울면 조금은 봐주는 게 인지상정인데… 아쉽네요.", "l_smug", "aggrieved")])
+    return ([stp(P, "으윽… 그, 그건 사실과 맞는 말이군요…", "p_panic", "panic"),
+             stp(L, "봤죠? 논리는 배신하지 않아요. 훗.", "l_cross", "smug")] if ok else
+            [stp(P, "논리라고 하셨습니까? 앞뒤가 전혀 맞지 않습니다!!", "", "angry", "F"),
+             stp(J, "…듣는 제가 다 피곤하군요. 하아.", "j_sigh")])
+
 def case_header():
     return (
         f"[피고인] {ss['case_name']}\n[흑역사 원문]\n\"\"\"\n{ss['history_text']}\n\"\"\"\n"
@@ -194,7 +252,11 @@ def build_call(kind):
         (verdict_system_prompt(ss["case_name"], random.sample(FORM_HINTS, 2), random.randint(1000, 9999)),
          f"{case_header()}\n[제1막 대화]\n{transcript(ss['p1']['steps'])}\n[피고인의 1차 변명]\n{ss['ex1']}\n\n"
          f"[제2막 대화]\n{transcript(ss['p2']['steps'])}\n[피고인의 최후 변명]\n{ss['ex2']}\n\n"
-         f"[변명 성의도 참고] 1차 변명 {len(ss['ex1'].strip())}자, 최후 변명 {len(ss['ex2'].strip())}자 (10자 미만이면 성의 부족)"),
+         f"[변명 성의도 참고] 1차 변명 {len(ss['ex1'].strip())}자, 최후 변명 {len(ss['ex2'].strip())}자 (10자 미만이면 성의 부족)\n"
+         f"[유죄 게이지] 1차 변명 후 현재 {ss.get('guilt', GUILT_START)}%\n"
+         f"[태도] 1차: {STANCE_NAME.get(ss.get('stance1'), '미선택')} / 최후: {STANCE_NAME.get(ss.get('stance2'), '미선택')}"
+         + ("\n[시간 초과] 최후 변명 시간이 초과되어 피고인이 말을 더듬었음" if ss.get("timeout2") else "")
+         + ("\n[최후의 변론] 제출됨 — last_stand_score 를 반드시 채점할 것" if ss.get("ls_text") else "")),
         dict(max_tokens=2500, temperature=1.0, validate=validate_verdict),
     )
 
@@ -204,10 +266,23 @@ def apply_result(kind, raw):
         p1 = normalize_phase1(raw, ss["history_text"])
         ss["facts"], ss["p1"] = p1["facts"], p1
         spend_fee()  # 성공했을 때만 선임비 차감
+        ss["guilt"], ss["g0"], ss["ls_used"] = GUILT_START, GUILT_START, False
         return "DEBATE1"
     if kind == "p2":
-        ss["p2"] = normalize_phase2(raw)
+        p2 = normalize_phase2(raw)
+        timeout = bool(ss.pop("timeout1", False))
+        q = p2.get("quality")
+        q = fallback_quality(ss.get("ex1", "")) if q is None else q
+        if len(str(ss.get("ex1", "")).strip()) < 10 and not timeout:
+            q = min(q, 20)
+        g0 = ss.get("guilt", GUILT_START)
+        g1 = clamp(g0 + gauge_delta(q, ss.get("stance1"), timeout))
+        p2["steps"] = reaction_steps(ss.get("stance1"), q, timeout) + p2["steps"]
+        p2["gauge"] = (g0, g1)
+        ss["g0"], ss["guilt"], ss["p2"] = g0, g1, p2
         return "DEBATE2"
-    ss["verdict_data"] = normalize_verdict(raw, ss.get("ex1", ""), ss.get("ex2", ""))
+    ctx = {"timeout2": bool(ss.get("timeout2")), "last_stand": bool(ss.get("ls_text"))}
+    ss["verdict_data"] = normalize_verdict(raw, ss.get("ex1", ""), ss.get("ex2", ""), ctx)
+    ss["verdict_data"]["gauge"] = (ss.get("guilt", GUILT_START), 100 - ss["verdict_data"]["score"])
     finish_trial()
     return "VERDICT"
