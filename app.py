@@ -242,14 +242,16 @@ def excuse_gate():
 
 
 def stance_bar():
-    """태도 스위치: 변명을 보내기 전에 반드시 하나를 골라야 입력창이 열린다. (고른 태도에 따라 캐릭터 반응과 유죄 게이지 증감이 달라짐)"""
+    """변명을 입력창에 쓰고 보내면, 입력창 바로 위에 작은 태도 버튼 3개가 가로로 뜬다. 하나를 누르면 변명이 완료(제출)된다.
+    (고른 태도에 따라 캐릭터 반응과 유죄 게이지 증감이 달라짐) → 고른 태도를 돌려준다."""
+    if not ss.get("pend"):
+        return None
     with st.container(key="stance_bar"):
-        cols = st.columns(3)
-        for col, (k, label) in zip(cols, STANCES.items()):
-            with col:
-                if st.button(label, key=f"stance_{k}", use_container_width=True, type="primary" if ss.get("stance") == k else "secondary"):
-                    ss["stance"] = k
-                    st.rerun()
+        st.markdown('<span class="stance-lab">태도 ▶</span>', unsafe_allow_html=True)
+        for k, label in STANCES.items():
+            if st.button(label, key=f"stance_{k}"):
+                return k
+    return None
 
 
 def key_guard():
@@ -557,18 +559,21 @@ elif stage == "DEBATE1":
             go("LOBBY")
     with st.container(key="timeout_hidden"):
         if st.button("시간 초과", key="timeout_btn1"):
-            ss["ex1"], ss["timeout1"], ss["stance1"] = STUTTER, True, ss.pop("stance", None)
+            if ss.get("pend"):  # 이미 적어 둔 변명이 있으면 그대로 제출(태도 미선택)
+                ss["ex1"], ss["stance1"] = ss.pop("pend"), None
+            else:
+                ss["ex1"], ss["timeout1"], ss["stance1"] = STUTTER, True, None
             start_job("p2", "DEBATE1")
     show_error()
     excuse_gate()
-    stance_bar()
-    ex1 = st.chat_input(
-        "1차 변명을 입력하세요 (최대 200자)" if ss.get("stance") else "⬆ 먼저 위에서 태도를 고르세요",
-        key="chat_ex1", disabled=not ss.get("stance"),
-    )
-    if ex1 and ex1.strip():
-        ss["ex1"], ss["stance1"] = ex1.strip()[:200], ss.pop("stance", None)
+    pick = stance_bar()
+    if pick:
+        ss["ex1"], ss["stance1"] = ss.pop("pend"), pick
         start_job("p2", "DEBATE1")
+    ex1 = st.chat_input("1차 변명을 입력하세요 (최대 200자)" if not ss.get("pend") else "다시 쓰면 변명이 바뀝니다 · 위에서 태도를 고르면 제출돼요", key="chat_ex1")
+    if ex1 and ex1.strip():
+        ss["pend"] = ex1.strip()[:200]
+        st.rerun()
 
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
@@ -590,7 +595,10 @@ elif stage == "DEBATE2":
             go("LOBBY")
     with st.container(key="timeout_hidden"):
         if st.button("시간 초과", key="timeout_btn2"):
-            ss["ex2"], ss["timeout2"], ss["stance2"] = STUTTER, True, ss.pop("stance", None)
+            if ss.get("pend"):
+                ss["ex2"], ss["stance2"] = ss.pop("pend"), None
+            else:
+                ss["ex2"], ss["timeout2"], ss["stance2"] = STUTTER, True, None
             ss.pop("ls_mode", None)
             start_job("verdict", "DEBATE2")
     show_error()
@@ -601,21 +609,25 @@ elif stage == "DEBATE2":
                 ss["ls_mode"] = True
                 st.rerun()
     if not ls_mode:
-        stance_bar()
+        pick = stance_bar()
+        if pick:
+            ss["ex2"], ss["stance2"] = ss.pop("pend"), pick
+            start_job("verdict", "DEBATE2")
     if ls_mode:
         ph = "🔥 최후의 변론 — 진심 어린 호소나 기적의 논리를 적으세요 (최대 400자)"
     else:
-        ph = "최후 변명을 입력하세요 (최대 200자)" if ss.get("stance") else "⬆ 먼저 위에서 태도를 고르세요"
-    ex2 = st.chat_input(ph, key="chat_ex2", disabled=(not ls_mode and not ss.get("stance")))
+        ph = "최후 변명을 입력하세요 (최대 200자)" if not ss.get("pend") else "다시 쓰면 변명이 바뀝니다 · 위에서 태도를 고르면 제출돼요"
+    ex2 = st.chat_input(ph, key="chat_ex2")
     if ex2 and ex2.strip():
         if ls_mode:
             ss["ex2"] = ss["ls_text"] = ex2.strip()[:400]
             ss["ls_used"] = True
             ss.pop("ls_mode", None)
             ss["stance2"] = None
+            start_job("verdict", "DEBATE2")
         else:
-            ss["ex2"], ss["stance2"] = ex2.strip()[:200], ss.pop("stance", None)
-        start_job("verdict", "DEBATE2")
+            ss["pend"] = ex2.strip()[:200]
+            st.rerun()
 
 # ---------------- VERDICT ----------------
 elif stage == "VERDICT":
