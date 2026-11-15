@@ -435,7 +435,7 @@ function beat(c,b){const F=BUST[c];if(!F)return;
  if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
  if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
  if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
- if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-34,ly:150,rx:HDXj+34,ry:136}:{lx:HDXj-34,ly:136,rx:HDXj+34,ry:150},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{rx:HDXj+36,ry:136}:{rx:HDXj+36,ry:166},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
 function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
 /* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
 function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
@@ -1353,7 +1353,7 @@ function hdPaintFx(px,R,st,n){const yt=st.eye_top,yb=yt+st.eye_h,sk=R.skin,WT=[2
  if(n==='vein'){const x=HDX-24,y=yt-13,c=[214,48,60],d=hdMix(c,R.ol,.4);[[0,0],[1,0],[2,0],[0,1],[0,2],[1,1],[3,1],[4,1],[4,2],[3,2],[3,3],[1,3],[2,4],[3,4],[4,4]].forEach(q=>px.put(x+q[0],y+q[1],q[0]+q[1]===2?d:c))}}
 function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRamps(pal),W=HDW,H=HDH,hair=HD_HAIR[st.hair],suit=HD_OUTFIT[st.outfit];
  const back=new HdPx(W,H),torso=new HdPx(W,H),hairF=new HdPx(W,H),face=new HdPx(W,H);
- hair.back(back,R);hdOutline(back,R.ol,0.7);const sl=suit(torso,R);hdRound(torso,st.round_r||6);hair.locks(torso,R);hdOutline(torso,R.ol,0.7);hair.front(hairF,R);hdOutline(hairF,R.ol,0.75);
+ hair.back(back,R);hdOutline(back,R.ol,0.7);const sl=suit(torso,R);hdRound(torso,st.round_r||6);const A0=new Uint8Array(W*H);for(let i=0;i<A0.length;i++)A0[i]=torso.d[i*4+3]?1:0;hair.locks(torso,R);for(let y=118;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!A0[i]&&torso.d[i*4+3])torso.d[i*4+3]=0}hdOutline(torso,R.ol,0.7);hair.front(hairF,R);hdOutline(hairF,R.ol,0.75);
  const hm=new Uint8Array(W*H);for(let i=0;i<hm.length;i++)hm[i]=hairF.d[i*4+3]?1:0;hdPaintFace(face,R,st,hm);
  const cv={back:back.canvas(),torso:torso.canvas(),face:face.canvas(),hairF:hairF.canvas()},rs=C.render||{},hl=rs.eye_highlight_px||2,cfgEye=HD_EYE[st.eyes],brow=hdPaintBrows(R,st),md=HD_MOUTH[st.mouth],mouths={};
  ['grin','smile','open','flat','hmm'].forEach(n=>{const p=new HdPx(W,H);md[n](p,R);mouths[n]=p.canvas()});
@@ -1417,11 +1417,11 @@ const HD_POSES={
   gavUp:{docs:.5,desk:1,ty:0,lean:-3,tilt:-3,turn:-4,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+56,ry:78,gon:1,gv:24},
   gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
  PROSECUTOR:{
-  main:{desk:1,ty:2,turn:3,la:1,lx:HDX+10,ly:150,ra:1,rx:HDX-10,ry:152},
-  windup:{desk:1,turn:5,lean:-4,tilt:2,ty:-1,la:1,lx:HDX-32,ly:100,ra:1,rx:HDX+32,ry:100},
-  slam:{desk:1,turn:11,lean:12,tilt:3,ty:8,la:1,lx:HDX-34,ly:150,ra:1,rx:HDX+34,ry:150,burst:1},
-  ask:{desk:1,turn:0,lean:3,tilt:0,ty:2,la:1,lx:HDX-26,ly:150,ra:1,rx:HDX+26,ry:150},
-  panic:{desk:1,turn:4,lean:-3,tilt:3,ty:3,la:1,lx:HDX-10,ly:146,ra:1,rx:HDX+10,ry:148}},
+  main:{desk:.65,ty:3,turn:3,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+37,ry:164},
+  windup:{desk:.65,turn:5,lean:-5,tilt:2,ty:0,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+40,ry:84},
+  slam:{desk:.65,turn:10,lean:10,tilt:3,ty:8,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+36,ry:166,burst:1},
+  ask:{desk:.65,turn:0,lean:2,tilt:-1,ty:3,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+46,ry:118},
+  panic:{desk:.65,turn:4,lean:-3,tilt:3,ty:4,la:1,lx:HDX-37,ly:164,ra:1,rx:HDX+14,ry:124}},
  LAWYER:{
   smug:{turn:-5,lean:3,tilt:5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
   cross:{turn:-8,lean:-2,tilt:-4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
@@ -1435,7 +1435,7 @@ function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('c
  const base0=()=>Object.assign({},HD_BASE_POSE,{lx:REST.L[0],ly:REST.L[1],rx:REST.R[0],ry:REST.R[1],burst:0});
  const cur=base0(),tgt=base0();let armL=false,armR=false,laT=false,raT=false,rate=9,t=0,raf=0,lastTs=0,lastDraw=0,hl=[0,0],hr=[0,0],talk=null;
  function ik2(S,T){const dx=T[0]-S[0],dy=T[1]-S[1],d=Math.hypot(dx,dy),maxd=L1+L2-.6,mind=Math.abs(L1-L2)+2,reach=Math.max(mind,Math.min(maxd,d)),base=Math.atan2(dy,dx),cb=(L1*L1+reach*reach-L2*L2)/(2*L1*reach),b=Math.acos(Math.max(-1,Math.min(1,cb)));
-  const c=[base+b,base-b].map(a=>({ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>q.ey-p.ey)[0];return {ex:c.ex,ey:c.ey,hx:S[0]+reach*Math.cos(base),hy:S[1]+reach*Math.sin(base)}}
+  const c=[base+b,base-b].map(a=>({ey:S[1]+L1*Math.sin(a),ex:S[0]+L1*Math.cos(a)})).sort((p,q)=>Math.abs(q.ey-p.ey)<7?((S[0]<HDX?-1:1)*(q.ex-p.ex))*-1:q.ey-p.ey)[0];return {ex:c.ex,ey:c.ey,hx:S[0]+reach*Math.cos(base),hy:S[1]+reach*Math.sin(base)}}
  const rgb=c=>'rgb('+c[0]+','+c[1]+','+c[2]+')',SK=F.R.skin;
  function props(){const c=tctx;
   if(cur.docs>.02){const pile=(x0,w,hh,seed)=>{const n=Math.max(1,Math.round(hh/6));for(let i=0;i<n;i++){const yy=200-(i+1)*6,off=((i*37+seed)%7)-3,ww=w-((i*11+seed)%9);c.fillStyle='#2a1a10';c.fillRect(x0+off-1,yy-1,ww+2,8);c.fillStyle=i%2?'#efe6c6':'#fffaf0';c.fillRect(x0+off,yy,ww,6);c.fillStyle='#9aa0bb';c.fillRect(x0+off+3,yy+3,Math.max(2,ww-9),1)}};pile(18,40,64*cur.docs,3);pile(116,40,52*cur.docs,11)}
@@ -1443,11 +1443,11 @@ function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('c
   if(cur.gon>.5){const x=hr[0]-CXo,y=hr[1]-CYo;c.save();c.translate(x,y);c.rotate(cur.gv*Math.PI/180);c.fillStyle='#2a1608';c.fillRect(-4,-34,8,38);c.fillStyle='#8a5a2c';c.fillRect(-2.5,-33,5,36);
    c.fillStyle='#2a1608';c.fillRect(-14,-46,28,14);c.fillStyle='#b07a3e';c.fillRect(-12.5,-44.5,25,11);c.fillStyle='#e8c25a';c.fillRect(-9,-44.5,3,11);c.fillRect(6,-44.5,3,11);c.fillStyle='#ffffff55';c.fillRect(-12.5,-44.5,25,3);c.restore()}
   if(cur.pl>.5){const x=hl[0]-CXo,y=hl[1]-CYo,a=cur.pa*Math.PI/180,len=17;c.lineCap='round';c.strokeStyle='#2a1020';c.lineWidth=6;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke();c.strokeStyle=rgb(SK.base);c.lineWidth=3.2;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke()}
-  if(cur.burst>.03){const pk=F.key==='PROSECUTOR',x=(pk?(hl[0]+hr[0])/2:hr[0])-CXo,y=(pk?Math.min(hl[1],hr[1])-4:hr[1])-CYo,b=cur.burst;c.lineCap='butt';for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r0=7+(1-b)*10,r1=r0+8+b*12;c.strokeStyle=i%2?'#fff':'#ffd23f';c.lineWidth=2;c.beginPath();c.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);c.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.stroke()}}}
+  if(cur.burst>.03){const pk=F.key==='PROSECUTOR',x=hr[0]-CXo,y=(pk?Math.max(hr[1],162)+3:hr[1])-CYo,b=cur.burst;c.lineCap='butt';for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r0=7+(1-b)*10,r1=r0+8+b*12;c.strokeStyle=i%2?'#fff':'#ffd23f';c.lineWidth=2;c.beginPath();c.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);c.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.stroke()}}}
  function draw(){const tn=cur.turn,dT=Math.round(tn*.3),ty=Math.round(cur.ty);let ln=cur.lean,tl=cur.tilt,jx=0,jy=0;
   if(cur.doze>.02){ln+=Math.sin(t*1.5)*cur.doze;tl+=Math.sin(t*1.1)*cur.doze*.6}
   if(cur.jit>.02){jx=(Math.random()-.5)*cur.jit*2;jy=(Math.random()-.5)*cur.jit*2;tl+=(Math.random()-.5)*cur.jit}
-  tctx.clearRect(0,0,134,200);const arms={};
+  tctx.clearRect(0,0,tmp.width,tmp.height);const arms={};
   if(armL){const S=[SLx+dT,SYo+ty],r=ik2(S,[cur.lx+jx,cur.ly+jy]);arms.L={S:S,E:[r.ex,r.ey],H:[r.hx,r.hy]};hl=[r.hx,r.hy]}
   if(armR){const S=[SRx+dT,SYo+ty],r=ik2(S,[cur.rx-jx,cur.ry+jy]);arms.R={S:S,E:[r.ex,r.ey],H:[r.hx,r.hy]};hr=[r.hx,r.hy]}
   F.render(tctx,{cx:CXo,cy:CYo,tilt:tl,lean:Math.round(ln),ty:ty,turn:tn,arms:(armL||armR)?arms:null});props();hdEnhance(tmp,cvs)}
