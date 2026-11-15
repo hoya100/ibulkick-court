@@ -363,16 +363,19 @@ BUST.L=buildBust($('svgL'),'LAWYER');
 const BASEP={J:'main',P:'main',L:'smug'},KEYN={J:'JUDGE',P:'PROSECUTOR',L:'LAWYER'};
 for(const k in BASEP)if(BUST[k]&&BUST[k].pose)BUST[k].pose(BASEP[k],{snap:true});
 /* ---- 유죄 게이지: 값이 바뀌면 막대가 차오르고(오르면 화면이 살짝 흔들림), 85%부터는 붉게 깜빡임 ---- */
-function ggSet(v){v=Math.max(0,Math.min(100,Math.round(v)));$('ggfill').style.width=v+'%';$('ggv').textContent=v;$('gg').classList.toggle('danger',v>=(D.ls_at||85))}
-(function(){const G=D.gauge;if(!G||(D.mode!=='debate'&&D.mode!=='verdict'))return;$('gg').style.display='block';$('ggmark').style.left=(D.ls_at||85)+'%';$('ggfill').style.transition='none';ggSet(G.from);void $('ggfill').offsetWidth;$('ggfill').style.transition='';
- setTimeout(()=>{ggSet(G.to);if(G.to>G.from+2){try{Stage.flinch(.18)}catch(e){}}},G.delay||1900)})();
+let ggCur=0,ggIv=null;function ggSet(v,slow){v=Math.max(0,Math.min(100,Math.round(v)));const fill=$('ggfill'),num=$('ggv');if(ggIv){clearInterval(ggIv);ggIv=null}
+ if(!slow||v===ggCur){fill.style.transition='none';fill.style.width=v+'%';void fill.offsetWidth;ggCur=v;num.textContent=v;$('gg').classList.toggle('danger',v>=(D.ls_at||85));return}
+ const d=Math.abs(v-ggCur),ms=Math.min(16000,Math.max(5000,d*420)),from=ggCur,t0=performance.now();fill.style.transition='width '+ms+'ms linear';fill.style.width=v+'%';let last=-1;
+ ggIv=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms),cur=Math.round(from+(v-from)*k);num.textContent=cur;if(cur!==last&&v>from){beep(150+cur*3,.03,.04)}last=cur;$('gg').classList.toggle('danger',cur>=(D.ls_at||85));if(k>=1){clearInterval(ggIv);ggIv=null;ggCur=v}},60)}
+(function(){const G=D.gauge;if(!G||(D.mode!=='debate'&&D.mode!=='verdict'))return;$('gg').style.display='block';$('ggmark').style.left=(D.ls_at||85)+'%';ggSet(G.from);
+ setTimeout(()=>{ggSet(G.to,true)},G.delay||1900)})();
 /* ---- 심박수 타이머: 변명 차례가 되면 카운트다운. 0이 되면 숨겨진 '시간 초과' 버튼을 눌러 자폭 대사를 낸다. 최후의 변론 모드에서는 멈춘다 ---- */
 let tmr=null,tleft=0;
 function lastOn(){try{return !!window.parent.document.querySelector('.st-key-last_on')}catch(e){return false}}
-function startTimer(){const T=D.timer|0;if(!T||D.mode!=='debate'||tmr)return;tleft=T;const hb=$('hb');hb.style.display='flex';$('hbn').textContent=tleft;
- tmr=setInterval(()=>{if(paused)return;if(lastOn()){hb.classList.add('off');$('hbn').textContent='∞';return}hb.classList.remove('off');tleft--;$('hbn').textContent=Math.max(0,tleft);
-  const sp=Math.max(.38,tleft/T);hb.style.setProperty('--hbs',sp.toFixed(2)+'s');hb.classList.toggle('low',tleft<=10);
-  if(tleft<=10&&tleft>0){beep(80,.12,.1);setTimeout(()=>beep(70,.1,.07),170);const v=$('vig');if(v){v.style.transition='opacity .25s';v.style.opacity=.55;setTimeout(()=>{v.style.opacity=0},260)}}
+function startTimer(){const T=D.timer|0;if(!T||D.mode!=='debate'||tmr)return;tleft=T;const hb=$('hb'),fm=n=>Math.floor(n/60)+':'+String(n%60).padStart(2,'0');hb.style.display='flex';$('hbn').textContent=fm(tleft);
+ tmr=setInterval(()=>{if(paused)return;if(lastOn()){hb.classList.add('off');$('hbn').textContent='∞';return}hb.classList.remove('off');tleft--;$('hbn').textContent=fm(Math.max(0,tleft));
+  const sp=Math.max(.38,tleft/T);hb.style.setProperty('--hbs',sp.toFixed(2)+'s');hb.classList.toggle('low',tleft<=15);
+  if(tleft<=15&&tleft>0){beep(80,.12,.1);setTimeout(()=>beep(70,.1,.07),170);const v=$('vig');if(v){v.style.transition='opacity .25s';v.style.opacity=.55;setTimeout(()=>{v.style.opacity=0},260)}}
   if(tleft<=0){clearInterval(tmr);tmr=null;try{Stage.flinch(.4)}catch(e){}try{const b=window.parent.document.querySelector('.st-key-timeout_hidden button');if(b)b.click()}catch(e){}}},1000)}
 
 const EXPR=D.expr||{};
@@ -1220,19 +1223,19 @@ function hdPaintFace(px,R,st,HM){const w=px.w,h=px.h,S=R.skin,poly=hdCatmull(hdA
  const castD=hdSub(hdAnd(hdShift(HM,w,h,1,2),FM),HM),castS=hdSub(hdSub(hdAnd(hdShift(HM,w,h,1,5),FM),HM),castD);hdPaint(px,castS,S.sh);hdPaint(px,castD,S.deep);       // 앞머리가 이마에 드리우는 그림자
  hdPaint(px,hdAnd(hdEll(w,h,HDX-13,66,5,2.6),FM),S.hi);hdPaint(px,hdAnd(hdEll(w,h,HDX-7,40,9,3),FM),S.hi);                                           // 볼·이마 하이라이트
  [[-1,-1],[1,-1]].forEach(()=>{});
- for(let y=61;y<=65;y++)px.put(HDX-1,y,S.hi);for(let y=62;y<=66;y++)px.put(HDX+1,y,S.sh);px.put(HDX,68,S.deep);px.put(HDX-1,68,S.deep);px.put(HDX+1,68,S.sh);px.put(HDX-2,67,S.sh);   // 코
+ for(let y=63;y<=65;y++)px.put(HDX-1,y,S.hi);px.put(HDX+1,66,S.sh);px.put(HDX,67,S.sh);px.put(HDX,68,S.deep);px.put(HDX-1,68,hdMix(S.sh,S.deep,.4));px.put(HDX+1,68,hdMix(S.sh,S.deep,.4));   // 코
  [-1,1].forEach(s=>{const bm=hdAnd(hdEll(w,h,HDX+s*17.5,68,5.8,2.8),FM),core=hdAnd(bm,hdEll(w,h,HDX+s*17.5,68,3.6,1.7));hdPaint(px,hdSub(bm,core),S.base);
   for(let i=0;i<bm.length;i++)if(bm[i]&&!core[i]){const x=i%w,y=(i/w)|0;if((x+y)%2===0)px.put(x,y,hdMix(S.base,S.blush,.55))}hdPaint(px,core,hdMix(S.base,S.blush,.8))});               // 볼 홍조(가장자리는 체크무늬로 번지게)
  hdOutline(px,R.ol,0.72);return FM}
 /* ----- 눈 (캐릭터 데이터의 크기·위치를 따름) ----- */
-const HD_EYE={crescent_smile:{tilt:2,flick:4,smile:1,pink:1,irisRx:3.7,lash:3},cool_half:{tilt:2.8,flick:4,smile:0,pink:0,irisRx:3.6,lash:2},sleepy_half:{tilt:1.8,flick:2,smile:0,pink:0,irisRx:3.6,lash:2,bag:1}};
+const HD_EYE={crescent_smile:{tilt:1.2,flick:2.4,smile:1,pink:1,irisRx:5.2,lash:3},cool_half:{tilt:1.6,flick:2.4,smile:0,pink:0,irisRx:5,lash:2},sleepy_half:{tilt:1.2,flick:1.4,smile:0,pink:0,irisRx:5,lash:2,bag:1}};
 function hdEyeSprite(R,st,cfg,side,rows,gx,gy,hl){const SW=36,SH=28,s=side,cx=18,top=9,H=st.eye_h,T=cfg.tilt,yc=top+H*0.5,ox=HDX+s*14-cx,oy=st.eye_top-top,px=new HdPx(SW,SH);
- const pts=[[cx-s*7.5,yc+1],[cx-s*4.5,top+1.2],[cx-s*1,top-0.2],[cx+s*3,top+0.2-T*0.3],[cx+s*6,top+1-T*0.8],[cx+s*8,yc-T],[cx+s*7,top+H-0.8-T*0.5],[cx+s*3,top+H+0.2],[cx-s*1,top+H+0.4],[cx-s*5,top+H-0.4]];
+ const pts=[[cx-s*6.8,yc+0.6],[cx-s*4.6,top+0.8],[cx-s*1,top-0.5],[cx+s*3,top-0.1-T*0.3],[cx+s*6,top+1-T*0.8],[cx+s*7.4,yc-T*.8],[cx+s*6.6,top+H-0.4-T*0.4],[cx+s*3,top+H+0.5],[cx-s*1,top+H+0.7],[cx-s*4.8,top+H-0.1]];
  const EM=hdPoly(SW,SH,pts),skin=R.skin;
  const cover=new Uint8Array(SW*SH);for(let y=0;y<SH;y++)for(let x=0;x<SW;x++)if(EM[y*SW+x]&&y<top+rows)cover[y*SW+x]=1;const EV=hdSub(EM,cover);
  const SCL=hdMix([246,247,255],HD_WHITE,0),SCLs=[214,219,236],SCLd=hdMix(SCLs,R.ol,.25);
  hdPaint(px,EV,SCL);hdPaint(px,hdAnd(EV,hdEdge(EM,SW,SH,2,0)),SCLs);hdPaint(px,hdAnd(EV,hdEdge(EM,SW,SH,-2,0)),SCLs);
- const ix=cx+gx,iy=yc+gy*0.6+1.7,rx=cfg.irisRx,ry=H*0.56,IM=hdAnd(EV,hdEll(SW,SH,ix,iy,rx,ry)),ird=hdMix(R.eye,R.ol,.5),mid=hdMix(R.eye,R.eyeL,.55);
+ const ix=cx+gx,iy=yc+gy*0.6+1.7,rx=cfg.irisRx,ry=H*0.6,IM=hdAnd(EV,hdEll(SW,SH,ix,iy,rx,ry)),ird=hdMix(R.eye,R.ol,.5),mid=hdMix(R.eye,R.eyeL,.55);
  for(let y=0;y<SH;y++)for(let x=0;x<SW;x++)if(IM[y*SW+x]){const t=(y+.5-(iy-ry))/(2*ry);px.put(x,y,t<.2?ird:t<.46?R.eye:t<.74?mid:R.eyeL)}
  hdPaint(px,hdAnd(hdEdge(IM,SW,SH,-1,0),IM),ird);hdPaint(px,hdAnd(hdEdge(IM,SW,SH,1,0),IM),ird);hdPaint(px,hdAnd(hdEdge(IM,SW,SH,0,-1),IM),ird);
  hdPaint(px,hdAnd(hdEll(SW,SH,ix,iy+0.5,1.9,H*0.3),IM),R.pupil);
@@ -1340,7 +1343,7 @@ const HD_OUTFIT={
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
   const J=hdRegion(px,[[-29,97],[29,97],[31,108],[31,124],[28,140],[20,155],[24,175],[30,200],[32,232],[-32,232],[-30,200],[-24,175],[-20,155],[-28,140],[-31,124],[-31,108]],S,{sd:3});
   hdPolyline(px,hdAbs([[-27,112],[-28,130],[-20,153]]),S.sh,J);hdPolyline(px,hdAbs([[27,112],[28,130],[20,153]]),S.deep,J);hdPolyline(px,hdAbs([[-24,114],[-25,132]]),S.lt,J);
-  HD_BUST(px,J,S,13,128,13,11);
+  HD_BUST(px,J,S,14,130,16,14);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-40,97],[40,97],[40,101],[-40,101]]))),S.lt);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,134]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,134]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-12,94],[-27,99],[-23,136],[-8,127]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-12,94],[-27,99],[-23,136]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-8,127],[-23,136]])),S.sh);
@@ -1355,7 +1358,7 @@ const HD_OUTFIT={
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const leg=hdRegion(px,f([[-34,186],[-1,186],[-1,232],[-30,232]]),legC,{sd:3});hdPolyline(px,hdAbs(f([[-16,190],[-15,232]])),S.lt,leg);hdPolyline(px,hdAbs(f([[-2,190],[-2,232]])),S.deep,leg)});
   const J=hdRegion(px,[[-33,97],[33,97],[34,110],[34,126],[31,142],[23,158],[27,176],[33,192],[-33,192],[-27,176],[-23,158],[-31,142],[-34,126],[-34,110]],S,{sd:3});
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-30,114],[-31,132],[-22,158]]),S.sh,J);hdPolyline(px,hdAbs([[30,114],[31,132],[22,158]]),S.deep,J);hdPolyline(px,hdAbs([[-27,116],[-28,134]]),S.lt,J);
-  HD_BUST(px,J,S,14,132,14,12);
+  HD_BUST(px,J,S,15,134,17,15);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-33,192],[33,192]]),S.deep,J);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,148]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,148]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-10,94],[-27,100],[-29,138],[-20,152],[-4,134]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-10,94],[-27,100],[-29,138],[-20,152]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-20,152],[-4,134]])),S.sh);hdPolyline(px,hdAbs(f([[-27,100],[-21,108],[-10,106]])),S.deep);
@@ -1401,7 +1404,7 @@ function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRam
  F.setExpr=function(name){const E=(D.expr||{})[name]||(D.expr||{}).neutral||{},S=F.state;S.baseMouth=(E.mouth&&mouths[E.mouth])?E.mouth:md.def;S.mouth=S.baseMouth;S.brow=Math.round((E.brow||0)*1.2);S.ov=name;S.lid=E.lid||0;S.gx=E.gx||0;S.gy=E.gy||0;S.fx=(E.fx||[]).join(',');F.expr=name};
  F.render=function(ctx,o){o=o||{};ctx.imageSmoothingEnabled=false;const cx=o.cx||0,cy=o.cy||0,ty=Math.round(o.ty||0),lean=Math.round(o.lean||0),tilt=o.tilt||0;
   const tn=o.turn||0,dB=Math.round(-tn*.5),dT=Math.round(tn*.3),dF=Math.round(tn),dH=Math.round(tn*.6);   /* 3/4 반측면: 머리·얼굴·앞머리·몸을 서로 다른 양만큼 밀어 시차로 '고개 돌림' 입체감을 낸다 */
-  const HK=.9,hs=(fn)=>{ctx.save();const py=ty+lean-cy+96;ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';fn();ctx.restore()};
+  const HK=.86,hs=(fn)=>{ctx.save();const py=ty+lean-cy+96;ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';fn();ctx.restore()};
   hs(()=>ctx.drawImage(cv.back,-cx+dB,ty+Math.round(lean*.85)-cy));ctx.drawImage(cv.torso,-cx+dT,ty-cy);F.composeHead(Math.round(tn*.6));
   const hb=F._hb||(F._hb=document.createElement('canvas'));if(hb.width!==W+40){hb.width=W+40;hb.height=H}const bx=hb.getContext('2d');bx.imageSmoothingEnabled=false;bx.clearRect(0,0,hb.width,hb.height);
   const dh=(img,dx)=>{if(Math.abs(tilt)<0.6)bx.drawImage(img,dx+20,0);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)bx.drawImage(img,0,y,W,1,dx+20+Math.round((96-y)*t),y,W,1);bx.drawImage(img,0,104,W,H-104,dx+20,104,W,H-104)}};
@@ -1448,8 +1451,8 @@ const HD_POSES={
   ask:{desk:.65,turn:0,lean:5,tilt:0,ty:4,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:164},
   panic:{desk:.65,turn:4,lean:-3,tilt:3,ty:4,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:164}},
  LAWYER:{
-  smug:{turn:-5,lean:3,tilt:5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
-  cross:{turn:-8,lean:-2,tilt:-4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
+  smug:{turn:-6,lean:1,tilt:3,la:1,lx:HDX+21,ly:128,ra:1,rx:HDX-20,ry:132},
+  cross:{turn:-9,lean:-3,tilt:-5,la:1,lx:HDX+22,ly:122,ra:1,rx:HDX-20,ry:128},
   panic:{turn:-4,lean:4,tilt:3,ty:2,la:1,lx:HDX-26,ly:104,ra:1,rx:HDX+26,ry:104}}};
 HD_POSES.LAWYER.main=HD_POSES.LAWYER.smug;
 const HD_BASE_POSE={tilt:0,lean:0,ty:0,turn:0,desk:0,docs:0,gv:0,gon:0,pl:0,pa:0,doze:0,jit:0};
