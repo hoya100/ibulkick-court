@@ -89,6 +89,16 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #txt{padding:20px 46px 12px 24px;color:#fff;font-size:clamp(14px,3.4vw,19px);line-height:1.65;word-break:keep-all;text-shadow:1px 1px 0 #000}
 #arrow{position:absolute;right:20px;bottom:6px;color:#f2c14e;font-size:30px;font-weight:700;animation:blink .8s steps(2) infinite;visibility:hidden}
 @keyframes blink{50%{opacity:.15}}
+#gg{position:absolute;left:8px;top:46px;z-index:13;width:min(44%,176px);display:none;pointer-events:none;font-weight:700;color:#fff;text-shadow:1px 1px 0 #000}
+#gglab{font-size:11px;margin-bottom:3px;letter-spacing:.3px}#gglab b{font-size:13px;color:#ffe27a}
+#ggbar{position:relative;height:12px;background:#0b0d1ecc;border:2px solid #0d0f26;box-shadow:0 0 0 1px #ffffff40}
+#ggfill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#3fd16a,#e8d23a 55%,#ff3b30);background-size:176px 100%;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+#ggmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;left:85%;opacity:.85}
+#gg.danger #ggbar{animation:ggd .5s steps(2) infinite}@keyframes ggd{50%{box-shadow:0 0 0 2px #ff3b30,0 0 10px #ff3b30}}
+#hb{position:absolute;right:8px;top:46px;z-index:13;display:none;align-items:center;gap:5px;padding:3px 9px;background:#0b0d1ecc;border:2px solid #0d0f26;box-shadow:0 0 0 1px #ffffff40;color:#fff;font-weight:700;pointer-events:none}
+#hbi{font-size:18px;display:inline-block;animation:hbp var(--hbs,1s) ease-in-out infinite}#hbn{font-size:17px;min-width:24px;text-align:right}
+#hb.low{background:#7a0e16cc}#hb.off{opacity:.45}#hb.off #hbi{animation:none}
+@keyframes hbp{0%,100%{transform:scale(1)}18%{transform:scale(1.35)}36%{transform:scale(1)}54%{transform:scale(1.2)}}
 #hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:12;display:none;white-space:nowrap;background:#b3121c;color:#fff;padding:6px 14px;font-weight:700;font-size:13px;border:2px solid #fff;animation:blink 1s steps(2) infinite}
 #mute{position:absolute;top:8px;right:8px;z-index:30;background:#000a;color:#fff;border:2px solid #fff6;padding:3px 8px;font-size:14px;cursor:pointer}
 #sm{display:none;position:absolute;inset:0;z-index:60;background:#000b;align-items:center;justify-content:center;cursor:default}
@@ -210,6 +220,8 @@ html.wait #scene{display:none}
 <!--__SCENE__-->
 <!--__OVERLAYS__-->
  <div id="hint"></div><div id="phase"></div><div id="shout"></div><div id="frame"></div>
+ <div id="gg"><div id="gglab">⚖️ 유죄 게이지 <b id="ggv">0</b>%</div><div id="ggbar"><i id="ggfill"></i><s id="ggmark"></s></div></div>
+ <div id="hb"><span id="hbi">💓</span><b id="hbn">30</b></div>
  <div id="dlg"><div id="tag"><div id="tagin">재판관</div></div><div id="box"></div><div id="boxin"><div id="txt"></div></div><div id="arrow">»</div></div>
  <div id="flash"></div><div id="crt"></div>
  <div id="mute">⚙️</div>
@@ -230,8 +242,8 @@ const D=__DATA__;
 /* ---- 변명 입력칸 제어: 연출(iframe)이 부모 화면의 표식(.st-key-excuse_gate)에 상태를 적어 두면, CSS가 입력창을 숨기거나 올려 준다.
         부모 화면에 접근할 수 없는 환경이면 아무것도 하지 않고(= 입력창은 항상 보임/6초 뒤 자동 표시) 게임은 그대로 진행된다. ---- */
 function exSet(attr,after){let n=0;const go=()=>{n++;let m=null;try{m=window.parent.document.querySelector('.st-key-excuse_gate')}catch(e){return true}
- if(m){m.setAttribute(attr,'1');if(after)after();return true}return n>25};if(!go()){const iv=setInterval(()=>{if(go())clearInterval(iv)},200)}}
-function exOpen(){if(D.mode!=='debate')return;exSet('data-open',()=>{setTimeout(()=>{try{const ta=window.parent.document.querySelector('[data-testid="stChatInput"] textarea');if(ta)ta.focus({preventScroll:true})}catch(e){}},650)})}
+ if(m){if(attr==='data-gate'){m.removeAttribute('data-open')}m.setAttribute(attr,'1');if(after)after();return true}return n>25};if(!go()){const iv=setInterval(()=>{if(go())clearInterval(iv)},200)}}
+function exOpen(){if(D.mode!=='debate')return;exSet('data-open',()=>{startTimer();setTimeout(()=>{try{const ta=window.parent.document.querySelector('[data-testid="stChatInput"] textarea');if(ta)ta.focus({preventScroll:true})}catch(e){}},650)})}
 if(D.mode==='debate')exSet('data-gate');
 if(D.mode==='wait'){document.documentElement.className='wait';(function(){
  const NS='http://www.w3.org/2000/svg',CX=100,INK='#0d0f26',GOLD='#d9b85a';
@@ -350,6 +362,19 @@ BUST.P=buildBust($('svgP'),'PROSECUTOR');
 BUST.L=buildBust($('svgL'),'LAWYER');
 const BASEP={J:'main',P:'main',L:'smug'},KEYN={J:'JUDGE',P:'PROSECUTOR',L:'LAWYER'};
 for(const k in BASEP)if(BUST[k]&&BUST[k].pose)BUST[k].pose(BASEP[k],{snap:true});
+/* ---- 유죄 게이지: 값이 바뀌면 막대가 차오르고(오르면 화면이 살짝 흔들림), 85%부터는 붉게 깜빡임 ---- */
+function ggSet(v){v=Math.max(0,Math.min(100,Math.round(v)));$('ggfill').style.width=v+'%';$('ggv').textContent=v;$('gg').classList.toggle('danger',v>=(D.ls_at||85))}
+(function(){const G=D.gauge;if(!G||(D.mode!=='debate'&&D.mode!=='verdict'))return;$('gg').style.display='block';$('ggmark').style.left=(D.ls_at||85)+'%';$('ggfill').style.transition='none';ggSet(G.from);void $('ggfill').offsetWidth;$('ggfill').style.transition='';
+ setTimeout(()=>{ggSet(G.to);if(G.to>G.from+2){try{Stage.flinch(.18)}catch(e){}}},G.delay||1900)})();
+/* ---- 심박수 타이머: 변명 차례가 되면 카운트다운. 0이 되면 숨겨진 '시간 초과' 버튼을 눌러 자폭 대사를 낸다. 최후의 변론 모드에서는 멈춘다 ---- */
+let tmr=null,tleft=0;
+function lastOn(){try{return !!window.parent.document.querySelector('.st-key-last_on')}catch(e){return false}}
+function startTimer(){const T=D.timer|0;if(!T||D.mode!=='debate'||tmr)return;tleft=T;const hb=$('hb');hb.style.display='flex';$('hbn').textContent=tleft;
+ tmr=setInterval(()=>{if(paused)return;if(lastOn()){hb.classList.add('off');$('hbn').textContent='∞';return}hb.classList.remove('off');tleft--;$('hbn').textContent=Math.max(0,tleft);
+  const sp=Math.max(.38,tleft/T);hb.style.setProperty('--hbs',sp.toFixed(2)+'s');hb.classList.toggle('low',tleft<=10);
+  if(tleft<=10&&tleft>0){beep(80,.12,.1);setTimeout(()=>beep(70,.1,.07),170);const v=$('vig');if(v){v.style.transition='opacity .25s';v.style.opacity=.55;setTimeout(()=>{v.style.opacity=0},260)}}
+  if(tleft<=0){clearInterval(tmr);tmr=null;try{Stage.flinch(.4)}catch(e){}try{const b=window.parent.document.querySelector('.st-key-timeout_hidden button');if(b)b.click()}catch(e){}}},1000)}
+
 const EXPR=D.expr||{};
 const VCAM=(D.mode!=='wait')?Stage.make({view:$('scene'),pst:$('pst'),wrap:$('camwrap')}):null;   // 사진 법정 + 곡선 카메라 (stage.py)
 if(VCAM)VCAM.set(D.opening?Stage.LOOK.JPUSH:Stage.LOOK.WIDE);   // 막 사이 연결 장면은 '판사 줌' 그대로 이어서 시작
@@ -479,8 +504,8 @@ function showCard(){$('hint').style.display='none';const w=$('cardwrap');w.style
  for(let k=0;k<18;k++){const s=document.createElement('span');s.className='spark';s.textContent='✦';s.style.left=(Math.random()*92)+'%';s.style.top=(Math.random()*92)+'%';s.style.fontSize=(10+Math.random()*18)+'px';s.style.animationDelay=(Math.random()*1.2)+'s';w.appendChild(s)}}
 </script></body></html>"""
 
-def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False, src=""):
-    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
+def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", mute=False, speed=30, intro=False, opening=None, push=False, src="", gauge=None, timer=0, ls_at=85):
+    payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "gauge": gauge, "timer": int(timer or 0), "ls_at": ls_at, "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
     payload = payload.replace("</", "<\\/")  # </script> 깨짐 방지
     components.html(VN_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
 
@@ -1300,9 +1325,9 @@ function HD_BUST(px,J,S,bx,by,rx,ry){const w=px.w,h=px.h;[-1,1].forEach(m=>{cons
 const HD_OUTFIT={
  judge_robe(px,R){const w=px.w,h=px.h,RB=R.robe,SH=R.shirt,T=R.tie;
   const neck=hdRegion(px,[[-9,80],[9,80],[10,100],[-10,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,87,14,6.5)),R.skin.deep);
-  const J=hdRegion(px,[[-47,98],[47,98],[54,124],[51,232],[-51,232],[-54,124]],RB,{sd:3});
+  const J=hdRegion(px,[[-45,98],[45,98],[47,124],[46,232],[-46,232],[-47,124]],RB,{sd:3});
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-56,98],[56,98],[56,109],[-56,109]]))),RB.lt);hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-56,98],[56,98],[56,101],[-56,101]]))),RB.hi);
-  [-34,-20,20,34].forEach((x,i)=>{hdPolyline(px,hdAbs([[x,150],[x+(x<0?-1:1),190],[x+(x<0?-2:2),232]]),i%2?RB.sh:RB.lt,J)});hdPolyline(px,hdAbs([[-48,130],[-47,180],[-50,232]]),RB.deep,J);hdPolyline(px,hdAbs([[48,130],[47,180],[50,232]]),RB.deep,J);
+  [-34,-20,20,34].forEach((x,i)=>{hdPolyline(px,hdAbs([[x,150],[x+(x<0?-1:1),190],[x+(x<0?-2:2),232]]),i%2?RB.sh:RB.lt,J)});hdPolyline(px,hdAbs([[-46,130],[-45,180],[-46,232]]),RB.deep,J);hdPolyline(px,hdAbs([[46,130],[45,180],[46,232]]),RB.deep,J);
   hdPaint(px,hdPoly(w,h,hdAbs([[-19,97],[19,97],[9,154],[-9,154]])),R.robeIn);
   const shirt=hdRegion(px,[[-9,97],[9,97],[0,118]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,97],[10,97],[1,118]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-19,95],[-38,100],[-35,156],[-8,126]]),{base:RB.lt,sh:RB.base,lt:RB.hi},{sd:3});hdPolyline(px,hdAbs(f([[-19,95],[-38,100],[-35,156]])),RB.hi,lap);hdPolyline(px,hdAbs(f([[-35,156],[-8,126]])),RB.deep);hdPolyline(px,hdAbs(f([[-30,108],[-29,140]])),RB.sh,lap);
@@ -1313,8 +1338,8 @@ const HD_OUTFIT={
   return {base:RB.base,lt:RB.lt,sh:RB.sh,w:17}},
  slim_suit(px,R){const w=px.w,h=px.h,S=R.suit,T=R.tie,SH=R.shirt;
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
-  const J=hdRegion(px,[[-29,97],[29,97],[33,108],[36,124],[31,140],[20,155],[25,175],[33,200],[35,232],[-35,232],[-33,200],[-25,175],[-20,155],[-31,140],[-36,124],[-33,108]],S,{sd:3});
-  hdPolyline(px,hdAbs([[-28,112],[-30,130],[-20,153]]),S.sh,J);hdPolyline(px,hdAbs([[28,112],[30,130],[20,153]]),S.deep,J);hdPolyline(px,hdAbs([[-25,114],[-26,132]]),S.lt,J);
+  const J=hdRegion(px,[[-29,97],[29,97],[31,108],[31,124],[28,140],[20,155],[24,175],[30,200],[32,232],[-32,232],[-30,200],[-24,175],[-20,155],[-28,140],[-31,124],[-31,108]],S,{sd:3});
+  hdPolyline(px,hdAbs([[-27,112],[-28,130],[-20,153]]),S.sh,J);hdPolyline(px,hdAbs([[27,112],[28,130],[20,153]]),S.deep,J);hdPolyline(px,hdAbs([[-24,114],[-25,132]]),S.lt,J);
   HD_BUST(px,J,S,13,128,13,11);
   hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-40,97],[40,97],[40,101],[-40,101]]))),S.lt);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,134]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,134]]))),SH.sh);
@@ -1328,10 +1353,10 @@ const HD_OUTFIT={
   const neck=hdRegion(px,[[-8,80],[8,80],[9,100],[-9,100]],{base:R.skin.sh,sh:R.skin.deep,lt:R.skin.sh},{sd:2});hdPaint(px,hdAnd(neck,hdEll(w,h,HDX,86,13,6)),R.skin.deep);
   const legC={base:hdMix(S.base,[10,10,20],.12),sh:S.sh,lt:S.lt};
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const leg=hdRegion(px,f([[-34,186],[-1,186],[-1,232],[-30,232]]),legC,{sd:3});hdPolyline(px,hdAbs(f([[-16,190],[-15,232]])),S.lt,leg);hdPolyline(px,hdAbs(f([[-2,190],[-2,232]])),S.deep,leg)});
-  const J=hdRegion(px,[[-33,97],[33,97],[37,110],[40,126],[35,142],[23,158],[28,176],[40,192],[-40,192],[-28,176],[-23,158],[-35,142],[-40,126],[-37,110]],S,{sd:3});
-  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-31,114],[-34,132],[-22,158]]),S.sh,J);hdPolyline(px,hdAbs([[31,114],[34,132],[22,158]]),S.deep,J);hdPolyline(px,hdAbs([[-28,116],[-29,134]]),S.lt,J);
+  const J=hdRegion(px,[[-33,97],[33,97],[34,110],[34,126],[31,142],[23,158],[27,176],[33,192],[-33,192],[-27,176],[-23,158],[-31,142],[-34,126],[-34,110]],S,{sd:3});
+  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-45,97],[45,97],[45,101],[-45,101]]))),S.lt);hdPolyline(px,hdAbs([[-30,114],[-31,132],[-22,158]]),S.sh,J);hdPolyline(px,hdAbs([[30,114],[31,132],[22,158]]),S.deep,J);hdPolyline(px,hdAbs([[-27,116],[-28,134]]),S.lt,J);
   HD_BUST(px,J,S,14,132,14,12);
-  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-40,192],[40,192]]),S.deep,J);
+  hdPaint(px,hdAnd(J,hdPoly(w,h,hdAbs([[-46,188],[46,188],[46,193],[-46,193]]))),S.sh);hdPolyline(px,hdAbs([[-33,192],[33,192]]),S.deep,J);
   const shirt=hdRegion(px,[[-11,95],[11,95],[0,148]],{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:2});hdPaint(px,hdAnd(shirt,hdPoly(w,h,hdAbs([[1,95],[12,95],[1,148]]))),SH.sh);
   [false,true].forEach(m=>{const f=p=>m?p.map(q=>[-q[0],q[1]]):p;const lap=hdRegion(px,f([[-10,94],[-27,100],[-29,138],[-20,152],[-4,134]]),{base:S.lt,sh:S.base,lt:S.hi},{sd:2});hdPolyline(px,hdAbs(f([[-10,94],[-27,100],[-29,138],[-20,152]])),S.hi,lap);hdPolyline(px,hdAbs(f([[-20,152],[-4,134]])),S.sh);hdPolyline(px,hdAbs(f([[-27,100],[-21,108],[-10,106]])),S.deep);
    hdRegion(px,f([[-11,93],[-3,99],[-12,107],[-15,98]]),{base:SH.base,sh:SH.sh,lt:SH.hi},{sd:1})});
