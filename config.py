@@ -341,6 +341,25 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .st-key-ls_bar button{ background:#b3121c !important; animation:lsPulse .8s steps(2) infinite; }
 .st-key-ls_bar button p{ font-size:13px !important; }
 @keyframes lsPulse{ 50%{ box-shadow:0 0 0 3px #ffd23f, 0 0 18px #ff3b30; } }
+/* ===== 폰을 가로로 돌렸을 때(화면 높이가 낮을 때): 장면을 화면 높이에 맞추고 버튼을 작게·낮게 ===== */
+@media (orientation:landscape) and (max-height:520px){
+  .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.15rem !important; padding-bottom:0 !important; }
+  .st-key-vn_stage{ height:calc(100dvh - 10px) !important; min-height:0 !important; }
+  .st-key-vn_stage iframe{ height:calc(100dvh - 10px) !important; min-height:0 !important; }
+  .st-key-lobby_stage iframe{ height:calc(100dvh - 16px) !important; min-height:0 !important; }
+  .st-key-lobby_stage{ margin:2px 4px 6px !important; }
+  .st-key-stance_bar{ bottom:calc(58px + env(safe-area-inset-bottom)) !important; width:min(72vw,520px) !important; padding:4px 6px !important; }
+  .st-key-stance_bar button{ min-height:30px !important; height:30px !important; }
+  .st-key-ls_bar{ bottom:calc(96px + env(safe-area-inset-bottom)) !important; }
+  .st-key-lb_side{ width:70px !important; left:6px !important; top:6px !important; }
+  .st-key-lb_corner{ width:70px !important; right:6px !important; top:6px !important; bottom:auto !important; }
+  .st-key-lb_side .stButton>button, .st-key-lb_corner .stButton>button{ height:28px !important; min-height:28px !important; font-size:10.5px !important; }
+  .st-key-lobby_stage .st-key-lobby_main{ width:min(300px,42%) !important; bottom:8px !important; }
+  .st-key-lobby_stage .st-key-lobby_main .stButton>button{ height:50px !important; font-size:17px !important; }
+  .st-key-lb_menu .stButton>button{ width:68px !important; height:80px !important; min-height:80px !important; font-size:11px !important; }
+  .st-key-lb_menu{ padding:6px !important; gap:8px !important; }
+  .tip{ font-size:11px !important; margin:4px 0 !important; padding:4px 8px !important; }
+}
 html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, .main{ scrollbar-width:none !important; -ms-overflow-style:none !important; }
 ::-webkit-scrollbar{ display:none !important; width:0 !important; height:0 !important; }
 .res-hint{ text-align:center; font-size:12px; color:#9fb0d8; margin:6px 0 2px; line-height:1.4; word-break:keep-all; }
@@ -482,9 +501,39 @@ STUTTER = "어... 그게... 그러니까..."
 # 화면 문구: 로비 팁
 # =================================================================
 
-LOBBY_TIPS = [
+GAME_TIPS = [
     "흑역사를 구체적으로 적을수록 공방이 정확해집니다.",
     "입력하신 내용만 사실로 취급됩니다. 없는 얘기는 법정도 지어내지 않아요.",
     "변명은 사실에 맞게, 진심을 담아 쓸수록 무죄에 가까워져요.",
     "무죄를 연달아 받으면 연승 보너스! 3연승이면 👑 이불킥 청정수도 노려볼 수 있어요.",
+    "🔥 유죄 게이지가 90%를 넘으면 [최후의 변론]이 떠요. 법봉이 내려오기 전에 누르세요! 재판당 1회뿐입니다.",
+    "게이지가 100%가 되면 그 자리에서 유죄 확정! 30% 이하로 끝나면 무죄, 그 사이는 감형이에요.",
+    "태도 스위치: 🔥당당함은 변명이 좋으면 크게 깎이지만 허술하면 크게 오릅니다. 승부수예요.",
+    "태도 스위치: 😭눈물은 안정적으로 조금씩 깎이는 대신 큰 한 방은 없어요.",
+    "태도 스위치: 📜논리는 변명의 앞뒤가 맞을수록 효과가 커요. 검사의 인용을 잘 보세요.",
+    "💓 답변 제한시간은 1분 30초! 시간이 다 되면 유죄 게이지가 껑충 올라가요.",
+    "검사는 방금 쓴 변명의 단어를 그대로 인용해서 정곡을 찌릅니다. 말을 바꾸면 모순으로 걸려요!",
+    "1차 변명과 2차 변명이 서로 어긋나면 판사가 이마를 박고 모순 페널티가 붙어요.",
+    "변명이 너무 짧으면 검사가 가차 없이 몰아붙입니다. 한두 문장은 꼭 채워 보세요.",
+    "변호사는 언제나 당신 편이지만 가끔 너무 멀리 갑니다. 그래도 믿어보세요. (아마도)",
+    "판사님은 점심 메뉴를 고민하며 재판을 듣고 있습니다. 지루하게 하면 졸아요.",
+    "연출 중 화면을 탭하면 대사가 한 번에 넘어가요. 설정에서 글자 속도도 바꿀 수 있어요.",
+    "재판 1회에 선임비 1개! 10분마다 자동으로 +1 충전돼요.",
+    "칭호는 재판 결과와 연승 기록에 따라 얻어요. 프로필에서 모아 보세요.",
 ]
+APP_TEASERS = [
+    "📱 정식 앱 출시 후: 로그인으로 기록·칭호가 영구 저장돼요.",
+    "📱 정식 앱 출시 후: 친구의 흑역사를 대신 재판하는 ‘친구 대결’이 열려요.",
+    "📱 정식 앱 출시 후: 전국 랭킹과 시즌 보상이 추가될 예정이에요.",
+    "📱 정식 앱 출시 후: 새로운 법정 스킨과 캐릭터 의상이 상점에 입고돼요.",
+    "📱 정식 앱 출시 후: 새로운 사건 모드(회사·연애·학교 흑역사편)가 순차 공개됩니다.",
+    "📱 정식 앱 출시 후: 판결 카드를 이미지로 저장해 SNS에 자랑할 수 있어요.",
+    "📱 정식 앱 출시 후: 선임비 팩, 광고 제거, 무제한 재판권이 상점에서 열려요.",
+    "📱 정식 앱 출시 후: 푸시 알림으로 선임비가 가득 찼을 때 알려드려요.",
+]
+LOBBY_TIPS = GAME_TIPS + APP_TEASERS   # 하위 호환
+
+def random_tip(app_ratio=0.35):
+    """게임 팁 위주로 보여주되, 가끔 '앱 출시 예고' 문구를 섞는다."""
+    import random as _r
+    return _r.choice(APP_TEASERS if _r.random() < app_ratio else GAME_TIPS)
