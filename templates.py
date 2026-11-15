@@ -109,7 +109,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #hbi{font-size:18px;display:inline-block;animation:hbp var(--hbs,1s) ease-in-out infinite}#hbn{font-size:17px;min-width:24px;text-align:right}
 #hb.low{background:#7a0e16cc}#hb.off{opacity:.45}#hb.off #hbi{animation:none}
 @keyframes hbp{0%,100%{transform:scale(1)}18%{transform:scale(1.35)}36%{transform:scale(1)}54%{transform:scale(1.2)}}
-#hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:12;display:none;white-space:nowrap;background:#b3121c;color:#fff;padding:6px 14px;font-weight:700;font-size:13px;border:2px solid #fff;animation:blink 1s steps(2) infinite}
+#hint{position:absolute;top:46px !important;left:auto !important;right:8px;transform:none !important;max-width:calc(100% - 198px);text-align:center;line-height:1.25;z-index:12;display:none;white-space:normal;background:#b3121c;color:#fff;padding:5px 9px;font-weight:700;font-size:12px;border:2px solid #fff;animation:blink 1s steps(2) infinite}
 #mute{position:absolute;top:8px;right:8px;z-index:30;background:#000a;color:#fff;border:2px solid #fff6;padding:3px 8px;font-size:14px;cursor:pointer}
 #sm{display:none;position:absolute;inset:0;z-index:60;background:#000b;align-items:center;justify-content:center;cursor:default}
 #sm.on{display:flex}
@@ -510,7 +510,9 @@ function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textC
 function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();return}if(i<last()){i++;show(i)}}
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{const a=ac();if(a&&a.state==='suspended')a.resume()}));
 $('start').addEventListener('click',e=>{e.stopPropagation();ac();beep(880,.12);$('start').style.display='none';const go0=()=>{started=true;i=0;show(0)};if(D.intro&&D.mode==='debate')Stage.intro(VCAM,go0);else go0()});
+if(!D.opening)setTimeout(()=>$('start').click(),350);   /* PRESS START 화면 없이 바로 시작 */
 if(D.opening){$('start').style.display='none';started=true;i=0;setTimeout(()=>show(0),450)}   /* 막 사이 연결: 시작 화면 없이 바로 이어짐 */
 
 /* ---- 탕! 탕! 탕! → 판결문 ---- */
@@ -544,8 +546,7 @@ def render_vn(mode, steps, card=None, height=580, title="", phase="", hint="", m
     payload = json.dumps({"mode": mode, "steps": steps, "card": card or {}, "title": title, "phase": phase, "hint": hint, "mute": mute, "speed": speed, "intro": bool(intro), "opening": opening, "push": bool(push), "gauge": gauge, "timer": int(timer or 0), "ls_at": ls_at, "ls": ls, "src": {"PROSECUTOR": "P", "LAWYER": "L"}.get(src, src if src in ("P", "L", "J") else ""), "cast": sprite_payload(), "expr": expressions_payload()}, ensure_ascii=False)
     payload = payload.replace("</", "<\\/")  # </script> 깨짐 방지
     html_ = VN_TEMPLATE.replace("__DATA__", payload)
-    if opening:  # 막 사이 연결 장면은 시작 화면(검은 창)이 깜빡 보이지 않도록 처음부터 숨긴다
-        html_ = html_.replace("</style>", "#start{display:none!important}</style>", 1)
+    html_ = html_.replace("</style>", "#start{display:none!important}</style>", 1)  # 시작(검은) 화면은 쓰지 않는다 — 바로 연출 시작
     components.html(html_, height=height, scrolling=False)
 
 # =================================================================
