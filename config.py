@@ -303,14 +303,19 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 /* ============ 태도 스위치 / 최후의 변론 버튼: 변명 차례(입력창이 올라올 때)에만 입력창 바로 위에 뜬다 ============ */
 .st-key-stance_bar,.st-key-ls_bar{ position:fixed !important; left:50%; z-index:1000; width:min(94vw,560px); transform:translate(-50%,160%); opacity:0; pointer-events:none;
   transition:transform .5s cubic-bezier(.2,1.25,.3,1), opacity .3s; margin:0 !important; }
-.st-key-stance_bar{ bottom:calc(84px + env(safe-area-inset-bottom)); }
+.st-key-stance_bar{ bottom:calc(78px + env(safe-area-inset-bottom)); }
 .st-key-ls_bar{ bottom:calc(132px + env(safe-area-inset-bottom)); }
 .stApp:has(.st-key-excuse_gate[data-open="1"]) .st-key-stance_bar,.stApp:has(.st-key-excuse_gate[data-open="1"]) .st-key-ls_bar{ transform:translate(-50%,0); opacity:1; pointer-events:auto; }
 .stApp:has(.st-key-excuse_gate:not([data-gate="1"]):not([data-open="1"])) .st-key-stance_bar,.stApp:has(.st-key-excuse_gate:not([data-gate="1"]):not([data-open="1"])) .st-key-ls_bar{ animation:exFailB 0s linear 6s forwards; }
 @keyframes exFailB{ to{ transform:translate(-50%,0); opacity:1; pointer-events:auto; } }
-.st-key-stance_bar [data-testid="stHorizontalBlock"]{ gap:6px !important; flex-wrap:nowrap !important; }
-.st-key-stance_bar [data-testid="stColumn"]{ min-width:0 !important; }
-.st-key-stance_bar button, .st-key-ls_bar button{ min-height:38px !important; padding:4px 3px !important; border:2px solid #0d0f26 !important; border-radius:0 !important; width:100%;
+.st-key-stance_bar{ display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important; align-items:center; justify-content:center; gap:5px !important; }
+.st-key-stance_bar>div{ width:auto !important; flex:0 1 auto !important; min-width:0 !important; }
+.st-key-stance_bar .stButton{ padding:0 !important; }
+.stance-lab{ color:#ffe27a; font-size:11px; font-weight:800; white-space:nowrap; text-shadow:1px 1px 0 #000; }
+.st-key-stance_bar button, .st-key-ls_bar button{ min-height:30px !important; height:30px !important; padding:2px 7px !important; border:2px solid #0d0f26 !important; border-radius:0 !important; width:auto !important;
+  background:#1a1f45f2 !important; color:#fff !important; box-shadow:0 0 0 1px #ffffff40, 0 2px 0 #000a; }
+.st-key-stance_bar button p, .st-key-stance_bar button span, .st-key-ls_bar button p{ white-space:nowrap !important; font-size:11px !important; line-height:1 !important; margin:0 !important; font-weight:700 !important; }
+.st-key-ls_bar button{ min-height:38px !important; padding:4px 3px !important; border:2px solid #0d0f26 !important; border-radius:0 !important; width:100%;
   background:#1a1f45f2 !important; color:#fff !important; box-shadow:0 0 0 1px #ffffff40, 0 3px 0 #000a; }
 .st-key-stance_bar button p, .st-key-stance_bar button span, .st-key-ls_bar button p{ white-space:nowrap !important; font-size:11.5px !important; line-height:1.1 !important; margin:0 !important; font-weight:700 !important; }
 .st-key-stance_bar button[data-testid="stBaseButton-primary"]{ background:#ffd23f !important; color:#1a1200 !important; box-shadow:0 0 0 2px #fff, 0 0 14px #ffd23f; }
@@ -439,7 +444,7 @@ VN_H = 560  # 가로형(16:9에 가까운) 연출 화면 높이
 LOBBY_H = 540  # 로비 장면(iframe) 높이
 
 RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job",
-            "guilt", "g0", "stance", "stance1", "stance2", "timeout1", "timeout2", "ls_mode", "ls_used", "ls_text")
+            "guilt", "g0", "pend", "stance", "stance1", "stance2", "timeout1", "timeout2", "ls_mode", "ls_used", "ls_text")
 
 # ---------- 공방 시스템(유죄 게이지 · 태도 · 타이머 · 최후의 변론) ----------
 GUILT_START = 50          # 재판 시작 유죄 게이지(%)
