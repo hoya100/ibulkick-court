@@ -106,7 +106,7 @@ try:
     for _n in ast.parse(open(os.path.join(_HERE, "templates.py"), encoding="utf-8").read()).body:
         if isinstance(_n, ast.FunctionDef) and _n.name == "render_vn":
             _args = {a.arg for a in _n.args.args + _n.args.kwonlyargs}
-            for _need in ("intro", "opening", "push"):
+            for _need in ("intro", "opening", "push", "gauge", "timer"):
                 if _need not in _args:
                     _stale.append(f"`templates.py` 의 `render_vn` 에 `{_need}` 인자가 없습니다 (서버의 templates.py 가 예전 버전)")
 except (OSError, SyntaxError, UnicodeDecodeError):
@@ -137,6 +137,11 @@ from openai import (
 from characters import SPRITE_DATA_VERSION, display_name
 from config import (
     APP_CSS,
+    GUILT_START,
+    LAST_STAND_AT,
+    STANCES,
+    STUTTER,
+    TIMER_SEC,
     FEE_MAX,
     LOBBY_H,
     LOBBY_TIPS,
@@ -230,9 +235,21 @@ def excuse_gate():
     if ss.get("error"):  # 에러로 되돌아온 경우엔 연출을 다시 보지 않아도 바로 입력할 수 있게 연다
         st.markdown(
             '<style>.stApp:has(.st-key-excuse_gate) [data-testid="stBottom"]'
-            "{transform:none !important;opacity:1 !important;pointer-events:auto !important;animation:none !important}</style>",
+            "{transform:none !important;opacity:1 !important;pointer-events:auto !important;animation:none !important}"
+            ".st-key-stance_bar,.st-key-ls_bar{transform:translate(-50%,0) !important;opacity:1 !important;pointer-events:auto !important;animation:none !important}</style>",
             unsafe_allow_html=True,
         )
+
+
+def stance_bar():
+    """태도 스위치: 변명을 보내기 전에 반드시 하나를 골라야 입력창이 열린다. (고른 태도에 따라 캐릭터 반응과 유죄 게이지 증감이 달라짐)"""
+    with st.container(key="stance_bar"):
+        cols = st.columns(3)
+        for col, (k, label) in zip(cols, STANCES.items()):
+            with col:
+                if st.button(label, key=f"stance_{k}", use_container_width=True, type="primary" if ss.get("stance") == k else "secondary"):
+                    ss["stance"] = k
+                    st.rerun()
 
 
 def key_guard():
@@ -531,35 +548,73 @@ elif stage == "DEBATE1":
     with st.container(key="vn_stage"):
         _render_vn(
             "debate", ss["p1"]["steps"], height=VN_H, title="제1막 · 개정 & 1차 심문",
-            phase="제1막 ▸ 1차 심문", hint="🚨 1차 심문! 아래 입력창에 변명을 적어 제출하세요 ▼", intro=True, push=True, **vn_opts(),
+            phase="제1막 ▸ 1차 심문", hint="🚨 태도를 고르고 변명을 제출하세요 ▼", intro=True, push=True,
+            gauge={"from": 0, "to": ss.get("guilt", GUILT_START), "delay": 2600}, timer=TIMER_SEC, **vn_opts(),
         )
-    # 재판 포기는 화면 안 ⚙️ 설정창에서 누릅니다(그 버튼이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
+    # 재판 포기 / 시간 초과는 화면 안에서 누릅니다(연출이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
     with st.container(key="giveup_hidden"):
         if st.button("재판 포기", key="giveup1"):
             go("LOBBY")
+    with st.container(key="timeout_hidden"):
+        if st.button("시간 초과", key="timeout_btn1"):
+            ss["ex1"], ss["timeout1"], ss["stance1"] = STUTTER, True, ss.pop("stance", None)
+            start_job("p2", "DEBATE1")
     show_error()
     excuse_gate()
-    ex1 = st.chat_input("1차 변명을 입력하세요 (최대 200자)", key="chat_ex1")
+    stance_bar()
+    ex1 = st.chat_input(
+        "1차 변명을 입력하세요 (최대 200자)" if ss.get("stance") else "⬆ 먼저 위에서 태도를 고르세요",
+        key="chat_ex1", disabled=not ss.get("stance"),
+    )
     if ex1 and ex1.strip():
-        ss["ex1"] = ex1.strip()[:200]
+        ss["ex1"], ss["stance1"] = ex1.strip()[:200], ss.pop("stance", None)
         start_job("p2", "DEBATE1")
 
 # ---------------- DEBATE2 ----------------
 elif stage == "DEBATE2":
+    p2 = ss["p2"]
+    g0, g1 = p2.get("gauge", (ss.get("guilt", GUILT_START),) * 2)
+    can_ls = ss.get("guilt", GUILT_START) >= LAST_STAND_AT and not ss.get("ls_used")
+    ls_mode = bool(ss.get("ls_mode")) and can_ls
+    if ls_mode:
+        with st.container(key="last_on"):  # 이 표식이 있으면 연출 속 타이머가 멈춘다(집중 모드)
+            st.empty()
     with st.container(key="vn_stage"):
         _render_vn(
-            "debate", ACT2_OPEN + ss["p2"]["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
-            phase="제2막 ▸ 최후 심문", hint="🔥 최후 심문! 아래 입력창에 최후 변명을 제출하세요 ▼", opening="act2", push=True, **vn_opts(),
+            "debate", ACT2_OPEN + p2["steps"], height=VN_H, title="제2막 · 변명 공방 & 최후 심문",
+            phase="제2막 ▸ 최후 심문", hint="🔥 앞뒤가 맞게 다시 해명하세요 ▼", opening="act2", push=True,
+            gauge={"from": g0, "to": g1, "delay": 3600}, timer=TIMER_SEC, ls_at=LAST_STAND_AT, **vn_opts(),
         )
-    # 재판 포기는 화면 안 ⚙️ 설정창에서 누릅니다(그 버튼이 이 숨김 버튼을 대신 클릭). 화면을 가리지 않도록 숨겨 둠
     with st.container(key="giveup_hidden"):
         if st.button("재판 포기", key="giveup2"):
             go("LOBBY")
+    with st.container(key="timeout_hidden"):
+        if st.button("시간 초과", key="timeout_btn2"):
+            ss["ex2"], ss["timeout2"], ss["stance2"] = STUTTER, True, ss.pop("stance", None)
+            ss.pop("ls_mode", None)
+            start_job("verdict", "DEBATE2")
     show_error()
     excuse_gate()
-    ex2 = st.chat_input("최후 변명을 입력하세요 (최대 200자)", key="chat_ex2")
+    if can_ls and not ls_mode:  # 패배 직전 긴급 발동: [최후의 변론] (1회 한정)
+        with st.container(key="ls_bar"):
+            if st.button("🔥 최후의 변론 (1회 한정)", key="b_last_stand", use_container_width=True):
+                ss["ls_mode"] = True
+                st.rerun()
+    if not ls_mode:
+        stance_bar()
+    if ls_mode:
+        ph = "🔥 최후의 변론 — 진심 어린 호소나 기적의 논리를 적으세요 (최대 400자)"
+    else:
+        ph = "최후 변명을 입력하세요 (최대 200자)" if ss.get("stance") else "⬆ 먼저 위에서 태도를 고르세요"
+    ex2 = st.chat_input(ph, key="chat_ex2", disabled=(not ls_mode and not ss.get("stance")))
     if ex2 and ex2.strip():
-        ss["ex2"] = ex2.strip()[:200]
+        if ls_mode:
+            ss["ex2"] = ss["ls_text"] = ex2.strip()[:400]
+            ss["ls_used"] = True
+            ss.pop("ls_mode", None)
+            ss["stance2"] = None
+        else:
+            ss["ex2"], ss["stance2"] = ex2.strip()[:200], ss.pop("stance", None)
         start_job("verdict", "DEBATE2")
 
 # ---------------- VERDICT ----------------
@@ -575,7 +630,9 @@ elif stage == "VERDICT":
         } if res else None,
     }
     with st.container(key="vn_stage"):
-        _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict", **vn_opts())
+        _g = v.get("gauge")
+        _render_vn("verdict", v["steps"], card=card, height=VN_H + 10, title="최종 선고", phase="최종 선고", opening="verdict",
+                   gauge={"from": _g[0], "to": _g[1], "delay": 2500} if _g else None, **vn_opts())
     if res and not ss.get("show_result"):
         st.caption("🎬 판결 연출을 다 보셨다면, 아래 버튼으로 평판·랭크 변화를 확인하세요!")
         _, show_col, _ = st.columns([1, 2, 1])
