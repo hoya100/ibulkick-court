@@ -145,6 +145,7 @@ from config import (
     FEE_MAX,
     LOBBY_H,
     LOBBY_TIPS,
+    random_tip,
     RANKS,
     MODEL_CANDIDATES,
     PAGE_ICON,
@@ -293,6 +294,7 @@ def profile_dialog():
     )
     st.caption("랭크 기준: 👑 이불킥 청정수 200↑ · 🟢 정상인 120↑ · 🟡 새벽 감성러 60↑ · 🟠 이불킥 장인 20↑ · 🔴 인간 흑역사 박물관")
     st.caption("💡 무죄를 연달아 받으면 연승 보너스(+10, +20, +30)가 붙어요!")
+    st.caption("📱 정식 앱 출시 후: 로그인 저장 · 친구 대결 · 전국 랭킹이 추가됩니다.")
     tabs = ["🎖️ 칭호", "📚 흑역사 기록"]
     tab = st.radio("탭", tabs, index=tabs.index(ss["profile_tab"]), horizontal=True, label_visibility="collapsed", key="rad_prof")
     ss["profile_tab"] = tab  # 탭 상태를 세션에 보관
@@ -326,6 +328,7 @@ def settings_dialog():
     ss["sound_on"] = st.toggle("🔊 효과음", value=ss["sound_on"], key="w_snd")
     ss["speed_label"] = st.select_slider("⌨️ 대사 글자 속도", options=list(SPEED_MS), value=ss["speed_label"], key="w_spd")
     st.caption("효과음·글자 속도는 다음 장면부터 적용됩니다.")
+    st.caption("📱 정식 앱 출시 후: 배경음악 테마 · 진동 효과 설정이 추가돼요.")
     st.divider()
     if st.button("📖 스토리 다시 보기", key="w_story"):
         go("STORY")
@@ -371,8 +374,12 @@ def shop_dialog():
         ss["toast"] = "🎁 출석 보상! 선임비 +1"
         st.rerun()
     st.markdown("**💳 선임비 3개 팩**")
-    st.button("준비 중 (정식 앱에서 제공 예정)", key="shop_pack", disabled=True, use_container_width=True)
-    st.caption("이 데모에는 실제 결제가 없습니다.")
+    st.button("📱 앱 출시 후 열려요", key="shop_pack", disabled=True, use_container_width=True)
+    st.markdown("**🎨 법정 스킨 · 캐릭터 의상**")
+    st.button("📱 앱 출시 후 열려요", key="shop_skin", disabled=True, use_container_width=True)
+    st.markdown("**🏆 시즌 패스 (랭킹 보상)**")
+    st.button("📱 앱 출시 후 열려요", key="shop_pass", disabled=True, use_container_width=True)
+    st.caption("이 데모에는 실제 결제가 없습니다. 위 상품들은 정식 앱 출시 때 순차적으로 열려요!")
 
 def render_hud():
     regen_fee()
@@ -491,7 +498,7 @@ elif stage == "LOBBY":
             f'자동 충전까지 {eta // 60}:{eta % 60:02d} · 🛒 상점에서 충전할 수 있어요</small></div>',
             unsafe_allow_html=True,
         )
-    st.markdown(f'<div class="tip">💡 {random.choice(LOBBY_TIPS)} · 재판 1회에 선임비 1 소모</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="tip">💡 {random_tip()}</div>', unsafe_allow_html=True)
 
 # ---------------- INPUT ----------------
 elif stage == "INPUT":
@@ -508,6 +515,7 @@ elif stage == "INPUT":
             )
         with paper_left:
             st.caption("※ 입력한 내용만 사실로 취급됩니다. 상황이 구체적일수록 공방이 더 정확해집니다. · 재판 1회에 변호사 선임비 1이 듭니다.")
+            st.caption("💡 " + random_tip(0.3))
             start = st.button("⚖️ 재판 개시", use_container_width=True, disabled=ss["fee"] <= 0 or not ready)
             back = st.button("◀ 로비", use_container_width=True)
     if back:
@@ -534,7 +542,7 @@ elif stage == "LOADING":
         # 변명 제출 직후 카메라: 마지막으로 질문한 캐릭터에서 출발해 판사에게 줌 이동
         _prev = ss.get("p1", {}).get("steps") if kind == "p2" else (ACT2_OPEN + ss.get("p2", {}).get("steps", [])) if kind == "verdict" else None
         _src = _prev[-1].get("s", "") if _prev else ""
-        _render_vn("wait", [], phase=kind, height=VN_H, src=_src, **vn_opts())
+        _render_vn("wait", [], phase=kind, height=VN_H, src=_src, hint=random_tip(0.25), **vn_opts())
     try:
         raw = call_llm_json(*args, **kwargs)
         nxt = apply_result(kind, raw)
@@ -673,6 +681,8 @@ elif stage == "VERDICT":
             st.success(f"🎉 랭크 상승! 이제 {res['rank_after']}입니다!")
         elif res["dir"] < 0:
             st.warning(f"😱 랭크 하락… {res['rank_after']}(으)로 떨어졌어요. 다음 재판에서 무죄로 방어하세요!")
+    if res and ss.get("show_result"):
+        st.markdown('<div class="tip">📱 정식 앱 출시 후: 판결 카드를 이미지로 저장해 SNS에 공유하고, 친구와 점수를 겨룰 수 있어요!</div>', unsafe_allow_html=True)
     _, c, _ = st.columns([1, 2, 1])
     with c:
         if st.button("🏠 로비로 돌아가기", use_container_width=True, key="b_lobby_back"):
