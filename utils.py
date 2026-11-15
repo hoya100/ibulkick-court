@@ -9,6 +9,7 @@ import streamlit as st
 
 from config import (
     GUILT_START,
+    LAST_STAND_AT,
     STANCE_NAME,
     STUTTER,
     TIMER_SEC,
@@ -197,6 +198,19 @@ def gauge_delta(q, stance, timeout=False):
     return 0
 
 
+def gauge_walk(steps, start, lo=0, hi=100):
+    """각 대사의 증감(g)을 누적해 대사마다 '그 대사 직후의 게이지(gv)'를 기록하고 마지막 값을 돌려준다.
+    g 가 없으면 화자로 추정: 검사가 몰아붙이면 +, 변호사가 반론하면 −, 판사는 0."""
+    cur = start
+    for st in steps:
+        g = st.get("g")
+        if g is None:
+            sp, c = st.get("s"), st.get("c")
+            g = (4 + (2 if c == "F" else 0)) if sp == "PROSECUTOR" else (-4 - (2 if c == "S" else 0)) if sp == "LAWYER" else 0
+        cur = max(lo, min(hi, cur + int(g)))
+        st["gv"] = cur
+    return cur
+
 def reaction_steps(stance, q, timeout):
     """변명 직후 캐릭터들이 보이는 반응 대사 + 연기(pose)·표정(e). 태도와 결과에 따라 달라진다."""
     L, P, J = "LAWYER", "PROSECUTOR", "JUDGE"
@@ -267,7 +281,9 @@ def apply_result(kind, raw):
         p1 = normalize_phase1(raw, ss["history_text"])
         ss["facts"], ss["p1"] = p1["facts"], p1
         spend_fee()  # 성공했을 때만 선임비 차감
-        ss["guilt"], ss["g0"], ss["ls_used"] = GUILT_START, GUILT_START, False
+        end1 = gauge_walk(p1["steps"], GUILT_START, 20, 80)   # 1막은 대사에 따라 20~80 사이에서 출렁인다
+        ss["guilt"], ss["g0"], ss["ls_used"] = end1, GUILT_START, False
+        ss.pop("cut", None)
         return "DEBATE1"
     if kind == "p2":
         p2 = normalize_phase2(raw)
@@ -277,13 +293,24 @@ def apply_result(kind, raw):
         if len(str(ss.get("ex1", "")).strip()) < 10 and not timeout:
             q = min(q, 20)
         g0 = ss.get("guilt", GUILT_START)
-        g1 = clamp(g0 + gauge_delta(q, ss.get("stance1"), timeout))
-        p2["steps"] = reaction_steps(ss.get("stance1"), q, timeout) + p2["steps"]
+        delta = gauge_delta(q, ss.get("stance1"), timeout)
+        rs = reaction_steps(ss.get("stance1"), q, timeout)
+        if rs:  # 태도 결과(상승/하락)를 반응 대사 두 줄에 나눠 싣는다
+            half = round(delta / 2)
+            rs[0]["g"] = half
+            if len(rs) > 1:
+                rs[1]["g"] = delta - half
+        p2["steps"] = rs + p2["steps"]
+        g1 = gauge_walk(p2["steps"], g0, 5, 100)
+        hit = [k for k, st in enumerate(p2["steps"]) if st["gv"] >= LAST_STAND_AT]
+        p2["ls_idx"] = hit[0] if hit else None            # 게이지가 처음 90을 넘는 대사 → 최후의 변론 이벤트
+        p2["ls_g"] = p2["steps"][hit[0]]["gv"] if hit else g1
         p2["gauge"] = (g0, g1)
         ss["g0"], ss["guilt"], ss["p2"] = g0, g1, p2
         return "DEBATE2"
-    ctx = {"timeout2": bool(ss.get("timeout2")), "last_stand": bool(ss.get("ls_text"))}
+    ctx = {"timeout2": bool(ss.get("timeout2")), "last_stand": bool(ss.get("ls_text")),
+           "cut": bool(ss.get("cut")), "guilt": ss.get("guilt", GUILT_START)}
     ss["verdict_data"] = normalize_verdict(raw, ss.get("ex1", ""), ss.get("ex2", ""), ctx)
-    ss["verdict_data"]["gauge"] = (ss.get("guilt", GUILT_START), 100 - ss["verdict_data"]["score"])
+    ss["verdict_data"]["gauge"] = (ss.get("guilt", GUILT_START), ss["verdict_data"]["final_guilt"])
     finish_trial()
     return "VERDICT"
