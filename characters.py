@@ -113,7 +113,7 @@ CHARACTERS = {
             },
             # 어떤 모양으로 그릴지(머리·눈·눈썹·입·의상). 값은 STYLE_CATALOG 에 있는 이름만 쓸 수 있고, templates.py 의 스프라이트 그리기 코드가 이 이름을 읽는다.
             "style": {"face": "jaw_tidy", "hair": "messy_short", "eyes": "sleepy_half", "brows": "low_tired", "mouth": "weary", "outfit": "judge_robe",
-                      "eye_h": 9, "eye_top": 50, "lid_min": 3.8,   # 눈 높이 / 눈 세로 위치 / 평소 눈꺼풀 내려온 정도(졸림)
+                      "eye_h": 10.5, "eye_top": 49, "lid_min": 3.8,   # 눈 높이 / 눈 세로 위치 / 평소 눈꺼풀 내려온 정도(졸림)
                       "shoulder_dx": 44, "shoulder_y": 106, "sleeve_w": 17},
             "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 2},
             "motion": {"blink_s": 5.2, "idle": ["yawn", "check_watch", "rub_eyes", "slump"], "breath_amp": 0.5},
@@ -168,7 +168,7 @@ CHARACTERS = {
                 "tie": "#2c2e36", "accent": "#9aa0b4",
             },
             "style": {"face": "jaw_tidy", "hair": "layered_medium", "eyes": "cool_half", "brows": "straight_sharp", "mouth": "thin_cool", "outfit": "charcoal_suit",
-                      "eye_h": 8, "eye_top": 55, "lid_min": 2,
+                      "eye_h": 9.5, "eye_top": 54, "lid_min": 2,
                       "shoulder_dx": 33, "shoulder_y": 106, "sleeve_w": 14},
             "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 3},
             "motion": {"blink_s": 4.6, "idle": ["straighten_papers", "adjust_cuff", "slam_desk", "stare"], "breath_amp": 0.35},
@@ -233,7 +233,7 @@ CHARACTERS = {
                 "tie": "#15161c", "pin": "#c9b26b", "accent": "#c9b26b",
             },
             "style": {"face": "jaw_tidy", "hair": "long_wavy", "eyes": "crescent_smile", "brows": "arched_raised", "mouth": "smirk", "outfit": "slim_suit",
-                      "eye_h": 10, "eye_top": 53, "lid_min": 2,
+                      "eye_h": 11.5, "eye_top": 52, "lid_min": 2,
                       "shoulder_dx": 30, "shoulder_y": 106, "sleeve_w": 12},
             "render": {"mode": "pixel_hd", "rim_light": True, "eye_highlight_px": 3},
             "motion": {"blink_s": 4.0, "idle": ["head_tilt", "wink", "hair_flip", "lean_on_hand"], "breath_amp": 0.6},
@@ -507,9 +507,9 @@ def phase2_prompt(name):
 [임무] 피고인의 1차 변명을 두고 벌어지는 '제2막: 변명 공방과 최후 심문'을 한국어로 씁니다. 입력으로 [흑역사 원문], [확정 사실], 지금까지의 대화, [피고인의 1차 변명]이 주어집니다.
 규칙:
 1. script는 정확히 6~7줄. LAWYER({NAME_OF['LAWYER']})가 피고인의 1차 변명을 재치 있게 그럴듯하게 포장·옹호하고, PROSECUTOR({NAME_OF['PROSECUTOR']})가 변명 속 모순과 원문의 사실을 근거로 열정적으로 파고듭니다. 중간에 JUDGE({NAME_OF['JUDGE']}) 1줄이 귀찮음을 은근히 드러내며 사건 내용에 맞는 한마디로 개입.
-2. 피고인의 1차 변명 표현을 대사에서 직접 인용해 반영하고("…라고 변명하셨지요"), 새로운 사건을 지어내지 말 것.
+2. 피고인의 1차 변명이 사실과 맞는지 판단해서, 그 변명 표현을 대사에서 직접 인용해 반영하고("…라고 변명하셨지요"), 새로운 사건을 지어내지 말 것.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 주장 → 근거 → 한 방 순서로 차분히 전개. shout 필드는 1막과 같은 규칙(FACT/SHIELD/ORDER/NONE), 3번 안팎 사용.
-4. final_question: 제1막 질문과 '같은 쟁점'을 한 번 더 파고드는 두 번째 질문(꼬리물기). speaker는 반드시 "PROSECUTOR", text는 1차 변명 속 '특정 단어나 허점'을 집요하게 물고 늘어지며, 피고인이 앞뒤가 맞게 다시 해명해야 하는 날카로운 1~2문장. 피고인에게 직접 묻는 질문 형태로 끝낼 것.
+4. final_question: 꼬리물기 질문. speaker는 반드시 "PROSECUTOR". 제1막에서 던진 질문을 다시 묻지 말고, 피고인이 방금 적은 [1차 변명]의 내용을 판단해서 그 안의 '구체적인 단어·주장·허점'을 한 줄 그대로 인용한 뒤, 그것이 [확정 사실]과 어떻게 어긋나는지 정곡을 찌르는 새 질문을 던진다(예: "'그냥 실수였다'고 하셨죠? 그럼 왜 세 번이나 보냈습니까?"). 피고인이 앞뒤가 맞게 다시 해명해야 하는 1~2문장, 피고인에게 직접 묻는 질문 형태로 끝낼 것.
 5. defense_quality: 피고인의 1차 변명이 [확정 사실]과 맞고 설득력·진심·재치가 있는지 0~100 정수로 채점(짠 편: 대부분 25~70, 정말 훌륭하면 80 이상, 10자 미만이거나 사실과 정반대면 15 이하).
 6. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
 형식 예시(형식만 참고):
