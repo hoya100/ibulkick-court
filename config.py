@@ -341,7 +341,8 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 .st-key-ls_bar button{ background:#b3121c !important; animation:lsPulse .8s steps(2) infinite; }
 .st-key-ls_bar button p{ font-size:13px !important; }
 @keyframes lsPulse{ 50%{ box-shadow:0 0 0 3px #ffd23f, 0 0 18px #ff3b30; } }
-.st-key-timeout_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
+.res-hint{ text-align:center; font-size:12px; color:#9fb0d8; margin:6px 0 2px; line-height:1.4; word-break:keep-all; }
+.st-key-timeout_hidden,.st-key-ls_go_hidden,.st-key-ls_cut_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
 /* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
 .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
 .st-key-vn_stage{ margin:0 0 6px !important; }
@@ -462,11 +463,11 @@ VN_H = 560  # 가로형(16:9에 가까운) 연출 화면 높이
 LOBBY_H = 540  # 로비 장면(iframe) 높이
 
 RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job",
-            "guilt", "g0", "pend", "stance", "stance1", "stance2", "timeout1", "timeout2", "ls_mode", "ls_used", "ls_text")
+            "guilt", "g0", "pend", "stance", "stance1", "stance2", "timeout1", "timeout2", "ls_mode", "ls_used", "ls_text", "cut")
 
 # ---------- 공방 시스템(유죄 게이지 · 태도 · 타이머 · 최후의 변론) ----------
 GUILT_START = 50          # 재판 시작 유죄 게이지(%)
-LAST_STAND_AT = 85        # 이 값 이상이면 [최후의 변론]이 열린다
+LAST_STAND_AT = 90        # 이 값 이상이면 [최후의 변론]이 열린다
 TIMER_SEC = 90            # 심박수 타이머(초) = 답변 제한시간 1분 30초. 0이면 타이머 없음
 STANCES = {"bold": "😏 뻔뻔하게 우기기", "tears": "😭 눈물로 호소하기", "logic": "🔍 논리적 팩트체크"}
 STANCE_NAME = {"bold": "뻔뻔하게 우기기", "tears": "눈물로 호소하기", "logic": "논리적 팩트체크"}
