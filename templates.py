@@ -435,7 +435,7 @@ function beat(c,b){const F=BUST[c];if(!F)return;
  if(b.expr&&F.setExpr){F.setExpr(b.expr);if(F.redraw)F.redraw()}
  if(b.look&&VCAM)Stage.look(VCAM,b.look);if(b.yaw!=null)yawTo(c,b.yaw,b.fast);
  if(b.flinch)Stage.flinch(b.flinch);if(b.thud)thud();if(b.sfx)sfx(b.sfx);if(b.jit!=null&&F.setJit)F.setJit(b.jit);if(b.icon)Stage.emote(CEL(c),b.icon);
- if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-36,ly:170,rx:HDXj+36,ry:180}:{lx:HDXj-36,ly:180,rx:HDXj+36,ry:170},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
+ if(b.rapid&&F.pose){let a=false;if(RAP)clearInterval(RAP);RAP=setInterval(()=>{if(!typing){clearInterval(RAP);RAP=null;return}a=!a;F.pose(a?{lx:HDXj-34,ly:150,rx:HDXj+34,ry:136}:{lx:HDXj-34,ly:136,rx:HDXj+34,ry:150},{rate:46});Stage.flinch(.05);sfx('cut')},260)}}
 function runCombo(c,name){clearCH();(COMBO[name]||[]).forEach(b=>{if(!b.d)beat(c,b);else CH.push(setTimeout(()=>beat(c,b),b.d))})}
 /* ---- 어떤 대사에 어떤 연계를 쓸지 고르는 규칙 (대사 데이터에 "pose":"p_slam" 처럼 적으면 그것이 우선) ---- */
 function heat(n){let h=0;for(let k=Math.max(0,n-4);k<n;k++){const q=D.steps[k];if(q&&(q.c==='F'||q.c==='S'||q.c==='O'||/!/.test(q.t||'')))h++}return h}
@@ -1368,14 +1368,19 @@ function hdBuildFigure(key){const C=D.cast[key],pal=C.palette,st=C.style,R=hdRam
   [-1,1].forEach(side=>{const e=eyeAt(side,rows,gx,gy);hx.drawImage(e.c,e.ox+fs,e.oy)});
   hx.drawImage(brow.c,brow.ox+fs,brow.oy+Math.round(s.brow));if(mouths[s.mouth])hx.drawImage(mouths[s.mouth],fs,0);if(s.fx)hx.drawImage(fxCanvas(s.fx),fs,0)};
  /* 표정 적용: characters.py 의 EXPRESSIONS 표(D.expr)에 적힌 값(입·눈썹·눈꺼풀·시선·효과)을 한 번에 바꾼다 */
- F.setExpr=function(name){const E=(D.expr||{})[name]||(D.expr||{}).neutral||{},S=F.state;S.baseMouth=(E.mouth&&mouths[E.mouth])?E.mouth:md.def;S.mouth=S.baseMouth;S.brow=E.brow||0;S.lid=E.lid||0;S.gx=E.gx||0;S.gy=E.gy||0;S.fx=(E.fx||[]).join(',');F.expr=name};
+ /* 표정 눈썹: 앞머리 위에 따로 얹는 또렷한 눈썹(화남=V, 억울=八, 놀람=치켜올림, 비웃음=한쪽만 올림) */
+ const BSHAPE={angry:'v',aggrieved:'w',tears:'w',shock:'up',panic:'up',smirk:'one',smug:'one'},ovc={};
+ F.ovFor=function(name){const k=BSHAPE[name];if(!k)return null;if(ovc[k])return ovc[k];const p=new HdPx(W,H),y=st.eye_top-4,col=hdMix(R.hair.sh,[10,8,12],.55),hi=hdMix(R.skin.base,[255,255,255],.3);
+  const SH={v:[[[-23,-5],[-14,-2],[-6,2]],[[6,2],[14,-2],[23,-5]]],w:[[[-23,1],[-14,-2],[-6,-5]],[[6,-5],[14,-2],[23,1]]],up:[[[-23,-5],[-14,-9],[-6,-6]],[[6,-6],[14,-9],[23,-5]]],one:[[[-23,0],[-14,0],[-6,1]],[[6,-5],[14,-8],[23,-4]]]}[k];
+  SH.forEach(pts=>{const a=pts.map(q=>[HDX+q[0],y+q[1]]),b=pts.map(q=>[HDX+q[0],y+q[1]+1]),c=pts.map(q=>[HDX+q[0],y+q[1]+2]);hdPolyline(p,c,hi);hdPolyline(p,a,col);hdPolyline(p,b,col)});return ovc[k]=p.canvas()};
+ F.setExpr=function(name){const E=(D.expr||{})[name]||(D.expr||{}).neutral||{},S=F.state;S.baseMouth=(E.mouth&&mouths[E.mouth])?E.mouth:md.def;S.mouth=S.baseMouth;S.brow=Math.round((E.brow||0)*1.2);S.ov=name;S.lid=E.lid||0;S.gx=E.gx||0;S.gy=E.gy||0;S.fx=(E.fx||[]).join(',');F.expr=name};
  F.render=function(ctx,o){o=o||{};ctx.imageSmoothingEnabled=false;const cx=o.cx||0,cy=o.cy||0,ty=Math.round(o.ty||0),lean=Math.round(o.lean||0),tilt=o.tilt||0;
   const tn=o.turn||0,dB=Math.round(-tn*.5),dT=Math.round(tn*.3),dF=Math.round(tn),dH=Math.round(tn*.6);   /* 3/4 반측면: 머리·얼굴·앞머리·몸을 서로 다른 양만큼 밀어 시차로 '고개 돌림' 입체감을 낸다 */
-  const HK=.86,hs=(fn)=>{ctx.save();const py=ty+lean-cy+96;ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';fn();ctx.restore()};
+  const HK=.9,hs=(fn)=>{ctx.save();const py=ty+lean-cy+96;ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';fn();ctx.restore()};
   hs(()=>ctx.drawImage(cv.back,-cx+dB,ty+Math.round(lean*.85)-cy));ctx.drawImage(cv.torso,-cx+dT,ty-cy);F.composeHead(Math.round(tn*.6));
   const hb=F._hb||(F._hb=document.createElement('canvas'));if(hb.width!==W+40){hb.width=W+40;hb.height=H}const bx=hb.getContext('2d');bx.imageSmoothingEnabled=false;bx.clearRect(0,0,hb.width,hb.height);
   const dh=(img,dx)=>{if(Math.abs(tilt)<0.6)bx.drawImage(img,dx+20,0);else{const t=Math.tan(tilt*Math.PI/180);for(let y=0;y<104;y++)bx.drawImage(img,0,y,W,1,dx+20+Math.round((96-y)*t),y,W,1);bx.drawImage(img,0,104,W,H-104,dx+20,104,W,H-104)}};
-  dh(headC,dF);dh(cv.hairF,dH);
+  dh(headC,dF);dh(cv.hairF,dH);{const ov=F.ovFor(F.state.ov);if(ov)dh(ov,dF)}
   {const py=ty+lean-cy+96;ctx.save();ctx.translate(HDX-cx,py);ctx.scale(HK,HK);ctx.translate(-(HDX-cx),-py);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(hb,-cx-20,ty+lean-cy);ctx.restore();ctx.imageSmoothingEnabled=false}
   if(o.arms){const cw=o.cw||W,ch=o.ch||H;F._arc=F._arc||{};
    ['L','R'].forEach(k=>{const a=o.arms[k];if(!a)return;const pts=[a.S,a.E,a.H].map(q=>[q[0]-cx,q[1]-cy]),xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]),
@@ -1412,11 +1417,11 @@ const HD_POSES={
   gavUp:{docs:.5,desk:1,ty:0,lean:-3,tilt:-3,turn:-4,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+56,ry:78,gon:1,gv:24},
   gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
  PROSECUTOR:{
-  main:{turn:3,la:1,lx:HDX+10,ly:152,ra:1,rx:HDX-10,ry:158},
-  windup:{turn:5,lean:-4,tilt:2,ty:-3,la:1,lx:HDX-32,ly:94,ra:1,rx:HDX+32,ry:94},
-  slam:{turn:11,lean:12,tilt:3,ty:8,la:1,lx:HDX-36,ly:176,ra:1,rx:HDX+36,ry:176,burst:1},
-  ask:{turn:0,lean:3,tilt:0,la:1,lx:HDX-30,ly:164,ra:1,rx:HDX+30,ry:164},
-  panic:{turn:4,lean:-3,tilt:3,ty:1,la:1,lx:HDX-10,ly:140,ra:1,rx:HDX+10,ry:144}},
+  main:{desk:1,ty:2,turn:3,la:1,lx:HDX+10,ly:150,ra:1,rx:HDX-10,ry:152},
+  windup:{desk:1,turn:5,lean:-4,tilt:2,ty:-1,la:1,lx:HDX-32,ly:100,ra:1,rx:HDX+32,ry:100},
+  slam:{desk:1,turn:11,lean:12,tilt:3,ty:8,la:1,lx:HDX-34,ly:150,ra:1,rx:HDX+34,ry:150,burst:1},
+  ask:{desk:1,turn:0,lean:3,tilt:0,ty:2,la:1,lx:HDX-26,ly:150,ra:1,rx:HDX+26,ry:150},
+  panic:{desk:1,turn:4,lean:-3,tilt:3,ty:3,la:1,lx:HDX-10,ly:146,ra:1,rx:HDX+10,ry:148}},
  LAWYER:{
   smug:{turn:-5,lean:3,tilt:5,la:1,lx:HDX-16,ly:158,ra:1,rx:HDX+14,ry:88},
   cross:{turn:-8,lean:-2,tilt:-4,la:1,lx:HDX+20,ly:126,ra:1,rx:HDX-18,ry:130},
@@ -1434,11 +1439,11 @@ function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('c
  const rgb=c=>'rgb('+c[0]+','+c[1]+','+c[2]+')',SK=F.R.skin;
  function props(){const c=tctx;
   if(cur.docs>.02){const pile=(x0,w,hh,seed)=>{const n=Math.max(1,Math.round(hh/6));for(let i=0;i<n;i++){const yy=200-(i+1)*6,off=((i*37+seed)%7)-3,ww=w-((i*11+seed)%9);c.fillStyle='#2a1a10';c.fillRect(x0+off-1,yy-1,ww+2,8);c.fillStyle=i%2?'#efe6c6':'#fffaf0';c.fillRect(x0+off,yy,ww,6);c.fillStyle='#9aa0bb';c.fillRect(x0+off+3,yy+3,Math.max(2,ww-9),1)}};pile(18,40,64*cur.docs,3);pile(116,40,52*cur.docs,11)}
-  if(cur.desk>.02){const top=Math.round(200-cur.desk*46);c.fillStyle='#2a1608';c.fillRect(-2,top-2,180,206-top);c.fillStyle='#8f5a30';c.fillRect(-2,top,180,206-top);c.fillStyle='#e0a86e';c.fillRect(-2,top,180,3);c.fillStyle='#6f4222';c.fillRect(-2,top+16,180,2)}
+  if(cur.desk>.02){const top=Math.round(200-cur.desk*46),K=F.key==='PROSECUTOR'?['#3a0f0c','#a8402c','#e58a62','#7a2a1d']:['#2a1608','#8f5a30','#e0a86e','#6f4222'];c.fillStyle=K[0];c.fillRect(-2,top-2,180,206-top);c.fillStyle=K[1];c.fillRect(-2,top,180,206-top);c.fillStyle=K[2];c.fillRect(-2,top,180,3);c.fillStyle=K[3];c.fillRect(-2,top+16,180,2)}
   if(cur.gon>.5){const x=hr[0]-CXo,y=hr[1]-CYo;c.save();c.translate(x,y);c.rotate(cur.gv*Math.PI/180);c.fillStyle='#2a1608';c.fillRect(-4,-34,8,38);c.fillStyle='#8a5a2c';c.fillRect(-2.5,-33,5,36);
    c.fillStyle='#2a1608';c.fillRect(-14,-46,28,14);c.fillStyle='#b07a3e';c.fillRect(-12.5,-44.5,25,11);c.fillStyle='#e8c25a';c.fillRect(-9,-44.5,3,11);c.fillRect(6,-44.5,3,11);c.fillStyle='#ffffff55';c.fillRect(-12.5,-44.5,25,3);c.restore()}
   if(cur.pl>.5){const x=hl[0]-CXo,y=hl[1]-CYo,a=cur.pa*Math.PI/180,len=17;c.lineCap='round';c.strokeStyle='#2a1020';c.lineWidth=6;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke();c.strokeStyle=rgb(SK.base);c.lineWidth=3.2;c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);c.stroke()}
-  if(cur.burst>.03){const x=hr[0]-CXo,y=hr[1]-CYo,b=cur.burst;c.lineCap='butt';for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r0=7+(1-b)*10,r1=r0+8+b*12;c.strokeStyle=i%2?'#fff':'#ffd23f';c.lineWidth=2;c.beginPath();c.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);c.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.stroke()}}}
+  if(cur.burst>.03){const pk=F.key==='PROSECUTOR',x=(pk?(hl[0]+hr[0])/2:hr[0])-CXo,y=(pk?Math.min(hl[1],hr[1])-4:hr[1])-CYo,b=cur.burst;c.lineCap='butt';for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.3,r0=7+(1-b)*10,r1=r0+8+b*12;c.strokeStyle=i%2?'#fff':'#ffd23f';c.lineWidth=2;c.beginPath();c.moveTo(x+Math.cos(a)*r0,y+Math.sin(a)*r0);c.lineTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.stroke()}}}
  function draw(){const tn=cur.turn,dT=Math.round(tn*.3),ty=Math.round(cur.ty);let ln=cur.lean,tl=cur.tilt,jx=0,jy=0;
   if(cur.doze>.02){ln+=Math.sin(t*1.5)*cur.doze;tl+=Math.sin(t*1.1)*cur.doze*.6}
   if(cur.jit>.02){jx=(Math.random()-.5)*cur.jit*2;jy=(Math.random()-.5)*cur.jit*2;tl+=(Math.random()-.5)*cur.jit}
