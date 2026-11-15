@@ -299,6 +299,26 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
   .st-key-lb_side .stButton>button, .st-key-lb_side .stButton>button *, .st-key-lb_corner .stButton>button, .st-key-lb_corner .stButton>button *{ font-size:11px !important; }
 }
 .st-key-giveup_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
+
+/* ============ 태도 스위치 / 최후의 변론 버튼: 변명 차례(입력창이 올라올 때)에만 입력창 바로 위에 뜬다 ============ */
+.st-key-stance_bar,.st-key-ls_bar{ position:fixed !important; left:50%; z-index:1000; width:min(94vw,560px); transform:translate(-50%,160%); opacity:0; pointer-events:none;
+  transition:transform .5s cubic-bezier(.2,1.25,.3,1), opacity .3s; margin:0 !important; }
+.st-key-stance_bar{ bottom:calc(84px + env(safe-area-inset-bottom)); }
+.st-key-ls_bar{ bottom:calc(132px + env(safe-area-inset-bottom)); }
+.stApp:has(.st-key-excuse_gate[data-open="1"]) .st-key-stance_bar,.stApp:has(.st-key-excuse_gate[data-open="1"]) .st-key-ls_bar{ transform:translate(-50%,0); opacity:1; pointer-events:auto; }
+.stApp:has(.st-key-excuse_gate:not([data-gate="1"]):not([data-open="1"])) .st-key-stance_bar,.stApp:has(.st-key-excuse_gate:not([data-gate="1"]):not([data-open="1"])) .st-key-ls_bar{ animation:exFailB 0s linear 6s forwards; }
+@keyframes exFailB{ to{ transform:translate(-50%,0); opacity:1; pointer-events:auto; } }
+.st-key-stance_bar [data-testid="stHorizontalBlock"]{ gap:6px !important; flex-wrap:nowrap !important; }
+.st-key-stance_bar [data-testid="stColumn"]{ min-width:0 !important; }
+.st-key-stance_bar button, .st-key-ls_bar button{ min-height:38px !important; padding:4px 3px !important; border:2px solid #0d0f26 !important; border-radius:0 !important; width:100%;
+  background:#1a1f45f2 !important; color:#fff !important; box-shadow:0 0 0 1px #ffffff40, 0 3px 0 #000a; }
+.st-key-stance_bar button p, .st-key-stance_bar button span, .st-key-ls_bar button p{ white-space:nowrap !important; font-size:11.5px !important; line-height:1.1 !important; margin:0 !important; font-weight:700 !important; }
+.st-key-stance_bar button[data-testid="stBaseButton-primary"]{ background:#ffd23f !important; color:#1a1200 !important; box-shadow:0 0 0 2px #fff, 0 0 14px #ffd23f; }
+.st-key-stance_bar button[data-testid="stBaseButton-primary"] p{ color:#1a1200 !important; }
+.st-key-ls_bar button{ background:#b3121c !important; animation:lsPulse .8s steps(2) infinite; }
+.st-key-ls_bar button p{ font-size:13px !important; }
+@keyframes lsPulse{ 50%{ box-shadow:0 0 0 3px #ffd23f, 0 0 18px #ff3b30; } }
+.st-key-timeout_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
 /* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
 .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
 .st-key-vn_stage{ margin:0 0 6px !important; }
@@ -418,7 +438,16 @@ SPEED_MS = {"느리게": 45, "보통": 30, "빠르게": 16}
 VN_H = 560  # 가로형(16:9에 가까운) 연출 화면 높이
 LOBBY_H = 540  # 로비 장면(iframe) 높이
 
-RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job")
+RUN_KEYS = ("p1", "p2", "ex1", "ex2", "facts", "verdict_data", "history_text", "case_name", "result", "show_result", "job",
+            "guilt", "g0", "stance", "stance1", "stance2", "timeout1", "timeout2", "ls_mode", "ls_used", "ls_text")
+
+# ---------- 공방 시스템(유죄 게이지 · 태도 · 타이머 · 최후의 변론) ----------
+GUILT_START = 50          # 재판 시작 유죄 게이지(%)
+LAST_STAND_AT = 85        # 이 값 이상이면 [최후의 변론]이 열린다
+TIMER_SEC = 30            # 심박수 타이머(초). 0이면 타이머 없음
+STANCES = {"bold": "😏 뻔뻔하게 우기기", "tears": "😭 눈물로 호소하기", "logic": "🔍 논리적 팩트체크"}
+STANCE_NAME = {"bold": "뻔뻔하게 우기기", "tears": "눈물로 호소하기", "logic": "논리적 팩트체크"}
+STUTTER = "어... 그게... 그러니까..."
 
 # =================================================================
 # 화면 문구: 로비 팁
