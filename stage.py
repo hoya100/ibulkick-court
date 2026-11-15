@@ -147,8 +147,10 @@ function make(o){const cam={p:Object.assign({},LOOK.WIDE),raf:0,W:0,H:0,bw:0,bh:
  cam.layout=function(){const W=o.view.clientWidth,H=o.view.clientHeight;if(!W||!H)return;cam.W=W;cam.H=H;
   /* 사진이 화면을 덮도록(가로 화면) / 세로 폰에서는 가로를 1.45배까지만 늘려 법정 전체가 보이게 */
   cam.bw=Math.max(W,Math.min(H*ASP,W*1.45));cam.bh=cam.bw/ASP;o.pst.style.width=cam.bw+'px';o.pst.style.height=cam.bh+'px';cam.apply()};
- cam.apply=function(){const p=cam.p,z=p.z,S=cam.bw*z,Sh=cam.bh*z,W=cam.W,H=cam.H;if(!W)return;
-  let tx=W/2-p.fx*S,ty=H*FOCUS_Y-p.fy*Sh;tx=S>=W?Math.min(0,Math.max(W-S,tx)):(W-S)/2;ty=Sh>=H?Math.min(0,Math.max(H-Sh,ty)):(H-Sh)*.45;
+ cam.apply=function(){const p=cam.p,W=cam.W,H=cam.H;if(!W)return;
+  /* 폰 화면에서는 인물이 너무 크게 잡히므로 줌을 줄인다(세로 폰: 최대 ~25%, 가로 폰: ~12%). 사진 높이가 화면의 74%보다 작아지지는 않게 */
+  const ar=H/W,zf=ar>1.15?Math.max(.74,1-(ar-1.15)*.4):(W/H>1.5?(H<430?.78:.88):1),z=Math.max(p.z*zf,Math.min(p.z,H*.74/cam.bh),Math.min(p.z,1)),S=cam.bw*z,Sh=cam.bh*z;
+  let tx=W/2-p.fx*S,ty=H*(ar>1.15?.31:(H<430?.3:FOCUS_Y))-p.fy*Sh;tx=S>=W?Math.min(0,Math.max(W-S,tx)):(W-S)/2;ty=Sh>=H?Math.min(0,Math.max(H-Sh,ty)):Math.min(0,Math.max(H*.62-Sh,ty));
   o.pst.style.transform='translate3d('+tx.toFixed(2)+'px,'+ty.toFixed(2)+'px,0) scale('+z.toFixed(4)+')';
   o.wrap.style.transform='perspective(1100px) rotateY('+p.yaw.toFixed(2)+'deg) rotateX('+p.pitch.toFixed(2)+'deg) rotateZ('+p.roll.toFixed(2)+'deg) scale(1.04)'};
  cam.set=function(t){cancelAnimationFrame(cam.raf);Object.assign(cam.p,t);cam.apply()};
