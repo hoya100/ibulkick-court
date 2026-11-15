@@ -300,9 +300,9 @@ def normalize_phase2(data):
     sp = sp if sp in ("JUDGE", "PROSECUTOR") else "JUDGE"
     text = str(fq.get("text") or "").strip() or "마지막으로 묻겠습니다. 지금 돌아보면 그 선택을 어떻게 평가하십니까?"
     steps.append({"s": sp, "t": text, "c": ""})
-    return {"steps": steps, "question": text}
+    return {"steps": steps, "question": text, "quality": parse_score(data.get("defense_quality"))}
 
-def normalize_verdict(data, ex1="", ex2=""):
+def normalize_verdict(data, ex1="", ex2="", ctx=None):
     card = data.get("summary_card") or {}
     steps = [
         {"s": "JUDGE", "t": str(i["dialogue"]), "c": ""}
@@ -320,7 +320,31 @@ def normalize_verdict(data, ex1="", ex2=""):
         score = min(score, 40)
     elif n1 < 10 or n2 < 10:
         score = min(score, 70)
+    # ---- 공방 시스템 보정: 시간 초과 / 앞뒤 모순 / 최후의 변론 ----
+    ctx = ctx or {}
+    extra = []   # (화자, 대사, 연기 이름, 표정, 외침)
+    contr = bool(data.get("contradiction")) if str(data.get("contradiction")).lower() not in ("false", "none", "") else False
+    if ctx.get("timeout2"):
+        score = max(0, score - 12)
+    if contr:
+        score = max(0, score - 10)
+        extra.append(("JUDGE", "잠깐… 1차 변명과 지금 하신 말씀이 서로 맞지 않는군요. 듣다 보니 머리가 아파서 이마를 좀 박겠습니다…", "j_sleep", "asleep", ""))
+    ls_ok = None
+    if ctx.get("last_stand"):
+        lss = parse_score(data.get("last_stand_score"))
+        lss = 50 if lss is None else lss
+        if len(str(ex2).strip()) < 15:
+            lss = min(lss, 30)
+        ls_ok = lss >= 60
+        if ls_ok:
+            score = min(100, score + 30 + int((lss - 60) * 0.25))
+            extra.append(("LAWYER", "이게 바로 최후의 한 방이죠! 판을 뒤집었어요, 피고인!", "l_cross", "smug", "S"))
+        else:
+            extra.append(("PROSECUTOR", "최후의 변론이라기엔 너무 가볍습니다. 달라지는 건 없어요!", "p_slam", "angry", "F"))
     ruling = ruling_from_score(score)
+    for sp, t, ps, ex, c in extra:
+        steps.insert(0, {"s": sp, "t": t, "c": c, "pose": ps, "e": ex})
+    steps.append({"s": "JUDGE", "t": {"NOT_GUILTY": "주문. 피고인은 무죄입니다.", "MITIGATED": "주문. 피고인은 유죄이나 형을 감경합니다.", "GUILTY": "주문. 피고인은 유죄입니다."}[ruling], "c": ""})
     fallback_sentence = {
         "GUILTY": random.choice([f"자필 반성문 {random.randint(3, 30)}장 공개 낭독형", f"{random.randint(30, 500)}일간 감성 글 작성 금지형"]),
         "MITIGATED": random.choice([f"가벼운 반성문 {random.randint(1, 5)}장 제출형", f"{random.randint(3, 20)}일간 새벽 감성 글 임시저장형"]),
@@ -337,5 +361,5 @@ def normalize_verdict(data, ex1="", ex2=""):
         "title": data.get("verdict_title") or random.choice(["서판결 법정 판결", "이불킥 사건 판결"]),
         "crime": card.get("crime_summary") or random.choice(["새벽 감성 급발진 및 알림 테러죄", "공개 낭만 과다 분출 방조죄", "과거 자아 과몰입죄"]),
         "sentence": sentence, "badge": card.get("badge") or random.choice(fallback_badge),
-        "score": score, "ruling": ruling,
+        "score": score, "ruling": ruling, "contradiction": contr, "last_stand_ok": ls_ok,
     }
