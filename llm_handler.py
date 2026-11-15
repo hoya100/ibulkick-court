@@ -190,8 +190,16 @@ def parse_script(data):
             continue
         sp = to_speaker(it.get("speaker"))
         k = SHOUT_MAP.get(str(it.get("shout", "")).upper().strip())
-        steps.append({"s": sp, "t": text, "c": k[0] if k and k[1] == sp else ""})
+        st = {"s": sp, "t": text, "c": k[0] if k and k[1] == sp else ""}
+        g = parse_signed(it.get("gauge"))
+        if g is not None:
+            st["g"] = max(-9, min(9, g))
+        steps.append(st)
     return steps
+
+def parse_signed(v):
+    m = re.search(r"-?\d+", str(v if v is not None else ""))
+    return int(m.group()) if m else None
 
 def auto_shouts(steps):
     """LLM이 외침(shout)을 안 줬을 때, 검사/변호사가 서로 끊고 들어오는 지점에 자동 배정."""
@@ -272,11 +280,6 @@ def validate_verdict(data, final):
     score = parse_score(data.get("defense_score"))
     if score is None:
         raise ValueError("defense_score가 없습니다")
-    ruling = to_ruling(data.get("ruling"))
-    if ruling != ruling_from_score(score):
-        raise ValueError("판정(ruling)과 점수가 맞지 않습니다")
-    if (ruling == "NOT_GUILTY") != vals[1].startswith("무죄"):
-        raise ValueError("선고 문구가 판정과 맞지 않습니다")
 
 def normalize_phase1(data, history):
     steps = auto_shouts(parse_script(data))
@@ -288,7 +291,7 @@ def normalize_phase1(data, history):
         facts = [history.strip()[:120]]
     q = str(data.get("question") or (data.get("interrogation") or {}).get("question") or "").strip()
     q = q or "피고인! 지금 적으신 그 행동, 당시에 말려 준 사람은 정말 단 한 명도 없었습니까?"
-    steps.append({"s": "PROSECUTOR", "t": q, "c": ""})
+    steps.append({"s": "PROSECUTOR", "t": q, "c": "", "g": 0})
     return {"steps": steps, "question": q, "facts": facts}
 
 def normalize_phase2(data):
@@ -298,7 +301,7 @@ def normalize_phase2(data):
     fq = data.get("final_question") or {}
     sp = "PROSECUTOR"  # 같은 쟁점을 검사가 한 번 더 묻는다(꼬리물기 2번째 질문)
     text = str(fq.get("text") or "").strip() or "마지막으로 묻겠습니다. 지금 돌아보면 그 선택을 어떻게 평가하십니까?"
-    steps.append({"s": sp, "t": text, "c": ""})
+    steps.append({"s": sp, "t": text, "c": "", "g": 0})
     return {"steps": steps, "question": text, "quality": parse_score(data.get("defense_quality"))}
 
 def normalize_verdict(data, ex1="", ex2="", ctx=None):
@@ -319,14 +322,16 @@ def normalize_verdict(data, ex1="", ex2="", ctx=None):
         score = min(score, 40)
     elif n1 < 10 or n2 < 10:
         score = min(score, 70)
-    # ---- 공방 시스템 보정: 시간 초과 / 앞뒤 모순 / 최후의 변론 ----
+    # ---- 최종 판정은 '유죄 게이지'로 정한다: 100% = 유죄 / 30% 이하 = 무죄 / 그 사이 = 감형 ----
     ctx = ctx or {}
     extra = []   # (화자, 대사, 연기 이름, 표정, 외침)
     contr = bool(data.get("contradiction")) if str(data.get("contradiction")).lower() not in ("false", "none", "") else False
+    guilt0 = int(ctx.get("guilt", 50))
+    shift = round((50 - score) * 0.45)          # 최후 변명 평가: 점수가 낮으면 게이지 상승
     if ctx.get("timeout2"):
-        score = max(0, score - 12)
+        shift += 12
     if contr:
-        score = max(0, score - 10)
+        shift += 10
         extra.append(("JUDGE", "잠깐… 1차 변명과 지금 하신 말씀이 서로 맞지 않는군요. 듣다 보니 머리가 아파서 이마를 좀 박겠습니다…", "j_sleep", "asleep", ""))
     ls_ok = None
     if ctx.get("last_stand"):
@@ -336,11 +341,14 @@ def normalize_verdict(data, ex1="", ex2="", ctx=None):
             lss = min(lss, 30)
         ls_ok = lss >= 60
         if ls_ok:
-            score = min(100, score + 30 + int((lss - 60) * 0.25))
+            shift -= 30 + int((lss - 60) * 0.3)
             extra.append(("LAWYER", "이게 바로 최후의 한 방이죠! 판을 뒤집었어요, 피고인!", "l_cross", "smug", "S"))
         else:
+            shift += 6
             extra.append(("PROSECUTOR", "최후의 변론이라기엔 너무 가볍습니다. 달라지는 건 없어요!", "p_slam", "angry", "F"))
-    ruling = ruling_from_score(score)
+    final_guilt = 100 if ctx.get("cut") else max(0, min(100, guilt0 + shift))
+    score = 100 - final_guilt
+    ruling = "GUILTY" if final_guilt >= 100 else ("NOT_GUILTY" if final_guilt <= 30 else "MITIGATED")
     for sp, t, ps, ex, c in extra:
         steps.insert(0, {"s": sp, "t": t, "c": c, "pose": ps, "e": ex})
     steps.append({"s": "JUDGE", "t": {"NOT_GUILTY": "주문. 피고인은 무죄입니다.", "MITIGATED": "주문. 피고인은 유죄이나 형을 감경합니다.", "GUILTY": "주문. 피고인은 유죄입니다."}[ruling], "c": ""})
@@ -360,5 +368,5 @@ def normalize_verdict(data, ex1="", ex2="", ctx=None):
         "title": data.get("verdict_title") or random.choice(["서판결 법정 판결", "이불킥 사건 판결"]),
         "crime": card.get("crime_summary") or random.choice(["새벽 감성 급발진 및 알림 테러죄", "공개 낭만 과다 분출 방조죄", "과거 자아 과몰입죄"]),
         "sentence": sentence, "badge": card.get("badge") or random.choice(fallback_badge),
-        "score": score, "ruling": ruling, "contradiction": contr, "last_stand_ok": ls_ok,
+        "score": score, "final_guilt": final_guilt, "ruling": ruling, "contradiction": contr, "last_stand_ok": ls_ok,
     }
