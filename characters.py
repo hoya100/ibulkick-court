@@ -509,10 +509,11 @@ def phase2_prompt(name):
 1. script는 정확히 6~7줄. LAWYER({NAME_OF['LAWYER']})가 피고인의 1차 변명을 재치 있게 그럴듯하게 포장·옹호하고, PROSECUTOR({NAME_OF['PROSECUTOR']})가 변명 속 모순과 원문의 사실을 근거로 열정적으로 파고듭니다. 중간에 JUDGE({NAME_OF['JUDGE']}) 1줄이 귀찮음을 은근히 드러내며 사건 내용에 맞는 한마디로 개입.
 2. 피고인의 1차 변명 표현을 대사에서 직접 인용해 반영하고("…라고 변명하셨지요"), 새로운 사건을 지어내지 말 것.
 3. 템포: 각 dialogue는 반드시 2~3문장, 공백 포함 80~150자의 장문. 주장 → 근거 → 한 방 순서로 차분히 전개. shout 필드는 1막과 같은 규칙(FACT/SHIELD/ORDER/NONE), 3번 안팎 사용.
-4. final_question: 최후 압박 질문. speaker는 "JUDGE" 또는 "PROSECUTOR", text는 1차 변명과 원문을 파고드는 날카로운 1~2문장.
-5. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
+4. final_question: 최후 압박 질문(꼬리물기). speaker는 "JUDGE" 또는 "PROSECUTOR", text는 1차 변명 속 '특정 단어나 허점'을 집요하게 물고 늘어지며, 피고인이 앞뒤가 맞게 다시 해명해야 하는 날카로운 1~2문장. 피고인에게 직접 묻는 질문 형태로 끝낼 것.
+5. defense_quality: 피고인의 1차 변명이 [확정 사실]과 맞고 설득력·진심·재치가 있는지 0~100 정수로 채점(짠 편: 대부분 25~70, 정말 훌륭하면 80 이상, 10자 미만이거나 사실과 정반대면 15 이하).
+6. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
 형식 예시(형식만 참고):
-{{"script":[{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD"}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT"}}],"final_question":{{"speaker":"JUDGE","text":"..."}}}}"""
+{{"script":[{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD"}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT"}}],"final_question":{{"speaker":"PROSECUTOR","text":"..."}},"defense_quality":45}}"""
 
 def verdict_system_prompt(name, forms, nonce):
     return f"""당신은 오리지널 B급 법정 아케이드 게임 '이불킥 법정'의 판결 엔진이며, 판사 [{NAME_OF['JUDGE']}]입니다. 피고인 이름: "{name}". 판결 번호: #{nonce}
@@ -523,6 +524,9 @@ def verdict_system_prompt(name, forms, nonce):
 [판정 규칙 — 게임의 핵심]
 1. defense_score: 0~100 정수. 피고인의 1차·최후 변명이 [확정 사실]과 맞는지, 앞뒤가 일관적인지, 진심이나 재치가 있는지로 채점한다. 점수는 짠 편이다: 대부분 30~70점이고, 80점 이상은 정말 훌륭한 변명에만 준다. 10자 미만의 성의 없는 변명은 40점 이하.
 2. ruling: 점수 75 이상이면 "NOT_GUILTY"(무죄), 45~74면 "MITIGATED"(감형), 44 이하면 "GUILTY"(유죄). 점수와 ruling이 반드시 맞아야 한다.
+2-1. contradiction: 피고인의 최후 변명이 1차 변명이나 [확정 사실]과 앞뒤가 맞지 않으면 true, 일관되면 false. (이 감점은 시스템이 따로 처리하니 defense_score에는 넣지 말 것)
+2-2. last_stand_score: [최후의 변론]이 제출된 경우에만 0~100 정수(창의성·설득력·웃음 포인트를 종합 평가). 제출되지 않았으면 null. (이 보너스도 시스템이 따로 처리하니 defense_score에는 넣지 말 것)
+2-3. 입력에 [태도]가 있으면, 피고인이 고른 태도의 분위기(뻔뻔함 / 눈물 / 논리)가 변명 문장에 실제로 드러나는지도 평가에 반영한다. script에서는 최종 유무죄를 직접 선언하지 말고 '이제 판결을 선고하겠습니다' 정도로 끝낸다(주문은 시스템이 붙인다).
 [창작 지시]
 3. 죄목·형량·칭호의 '소재'는 반드시 [확정 사실]이나 피고인 변명에 실제로 나온 표현에서만 가져온다. 원문에 없는 물건·인물·장소를 소재로 쓰지 말 것.
 4. crime_summary(죄목): 기소된 죄목을 법률 용어를 패러디한 기발한 신조어로 새로 작명(무죄여도 적는다). (예시 '지하철 전동차 내 공개 낭만 유포죄'는 형식만 참고, 그대로 쓰지 말 것)
@@ -533,7 +537,7 @@ def verdict_system_prompt(name, forms, nonce):
 9. verdict_title: 이 판결의 한 줄 제목.
 10. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지.
 형식 예시(형식만 참고):
-{{"defense_score":62,"ruling":"MITIGATED","verdict_title":"...","script":[{{"speaker":"JUDGE","dialogue":"..."}}],"summary_card":{{"crime_summary":"...","final_sentence":"...","badge":"🏅 ..."}}}}"""
+{{"defense_score":62,"ruling":"MITIGATED","contradiction":false,"last_stand_score":null,"verdict_title":"...","script":[{{"speaker":"JUDGE","dialogue":"..."}}],"summary_card":{{"crime_summary":"...","final_sentence":"...","badge":"🏅 ..."}}}}"""
 
 def transcript(steps):
     return "\n".join(f"{NAME_OF.get(s['s'], '?')}: {s['t']}" for s in steps)
