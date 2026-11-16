@@ -363,7 +363,7 @@ div[role="dialog"]{ border-radius:0 !important; box-shadow:0 -4px 0 0 var(--ink)
 html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, .main{ scrollbar-width:none !important; -ms-overflow-style:none !important; }
 ::-webkit-scrollbar{ display:none !important; width:0 !important; height:0 !important; }
 .res-hint{ text-align:center; font-size:12px; color:#9fb0d8; margin:6px 0 2px; line-height:1.4; word-break:keep-all; }
-.st-key-timeout_hidden,.st-key-ls_go_hidden,.st-key-ls_cut_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
+.st-key-timeout_hidden,.st-key-ls_go_hidden,.st-key-ls_cut_hidden,.st-key-fb_go_hidden,.st-key-fb_done_hidden{ position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; opacity:0 !important; pointer-events:none !important; margin:0 !important; padding:0 !important; }
 /* ============ 재판 화면(vn_stage): 화면을 거의 꽉 채워 몰입감 UP ============ */
 .stApp:has(.st-key-vn_stage) .block-container, .stApp:has(.st-key-vn_stage) [data-testid="stMainBlockContainer"]{ padding-top:.4rem !important; }
 .st-key-vn_stage{ margin:0 0 6px !important; }
