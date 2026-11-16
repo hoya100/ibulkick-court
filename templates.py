@@ -101,6 +101,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #lsbtn.on{display:block;animation:lsPop .35s cubic-bezier(.2,1.5,.3,1),lsThrob .55s ease-in-out .35s infinite}
 @keyframes lsPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
 @keyframes lsThrob{50%{transform:translate(-50%,-50%) scale(1.08)}}
+#scene.rv #camwrap{filter:sepia(.28) saturate(.82) brightness(.93) hue-rotate(-8deg);transition:filter .9s}
 #scene.slowmo #camwrap{filter:saturate(.7) contrast(1.1) brightness(.92);transition:filter 1s}
 #ggfill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#3fd16a,#e8d23a 55%,#ff3b30);background-size:176px 100%;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
 #ggmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;left:85%;opacity:.85}
@@ -400,8 +401,9 @@ const EXPR=D.expr||{};
 const VCAM=(D.mode!=='wait')?Stage.make({view:$('scene'),pst:$('pst'),wrap:$('camwrap')}):null;   // 사진 법정 + 곡선 카메라 (stage.py)
 if(VCAM)VCAM.set(D.opening?Stage.LOOK.JPUSH:Stage.LOOK.WIDE);   // 막 사이 연결 장면은 '판사 줌' 그대로 이어서 시작
 /* 표정: 대사에 e 값이 있으면 그 표정, 없으면 외침(c)에 따라 — 검사 팩폭=비웃음 / 변호사 쉴드=억울함 / 판사 정숙=분노 */
+function listenExpr(k,c,st){if(!st.rv||k===c)return 'neutral';return (k==='P'||k==='L')&&(c==='P'||c==='L')?'soft':'neutral'}
 function exprFor(st){if(st.e&&EXPR[st.e])return st.e;return {F:'smirk',S:'aggrieved',O:'angry'}[st.c]||'neutral'}
-function applyExpr(c,st){for(const k in BUST){const F=BUST[k];if(F&&F.setExpr){F.setExpr(k===c?exprFor(st):'neutral');if(F.redraw)F.redraw()}}}
+function applyExpr(c,st){for(const k in BUST){const F=BUST[k];if(F&&F.setExpr){F.setExpr(k===c?exprFor(st):listenExpr(k,c,st));if(F.redraw)F.redraw()}}}
 
 if(D.mode==='verdict'){const c=D.card;$('c_title').textContent=c.title;$('c_name').textContent=c.name;$('c_crime').textContent=c.crime;const SC={'무죄':'#1a9b5b','감형':'#d9822b','유죄':'#c1121f'};$('c_stamp').textContent=c.ruling;$('c_stamp').style.color=SC[c.ruling]||'#c1121f';$('c_stamp').style.borderColor=SC[c.ruling]||'#c1121f';$('c_sentence').textContent=c.sentence;$('c_badge').textContent=c.badge;
 const R=c.res;if(R){const up=R.delta>=0;$('r_d').textContent='평판 '+(up?'+':'')+R.delta;$('r_d').className='res-d '+(up?'up':'down');
@@ -475,7 +477,7 @@ const TEMPO0={P:{m:.85,p:.6,gap:90},L:{m:1,p:1,gap:200},J:{m:1.3,p:1.5,gap:380}}
 const TEMPOC={p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
 function tempoFor(c,pk,st){const b=Object.assign({},TEMPO0[c]||TEMPO0.L,TEMPOC[pk]||{}),t=st.t||'';
  if(!TEMPOC[pk]){const ex=(t.match(/!/g)||[]).length,el=(t.match(/…|\.\.\./g)||[]).length;if(ex>=2)b.m*=.88;if(el>=2)b.m*=1.15}
- if(typeof st.tempo==='number')b.m*=st.tempo;return b}
+ if(typeof st.tempo==='number')b.m*=st.tempo;if(st.rv)b.m*=1.3;return b}
 let CH=[],RAP=null;
 function clearCH(){CH.forEach(clearTimeout);CH=[];if(RAP){clearInterval(RAP);RAP=null}}
 function beat(c,b){const F=BUST[c];if(!F)return;
@@ -509,7 +511,7 @@ function chooseCombo(st,n){
  if(tired&&h>=2)return 'j_sleep';
  if(tired)return 'j_sigh';
  return 'j_main'}
-function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
+function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);scene.classList.toggle('rv',!!st.rv);{const v=$('vig');if(v&&!(D.ls&&evDone)){v.style.transition='opacity .9s';v.style.opacity=st.rv?.4:0}}clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
  const tp=tempoFor(c,pk,st),speak=()=>{busy=false;setTalk(c);if(st.gv!=null&&D.mode==='debate')ggStep(st.gv);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t,tp)};
  const pv=n>0?(D.steps[n-1].t||''):'',slow=/…\s*$/.test(pv)?1.5:1,gap=Math.round(tp.gap*slow);
  setTimeout(()=>{runCombo(c,pk);if(st.c&&SHOUT[st.c])shout(st.c,speak);else speak()},changed?Math.round(lk*1000)+Math.round(gap*.6):gap)}
@@ -742,7 +744,7 @@ const D=__DATA__;
 /*__SPRITES__*/
 const $=id=>document.getElementById(id);
 const scene=$('scene');
-const NJ=D.cast.JUDGE.name,NP=D.cast.PROSECUTOR.name,NL=D.cast.LAWYER.name,DL=D.cast.LAWYER.display;
+const NJ=D.cast.JUDGE.name,NP=D.cast.PROSECUTOR.name,NL=D.cast.LAWYER.name,DL=D.cast.LAWYER.display,DP=D.cast.PROSECUTOR.display,DJ=D.cast.JUDGE.display;
 $('nm_pros').textContent=D.cast.PROSECUTOR.display;$('nm_judge').textContent=D.cast.JUDGE.display;$('nm_law').textContent=DL;$('bc_n').textContent='평판 방어 전문 · 변호사 '+NL;
 const S=[
  {v:'bed',k:'t',x:'새벽 3시 7분. 나는 이불 속에서 도무지 잠들지 못하고 있었다.'},
@@ -752,6 +754,7 @@ const S=[
  {v:'card',k:'t',fx:'paper',x:'…명함이었다. 내 것이 아니다. 누가, 언제, 이걸 내 이불 속에…?'},
  {v:'card',k:'t',x:'〈이불킥 법정 — 당신의 흑역사, 무죄로 만들어 드립니다. 평판 방어 전문 · 변호사 '+NL+'〉'},
  {v:'card',k:'t',fx:'flip',x:'뒷면에는 손글씨가 적혀 있었다. “오늘 새벽, 법원 정문 계단 위에서 기다리겠습니다.”'},
+ {v:'card',k:'t',x:'그 아래엔 더 작은 글씨. “흑역사 때문에 잠 못 드는 당신에게. — '+NL+'”'},
  {v:'card',k:'t',x:'수상하다. 하지만 이대로 평생 이불만 걷어차며 살 수는 없다. 나는 외투를 걸치고 집을 나섰다.'},
  {v:'court',k:'t',x:'…와.'},
  {v:'court',k:'t',x:'눈앞에 거대한 법원이 우뚝 서 있다. 고개를 한참 젖혀야 꼭대기가 보인다.'},
@@ -763,6 +766,7 @@ const S=[
  {v:'court',k:'s',x:'다들 이미 잊었길 바랐는데.'},
  {v:'court',k:'s',x:'누군가는 분명 캡처해 뒀겠지.'},
  {v:'court',k:'s',x:'내 평판은 그날 이후로 바닥을 기고 있다.'},
+ {v:'court',k:'s',x:'그런데 명함의 손글씨는 이상하게 따뜻했다. 같은 새벽을 겪어 본 사람의 글씨처럼.'},
  {v:'court',k:'s',x:'이제 도망칠 곳도 없다. 한 계단만 더.'},
  {v:'court',k:'s',x:'드디어, 문 앞이다.'},
  {v:'hall',k:'d',x:'끼이이익—! 무겁고 커다란 문이 천천히 열렸다.'},
@@ -772,6 +776,15 @@ const S=[
  {v:'law',k:'t',x:'오른쪽에는 '+NL+' 변호사. 나를 보더니 느긋하게 웃으며 한쪽 눈을 찡긋한다. …뭐지?'},
  {v:'law',k:'t',x:'맞다. 그 명함의 주인이 바로 이 사람이었다.'},
  {v:'law',k:'t',w:DL,x:'“기다리고 있었어요~ 당신의 흑역사, 제가 그럴듯하게 포장해서 무죄로 만들어 드릴게요.”'},
+ {v:'law',k:'t',x:'…그런데 그 순간, '+NL+' 변호사의 웃음이 아주 잠깐 흔들렸다. 눈빛이 먼 곳을 보는 것 같았다.'},
+ {v:'law',k:'t',w:DL,x:'“사실 저도 예전엔 그쪽 자리에 앉아 있었어요. 신입 시절에 단톡방에 잘못 올린 한 줄 때문에, 평판이 바닥까지 떨어졌거든요.”'},
+ {v:'law',k:'t',w:DL,x:'“그때 저를 변호해 준 사람은 아무도 없었어요. 그래서 결심했죠. 흑역사에도 변호받을 권리가 있다고.”'},
+ {v:'law',k:'t',w:DL,x:'“새벽에 이불 걷어차는 사람은, 전부 예전의 저니까요.”'},
+ {v:'pros',k:'t',x:'맞은편에서 서류 넘기는 소리가 뚝 멈췄다. '+NP+' 검사가 시선을 피한다.'},
+ {v:'pros',k:'t',x:'나중에 알게 된 사실. 그 재판에서 '+NL+'를 기소했던 검사가 바로 '+NP+'. 법학 동기이자, 법정에선 영원한 라이벌이다.'},
+ {v:'pros',k:'t',w:DP,x:'“…감상은 법정 밖에서 하시죠, 변호사님. 저는 오늘도 증거만 봅니다.”'},
+ {v:'law',k:'t',w:DL,x:'“어머, 냉정이는 여전하네. 이번엔 안 져요. 그날 못 이긴 한 판을… 오늘 이 분과 함께 갚을 거예요.”'},
+ {v:'judge',k:'t',w:DJ,x:'“…누가 이기든 상관없으니 퇴근만 시켜 주십시오.” 그렇게 말하면서도 판사의 서류엔 빼곡한 손글씨가 보였다. 대충 하는 척, 한 줄 한 줄 직접 쓰는 사람인 모양이다.'},
  {v:'gauge',k:'t',x:'나는 안다. 그날의 흑역사 때문에 내 평판과 이불킥 랭크는 이미 바닥을 기고 있다는 것을.'},
  {v:'goal',k:'g',x:'그래서 오늘의 목표는 단 하나! 어떻게든 무죄를 받아내서, 평판과 이불킥 랭크를 지켜내는 것이다!'},
  {v:'crown',k:'g',x:'무죄를 연달아 받아내면… 최고 랭크 👑 [이불킥 청정수]가 될 수도 있다고 한다.'},
