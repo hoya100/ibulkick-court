@@ -138,7 +138,11 @@ const LOOK={
  LPAN:{fx:.74,fy:.53,z:2.15,yaw:2,pitch:1,roll:-.6,dur:.2,ease:'snap',arc:0},              /* 변호사 움찔 */
  JSLEEP:{fx:.5,fy:.47,z:2.45,yaw:0,pitch:3,roll:0,dur:1.1,ease:'out',arc:.2},              /* 판사 널부러짐 */
  JGAV:{fx:.5,fy:.42,z:2.5,yaw:0,pitch:-2,roll:0,dur:.5,ease:'io',arc:.2},                  /* 망치 들기 */
- JGHIT:{fx:.5,fy:.43,z:2.7,yaw:0,pitch:-3,roll:.4,dur:.18,ease:'snap',arc:0}              /* 망치 내리치기: 순간 줌인 */
+ JGHIT:{fx:.5,fy:.43,z:2.7,yaw:0,pitch:-3,roll:.4,dur:.18,ease:'snap',arc:0},
+ LDIAG:{fx:.75,fy:.52,z:2.0,yaw:9,pitch:-4,roll:-6,dur:1.8,ease:'io',arc:.8},            /* 회상: 한유리를 대각선에서 */
+ LDIAG2:{fx:.76,fy:.52,z:2.4,yaw:11,pitch:-5,roll:-8,dur:7,ease:'out',arc:0},          /* 회상: 대각선인 채 천천히 다가감 */
+ LDESP:{fx:.77,fy:.55,z:2.75,yaw:13,pitch:-7,roll:-10,dur:6,ease:'out',arc:0},          /* 회상: 절망하는 얼굴 가까이 */
+ LLEAVE:{fx:.88,fy:.52,z:1.9,yaw:6,pitch:-3,roll:-4,dur:4.5,ease:'io',arc:.4}              /* 회상: 퇴정하는 뒷모습을 따라감 */              /* 망치 내리치기: 순간 줌인 */
 };
 const EASE={io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,out:t=>1-Math.pow(1-t,3),snap:t=>{const c=1.1,d=c+1;return 1+d*Math.pow(t-1,3)+c*Math.pow(t-1,2)},lin:t=>t};
 
