@@ -488,7 +488,7 @@ const COMBO={
 /* ---- 말하는 속도(템포): 캐릭터 성격(검사=빠르고 날카롭게 / 변호사=여유 / 판사=느리고 무겁게) × 동작 × 대사 분위기.
         m = 글자 간격 배수(작을수록 빠름), p = 쉼표·마침표 뒤 멈춤 배수, gap = 말 시작 전 뜸(ms) ---- */
 const TEMPO0={P:{m:.85,p:.6,gap:90},L:{m:1,p:1,gap:200},J:{m:1.3,p:1.5,gap:380}};
-const TEMPOC={l_despair:{m:1.8,p:2,gap:0},j_write:{m:1.35,p:1.5,gap:0},p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
+const TEMPOC={l_despair:{m:1.8,gap:0},j_write:{m:1.35,p:1.5,gap:0},p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
 function tempoFor(c,pk,st){const b=Object.assign({},TEMPO0[c]||TEMPO0.L,TEMPOC[pk]||{}),t=st.t||'';
  if(!TEMPOC[pk]){const ex=(t.match(/!/g)||[]).length,el=(t.match(/…|\.\.\./g)||[]).length;if(ex>=2)b.m*=.88;if(el>=2)b.m*=1.15}
  if(typeof st.tempo==='number')b.m*=st.tempo;if(st.rv)b.m*=1.3;return b}
@@ -560,11 +560,11 @@ function runFlash(){document.documentElement.classList.add('flashing');scene.cla
   tmo=setTimeout(go,st.wait!=null?st.wait:700)}
  function applyExprOne(c,e){const B=BUST[c];if(B&&B.setExpr){B.setExpr(e);if(B.redraw)B.redraw()}}
  function run(st){
-  if(st.ch){cover.style.opacity=1;$('nite').classList.toggle('on',!!st.nite);$('fct').textContent=st.ch;$('fcs').textContent=st.sub||'';const fc=$('fcard');fc.classList.remove('on');void fc.offsetWidth;fc.classList.add('on');
+  if(st.ch||st.cut){cover.style.opacity=1;$('nite').classList.toggle('on',!!st.nite);$('fct').textContent=st.ch||'';$('fcs').textContent=st.sub||'';const fc=$('fcard');fc.classList.remove('on');if(st.ch){void fc.offsetWidth;fc.classList.add('on')}
    $('fct').style.animation='none';$('fcs').style.animation='none';void fc.offsetWidth;$('fct').style.animation='';$('fcs').style.animation='';
    $('txt').textContent='';if(st.cam0&&VCAM)VCAM.set(Stage.LOOK[st.cam0]);
    (st.setup||[]).forEach(f=>{if(f==='reset'){['J','P','L'].forEach(c=>{const el=CEL(c);if(el){el.style.transition='none';el.style.left='';el.style.opacity=1}});}else fxdo(f)});
-   tmo=setTimeout(()=>{fc.classList.remove('on');cover.style.opacity=0;tmo=setTimeout(()=>body(st),900)},3000)}
+   tmo=setTimeout(()=>{fc.classList.remove('on');cover.style.opacity=0;tmo=setTimeout(()=>body(st),900)},st.ch?3000:1100)}
   else body(st)}
  next()}
 function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);scene.classList.toggle('rv',!!st.rv);{const v=$('vig');if(v&&!(D.ls&&evDone)){v.style.transition='opacity .9s';v.style.opacity=st.rv?.4:0}}clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
@@ -808,8 +808,8 @@ const NJ=D.cast.JUDGE.name,NP=D.cast.PROSECUTOR.name,NL=D.cast.LAWYER.name,DL=D.
 $('nm_pros').textContent=D.cast.PROSECUTOR.display;$('nm_judge').textContent=D.cast.JUDGE.display;$('nm_law').textContent=DL;$('bc_n').textContent='평판 방어 전문 · 변호사 '+NL;
 const S0=[
  {v:'bed',k:'t',x:'새벽 3시 7분. 나는 이불 속에서 도무지 잠들지 못하고 있었다.'},
- {v:'bed',k:'t',fx:'think',x:'눈을 감으면 자꾸 그날의 일이 떠오른다. 그 글, 그 사진, 그 한마디…'},
- {v:'bed',k:'t',fx:'kick',x:'“으아아악!” 나는 이불 속에서 온몸을 뒤틀며 몸부림쳤다. 이불이 들썩들썩, 아무리 뒹굴어도 흑역사는 사라지지 않았다.'},
+ {v:'bed',k:'t',fx:'think',x:'눈을 감으면 자꾸 내가 저지른 그 일이 떠오른다. 내가 올린 그 글, 그 사진, 그 한마디…'},
+ {v:'bed',k:'t',fx:'kick',x:'“으아아악!” 나는 이불 속에서 온몸을 뒤틀며 몸부림쳤다. 이불을 퍽퍽 쳐 봐도, 아무리 뒹굴어도 흑역사는 사라지지 않았다.'},
  {v:'bed',k:'t',fx:'drop',x:'그때, 이불 끝에 딱딱한 무언가가 걸렸다. 이불 틈에서 종이 한 장이 툭 떨어졌다.'},
  {v:'card',k:'t',fx:'paper',x:'…명함이었다. 내 것이 아니다. 누가, 언제, 이걸 내 이불 속에…?'},
  {v:'card',k:'t',x:'〈이불킥 법정 — 당신의 흑역사, 무죄로 만들어 드립니다. 평판 방어 전문 · 변호사 '+NL+'〉'},
@@ -821,11 +821,11 @@ const S0=[
  {v:'court',k:'t',x:'명함에 적힌 곳이 틀림없다. 저 둥근 문양 아래에서, 누군가 나를 기다리고 있다.'},
  {v:'court',k:'s',x:'계단이 생각보다 높다.'},
  {v:'court',k:'s',x:'이 명함, 장난이 아니길 바랄 뿐이다.'},
- {v:'court',k:'s',x:'그날 올린 그 글, 그 한마디가 자꾸 떠오른다.'},
+ {v:'court',k:'s',x:'내가 올린 그 글, 내가 쓴 그 한마디가 자꾸 떠오른다.'},
  {v:'court',k:'s',x:'지금도 생각하면 발가락이 오그라든다.'},
  {v:'court',k:'s',x:'다들 이미 잊었길 바랐는데.'},
  {v:'court',k:'s',x:'누군가는 분명 캡처해 뒀겠지.'},
- {v:'court',k:'s',x:'내 평판은 그날 이후로 바닥을 기고 있다.'},
+ {v:'court',k:'s',x:'내 평판은 내가 그 글을 올린 뒤로 바닥을 기고 있다.'},
  {v:'court',k:'s',x:'그런데 명함의 손글씨는 이상하게 따뜻했다. 같은 새벽을 겪어 본 사람의 글씨처럼.'},
  {v:'court',k:'s',x:'이제 도망칠 곳도 없다. 한 계단만 더.'},
  {v:'court',k:'s',x:'드디어, 문 앞이다.'},
@@ -836,15 +836,14 @@ const S0=[
  {v:'law',k:'t',x:'오른쪽에는 '+NL+' 변호사. 나를 보더니 느긋하게 웃으며 한쪽 눈을 찡긋한다. …뭐지?'},
  {v:'law',k:'t',x:'맞다. 그 명함의 주인이 바로 이 사람이었다.'},
  {v:'law',k:'t',w:DL,x:'“기다리고 있었어요~ 당신의 흑역사, 제가 그럴듯하게 포장해서 무죄로 만들어 드릴게요.”'},
- {v:'law',k:'fb',x:'…그런데 그 순간, '+NL+' 변호사의 웃음이 아주 잠깐 흔들렸다. 눈빛이 아주 먼 곳, 어느 오래된 법정을 보고 있는 것 같았다.'},
- {v:'law',p:2,k:'t',x:'회상이 지나가고, '+NL+' 변호사는 다시 아무 일 없다는 듯 웃고 있었다. 하지만 이제는 그 웃음의 무게가 조금 다르게 보인다.'},
- {v:'law',p:2,k:'t',w:DP,x:'“…감상은 법정 밖에서 하시죠, 변호사님. 저는 오늘도 증거만 봅니다.”'},
- {v:'law',p:2,k:'t',w:DL,x:'“어머, 냉정이는 여전하네. 이번엔 안 져요. 그날 못 이긴 한 판을… 오늘 이 분과 함께 갚을 거예요.”'},
- {v:'law',p:2,k:'t',w:DJ,x:'“…누가 이기든 상관없으니 퇴근만 시켜 주십시오.” 그렇게 말하며 판사는 조용히 펜을 들었다. 오늘도 판결문은 손으로 쓸 모양이다.'},
- {v:'gauge',p:2,k:'t',x:'나는 안다. 그날의 흑역사 때문에 내 평판과 이불킥 랭크는 이미 바닥을 기고 있다는 것을.'},
- {v:'goal',p:2,k:'g',x:'그래서 오늘의 목표는 단 하나! 어떻게든 무죄를 받아내서, 평판과 이불킥 랭크를 지켜내는 것이다!'},
- {v:'crown',p:2,k:'g',x:'무죄를 연달아 받아내면… 최고 랭크 👑 [이불킥 청정수]가 될 수도 있다고 한다.'},
- {v:'enter',p:2,k:'t',x:'…좋아. 심호흡을 하고 한 발 내디뎠다. 이제, 법정 안으로 들어가 보자.'}
+ {v:'law',k:'t',x:'…그러고 보니 이 사람, 어딘가 낯설지 않은 웃음이다. 명함에 적힌 “같은 새벽을 겪어 본 사람”이라는 말이 괜히 와닿는다.'},
+ {v:'law',k:'t',w:DP,x:'“…변호사님, 의뢰인 앞에서 쇼는 그만하시죠. 저는 오늘도 증거만 봅니다.”'},
+ {v:'law',k:'t',w:DL,x:'“어머, 냉정이는 여전하네. 이번엔 안 져요. 3년 전에 못 이긴 한 판, 오늘 이 분과 함께 갚을 거예요.”'},
+ {v:'law',k:'t',w:DJ,x:'“…누가 이기든 상관없으니 퇴근만 시켜 주십시오.” 그러면서도 판사는 서류에 한 줄 한 줄, 직접 손으로 쓰고 있었다.'},
+ {v:'gauge',k:'t',x:'나는 안다. 내가 저지른 흑역사 때문에 내 평판과 이불킥 랭크는 이미 바닥을 기고 있다는 것을.'},
+ {v:'goal',k:'g',x:'그래서 오늘의 목표는 단 하나! 어떻게든 무죄를 받아내서, 평판과 이불킥 랭크를 지켜내는 것이다!'},
+ {v:'crown',k:'g',x:'무죄를 연달아 받아내면… 최고 랭크 👑 [이불킥 청정수]가 될 수도 있다고 한다.'},
+ {v:'enter',k:'t',x:'…좋아. 심호흡을 하고 한 발 내디뎠다. 이제, 법정 안으로 들어가 보자.'}
 ];
 const PART=D.part||1,S=S0.filter(e=>(e.p||1)===PART);
 const STEPS=S.filter(e=>e.k==='s').length;
@@ -888,7 +887,7 @@ function setScene(v){Object.keys(OV).forEach(k=>$(OV[k]).classList.toggle('on',k
 function paper(){if(muted)return;const a=ac();if(!a)return;const len=Math.floor(a.sampleRate*.12),b=a.createBuffer(1,len,a.sampleRate),c=b.getChannelData(0);for(let i=0;i<len;i++)c[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.5);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=1800;const g=a.createGain();g.gain.value=.35;s.connect(f);f.connect(g);g.connect(a.destination);s.start()}
 function doFx(x){
  if(x==='think'){$('think').classList.add('on');beep(520,.1,.05);setTimeout(()=>beep(390,.14,.05),120)}
- else if(x==='kick'){$('blanket').classList.add('kick');[0,420,840,1260].forEach((d,j)=>setTimeout(()=>{footstep(j);popText(j%2?'들썩!':'들썩들썩!',j%2)},d))}
+ else if(x==='kick'){$('blanket').classList.add('kick');[0,420,840,1260].forEach((d,j)=>setTimeout(()=>{footstep(j);popText(j%2?'퍽퍽!':'퍽!',j%2)},d))}
  else if(x==='drop'){$('blanket').classList.remove('kick');$('dropcard').classList.add('on');paper()}
  else if(x==='paper'){$('bcard').classList.remove('flip');paper()}
  else if(x==='flip'){$('bcard').classList.add('flip');paper()}}
@@ -1641,61 +1640,54 @@ LOBBY_TEMPLATE = LOBBY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
 #   * 필드 설명은 VN_TEMPLATE 의 runFlash 주석 참고.  s: J/P/L/N(내레이션)
 # =================================================================
 FLASH_STEPS = [
-    # ---- 회상 ① 한유리: 혼자 변론하다 끝내 침묵 → 유죄 → 퇴정 ----
-    {"ch": "회상 ①  한유리", "sub": "3년 전, 같은 법정", "cam0": "WIDE", "cam": "WIDE", "s": "N",
-     "t": "그날의 피고인은 신입 변호사 한유리였다. 단톡방에 잘못 올린 단 한 줄 때문에.",
-     "also": {"L": "stand"}},
+    # ---- 한 호흡으로 이어지는 회상: 한유리의 재판 → 퇴정 → (암전) 검사 → (암전) 판사 → (암전) 한유리의 결심 ----
+    {"cam0": "WIDE", "cam": "WIDE", "s": "N", "wait": 1500, "also": {"L": "stand"},
+     "t": "3년 전. 신입 변호사 한유리가 피고인석에 섰다. 단톡방에 잘못 올린 한 줄 때문에."},
     {"s": "P", "cam": "P", "pose": "p_ask", "expr": "neutral",
-     "t": "피고인은 단체 대화방에 부적절한 한 줄을 게시했고, 그 캡처는 이미 업계 전체에 퍼졌습니다."},
+     "t": "피고인은 단체 대화방에 부적절한 메시지를 올렸고, 캡처본은 이미 업계 전체에 퍼졌습니다."},
     {"s": "L", "cam": "LDIAG", "pose": "l_plead", "expr": "aggrieved",
-     "t": "그건… 실수였어요! 다른 방인 줄 알고 보낸 거예요. 지우려고 했는데, 이미 읽음이 떠서…!"},
+     "t": "그건 실수예요. 다른 방인 줄 알고… 바로 지웠는데, 이미 읽음이 떠서…"},
     {"s": "P", "cam": "PSLAM", "pose": "p_slam", "expr": "angry",
-     "t": "증거 제1호. 삭제 시각은 발송 11분 뒤. 이미 늦었습니다."},
+     "t": "삭제는 발송 11분 뒤였습니다."},
     {"s": "L", "cam": "LDIAG", "pose": "l_plead", "expr": "aggrieved", "also": {"P": "main"},
-     "t": "저는… 정말 나쁜 뜻은 없었어요. 제발 한 번만… 제 얘기도 들어 주세요…!", "tempo": 1.0},
+     "t": "…제 변호인은요? 저 혼자 변론하는 건가요?", "tempo": 1.0},
     {"s": "N", "cam": "LDIAG", "cam2": "LDIAG2", "cam2d": 2200, "also": {"L": "stand"},
-     "t": "방청석은 조용했다. 피고인석 옆 변호인석은, 비어 있었다.", "hold": 2200},
-    {"s": "L", "cam": "LDIAG2", "cam2": "LDESP", "cam2d": 2600, "pose": "l_plead", "expr": "aggrieved",
-     "t": "…저를 변호해 줄 사람, 정말 아무도 없나요? 단 한 명도…?", "hold": 1800},
-    {"s": "L", "cam": "LDESP", "pose": "l_despair", "expr": "tears",
-     "t": "……", "tempo": 2.6, "hold": 3200},
+     "t": "변호인석은 비어 있었다. 방청석도 조용했다.", "hold": 2200},
+    {"s": "L", "cam": "LDIAG2", "cam2": "LDESP", "cam2d": 2600, "pose": "l_despair", "expr": "tears",
+     "t": "……", "tempo": 2.6, "hold": 3600},
     {"s": "J", "cam": "LDESP", "expr": "neutral", "pose": "j_main", "fx": ["gavel"], "wait": 1400,
-     "t": "피고인에게 유죄를 선고합니다.", "hold": 3400},
+     "t": "피고인에게 유죄를 선고합니다.", "hold": 3200},
     {"s": "N", "cam": "LDESP", "cam2": "LLEAVE", "cam2d": 1500, "also": {"L": "stand"}, "fx": ["leave:L"], "hold": 600,
-     "t": "법정을 나서는 한유리의 뒷모습을, 아무도 붙잡지 않았다."},
+     "t": "한유리는 아무 말 없이 법정을 나섰다."},
     {"s": "P", "cam": "P", "pose": "p_still", "expr": "wistful",
-     "t": "…나는 법대로 했을 뿐이야. 그래야만 했어.", "hold": 1800},
+     "t": "…규정대로 했을 뿐이야.", "hold": 1500},
     {"s": "J", "cam": "J", "pose": "j_sigh", "expr": "soft",
-     "t": "변호인 없는 재판이라니. 규정상 문제는 없지만… 이게 맞는 건가.", "hold": 1800},
-    {"s": "N", "cam": "WIDE", "t": "그날 한유리는 다짐했다. 흑역사에도 변호받을 권리가 있다고.", "hold": 2000},
+     "t": "변호인 없는 재판이라… 규정상 문제는 없지만.", "hold": 1600},
 
-    # ---- 회상 ② 차냉정: 그날 밤 검사실 ----
-    {"ch": "회상 ②  차냉정", "sub": "같은 날 밤, 검사실", "nite": 1, "cam0": "P", "cam": "P", "s": "N",
-     "setup": ["reset", "hide:J", "hide:L"],
-     "t": "차냉정은 불 꺼진 검사실에서 혼자 서류를 넘기고 있었다."},
+    {"cut": 1, "nite": 1, "cam0": "P", "cam": "P", "s": "N", "setup": ["reset", "hide:J", "hide:L"],
+     "t": "그날 밤, 검사실."},
     {"s": "P", "cam": "P", "pose": "p_still", "expr": "neutral",
-     "t": "증거는 완벽했다. 절차도 완벽했다. …그런데 왜 이렇게 손이 시리지."},
-    {"s": "N", "cam": "PPUSH", "t": "법학 동기. 밤새 스터디하던 한유리가 피고인석에 서 있었다.", "hold": 2000},
+     "t": "증거도 절차도 완벽했어. …그런데 기분이 이상하네."},
     {"s": "P", "cam": "PPUSH", "pose": "p_panic", "expr": "wistful",
-     "t": "봐줬다면 그건 그 애를 모욕하는 거야. 법은 누구에게나 똑같아야 하니까.", "hold": 1800},
-    {"s": "P", "cam": "P", "pose": "p_still", "expr": "soft",
-     "t": "…대신 다음에 만나면, 정정당당하게 이길 거야. 그게 내 방식의 사과야.", "hold": 2200},
-    {"s": "N", "cam": "P", "t": "차가운 얼굴 뒤에 숨겨 둔 것은, 서랍 속 낡은 스터디 노트 한 권이었다.", "hold": 2200},
+     "t": "봐줬으면 그게 더 실례지. 다음에 만나면, 제대로 붙어 줄게.", "hold": 2000},
+    {"s": "N", "cam": "P", "t": "서랍 속에는 둘이 같이 쓰던 스터디 노트가 아직 있었다.", "hold": 2000},
 
-    # ---- 회상 ③ 서판결: 판사실, 손으로 쓰는 판결문 ----
-    {"ch": "회상 ③  서판결", "sub": "그날 밤, 판사실", "nite": 1, "cam0": "J", "cam": "J", "s": "N",
-     "setup": ["reset", "show:J", "hide:P", "hide:L"],
-     "t": "서판결 판사는 판결문을 반드시 손으로 쓴다."},
+    {"cut": 1, "nite": 1, "cam0": "J", "cam": "J", "s": "N", "setup": ["reset", "show:J", "hide:P", "hide:L"],
+     "t": "판사실. 서판결은 판결문을 언제나 손으로 쓴다."},
     {"s": "J", "cam": "J", "pose": "j_write", "expr": "neutral",
-     "t": "타자로 치면 빠르지. 하지만 사람 인생 한 줄을 적기엔, 키보드는 너무 가벼워서 말이야."},
+     "t": "타자가 빠르긴 한데, 사람 일을 적을 땐 손이 편해서요."},
     {"s": "J", "cam": "JPUSH", "pose": "j_write", "expr": "wistful",
-     "t": "오늘 그 변호인 없는 사건… 기록엔 아무 문제 없다고 쓰겠지. 그래도 손이 자꾸 멈추는군."},
-    {"s": "J", "cam": "J", "pose": "j_sigh", "expr": "soft",
-     "t": "퇴근하고 싶다는 건 거짓말이 아냐. 다만 내일은, 누구든 변호받는 법정이길 바랄 뿐이지.", "hold": 2200},
-    {"s": "N", "cam": "J", "t": "그 바람은 아직 이름도 모르는 어느 피고인을 향해 이어진다.", "hold": 2400},
+     "t": "…변호인 없는 사건은, 어쩐지 펜이 자꾸 멈추네.", "hold": 2200},
+
+    {"cut": 1, "nite": 1, "cam0": "L", "cam": "LDIAG", "s": "N", "setup": ["reset", "hide:J", "hide:P"],
+     "t": "한유리는 혼자 짐을 정리하고 있었다."},
+    {"s": "L", "cam": "LDIAG2", "pose": "l_stand", "expr": "soft",
+     "t": "나 같은 사람이 또 있을 텐데. 그럼 다음엔 내가 변호하면 되지."},
+    {"s": "N", "cam": "WIDE", "wait": 900,
+     "t": "그 뒤 한유리는 흑역사 전문 변호사가 되었다. 그리고 새벽마다 잠 못 드는 사람들에게 명함을 돌리기 시작했다.", "hold": 3000},
 ]
 
 
 def render_flash(height=580, mute=False, speed=30):
     """회상 3부작(자동 재생). 끝나면 숨김 버튼(fb_done_hidden)을 눌러 스토리 2부로 넘어간다."""
-    render_vn("flash", FLASH_STEPS, height=height, title="회상", phase="회상", mute=mute, speed=speed)
+    render_vn("flash", FLASH_STEPS, height=height, title="프롤로그", phase="프롤로그", mute=mute, speed=speed)
