@@ -82,6 +82,14 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #crt{position:absolute;inset:0;z-index:20;pointer-events:none;background:repeating-linear-gradient(#0000 0 2px,#0002 2px 3px);box-shadow:inset 0 0 90px #000a}
 /* 대화창 */
 #dlg{position:absolute;left:2.5%;right:2.5%;bottom:3%;height:37%;min-height:150px;z-index:10}
+#nite{position:absolute;inset:0;z-index:16;pointer-events:none;opacity:0;background:#0a1238;mix-blend-mode:multiply;transition:opacity 1.2s}
+#nite.on{opacity:.62}
+#fcard{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000;color:#f3e6c4;text-align:center;padding:0 14px}
+#fcard.on{display:flex}#fct{font-size:clamp(20px,6vw,34px);font-weight:900;letter-spacing:3px;opacity:0;transform:translateY(8px);animation:fcin 1.1s .2s forwards}#fcs{margin-top:10px;font-size:clamp(12px,3.3vw,16px);opacity:0;animation:fcin 1s 1s forwards;color:#c9b98e}
+@keyframes fcin{to{opacity:1;transform:none}}
+#skipfb{display:none;position:absolute;right:10px;top:10px;z-index:40;background:#0009;color:#fff;border:2px solid #fff6;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.flashing #skipfb{display:block}.flashing #mute{display:none}
+.flashing #tagin{background:linear-gradient(#8a7a5a,#5a4a30)}
 #tag{position:absolute;left:14px;top:-22px;z-index:2;padding:2px;background:#d6eaff;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
 #tagin{padding:5px 28px 5px 16px;color:#fff;font-weight:700;font-size:15px;letter-spacing:1px;background:linear-gradient(#3d98da,#1d66a6);clip-path:polygon(0 0,calc(100% - 13px) 0,100% 50%,calc(100% - 13px) 100%,0 100%)}
 #box{position:absolute;inset:0;background:linear-gradient(#b4c4e0,#6b80a8);clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% calc(100% - 16px),calc(100% - 16px) 100%,16px 100%,0 calc(100% - 16px),0 16px)}
@@ -241,6 +249,7 @@ html.wait #scene{display:none}
  <div id="lsrp"><i></i><i></i><i></i></div><button id="lsbtn" type="button">🔥 최후의 변론!</button>
  <div id="dlg"><div id="tag"><div id="tagin">재판관</div></div><div id="box"></div><div id="boxin"><div id="txt"></div></div><div id="arrow">»</div></div>
  <div id="flash"></div><div id="crt"></div>
+ <div id="nite"></div><div id="fcard"><div id="fct"></div><div id="fcs"></div></div><button id="skipfb" type="button">건너뛰기 ▶▶</button>
  <div id="mute">⚙️</div>
  <div id="sm"><div id="smbox"><h3>⚙️ 설 정</h3><button id="sm_snd">🔊 효과음 켜짐</button><button id="sm_go">▶ 계속하기</button><button id="sm_quit">🏳️ 재판 포기 (로비로)</button></div></div>
  <div id="cardwrap"><div class="card"><div class="card-in"><div class="stamp" id="c_stamp">유죄</div>
@@ -434,7 +443,7 @@ smq.onclick=e=>{e.stopPropagation();if(!smq.classList.contains('sure')){smq.clas
 let started=false,i=-1,typing=false,timer=null,full='',busy=false,curCam='J',ended=false;
 const last=()=>D.steps.length-1;
 function setTalk(c){document.querySelectorAll('.char').forEach(e=>e.classList.toggle('talk',e.dataset.c===c));for(const k in BUST)if(BUST[k]&&BUST[k].setTalking)BUST[k].setTalking(k===c)}
-function stopType(){clearTimeout(timer);clearInterval(timer);typing=false;if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
+function stopType(){clearTimeout(timer);clearInterval(timer);typing=false;if(window.__fl){const f=window.__fl;window.__fl=null;setTimeout(f,0)}if(RAP){clearInterval(RAP);RAP=null}$('txt').textContent=full;$('arrow').style.visibility='visible';setTalk(null);
  if(window.__lsAfter){window.__lsAfter=false;setTimeout(goLs,1500)}
  if(D.ls&&i===D.ls.idx&&!evDone&&D.mode==='debate'){evDone=true;ended=true;setTimeout(lsEvent,700);return}
  if(i===last()&&!ended){if(D.mode==='verdict'){ended=true;setTimeout(gavel,900)}else{$('hint').textContent=D.hint||'';$('hint').style.display='block';exOpen();if(D.push){const ls=D.steps[last()];Stage.push(VCAM,(ls&&ls.cam)||CAM[ls&&ls.s]||'J')}}}}
@@ -457,6 +466,11 @@ const COMBO={
  /* 변호사 한유리: 여유(턱 괴기) → 팔짱 반격 → 당황 */
  l_smug:[{d:0,pose:'smug',rate:6,yaw:-14}],
  l_cross:[{d:0,pose:'smug',rate:6},{d:380,pose:'cross',rate:7,expr:'smug',look:'LCROSS',yaw:-26,sfx:'sparkle'}],
+ l_plead:[{d:0,pose:'plead',rate:12,expr:'aggrieved',yaw:-12}],
+ l_despair:[{d:0,pose:'despair',rate:3,expr:'tears',yaw:-8}],
+ l_stand:[{d:0,pose:'stand',rate:5,yaw:-10}],
+ j_write:[{d:0,pose:'write',rate:5},{d:700,jit:.3}],
+ p_still:[{d:0,pose:'ask',rate:3,yaw:20}],
  l_panic:[{d:0,pose:'panic',rate:16,expr:'panic',yaw:-10,flinch:.12,sfx:'gasp',icon:'drop'},{d:500,jit:.9},{d:1300,jit:0}],
  /* 검사 차냉정: 냉철 → (질문은 약한 삿대질) → 책상 쾅 + 속사포 삿대질 → 뜨끔 */
  p_main:[{d:0,pose:'main',rate:6}],
@@ -474,7 +488,7 @@ const COMBO={
 /* ---- 말하는 속도(템포): 캐릭터 성격(검사=빠르고 날카롭게 / 변호사=여유 / 판사=느리고 무겁게) × 동작 × 대사 분위기.
         m = 글자 간격 배수(작을수록 빠름), p = 쉼표·마침표 뒤 멈춤 배수, gap = 말 시작 전 뜸(ms) ---- */
 const TEMPO0={P:{m:.85,p:.6,gap:90},L:{m:1,p:1,gap:200},J:{m:1.3,p:1.5,gap:380}};
-const TEMPOC={p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
+const TEMPOC={l_despair:{m:1.8,p:2,gap:0},j_write:{m:1.35,p:1.5,gap:0},p_slam:{m:.5,p:.25,gap:50},p_ask:{m:.95,p:1.1,gap:140},p_panic:{m:1.15,p:1.4,gap:220},l_cross:{m:1.12,p:1.2,gap:260},l_panic:{m:1.2,p:1.5,gap:240},j_sleep:{m:1.7,p:1.8,gap:520},j_sigh:{m:1.5,p:1.7,gap:460},j_gavel:{m:.95,p:1,gap:160}};
 function tempoFor(c,pk,st){const b=Object.assign({},TEMPO0[c]||TEMPO0.L,TEMPOC[pk]||{}),t=st.t||'';
  if(!TEMPOC[pk]){const ex=(t.match(/!/g)||[]).length,el=(t.match(/…|\.\.\./g)||[]).length;if(ex>=2)b.m*=.88;if(el>=2)b.m*=1.15}
  if(typeof st.tempo==='number')b.m*=st.tempo;if(st.rv)b.m*=1.3;return b}
@@ -511,6 +525,48 @@ function chooseCombo(st,n){
  if(tired&&h>=2)return 'j_sleep';
  if(tired)return 'j_sigh';
  return 'j_main'}
+/* =========================================================
+   회상(flash) 연출 — 유저는 보기만 한다(자동 진행). 세피아 + 비네팅 + 대각선 카메라.
+   단계 필드: ch/sub=챕터 카드, nite=밤 톤, cam/cam2/cam2d=카메라(+뒤이어 천천히 이동), s=화자(N=내레이션), t=대사, pose=연계 동작,
+             also={L:'despair'}=다른 인물 자세, expr=표정, fx=['gavel','leave:L','hide:P','show:P','thud','flinch'], hold=대사 뒤 머무는 ms
+   ========================================================= */
+function runFlash(){document.documentElement.classList.add('flashing');scene.classList.add('rv');started=false;const F=D.steps;let n=-1,tmo=null,dead=false;
+ const cover=$('cover');cover.style.transition='opacity .9s';
+ {const v=$('vig');if(v){v.style.transition='opacity 1.5s';v.style.opacity=.34}}
+ const finish=()=>{if(dead)return;dead=true;clearTimeout(tmo);window.__fl=null;cover.style.opacity=1;setTimeout(()=>clickHidden('fb_done_hidden'),1000)};
+ $('skipfb').onclick=e=>{e.stopPropagation();finish()};
+ const next=()=>{if(dead)return;n++;if(n>=F.length){finish();return}run(F[n])};
+ function fxdo(f){const [k,a]=f.split(':');
+  if(k==='gavel'){sfx('rumble');if(BUST.J&&BUST.J.pose)BUST.J.pose('gavUp',{rate:26});setTimeout(()=>{if(BUST.J&&BUST.J.pose)BUST.J.pose('gavHit',{rate:55});hit()},380);setTimeout(()=>{if(BUST.J&&BUST.J.pose)BUST.J.pose('main',{rate:5})},1500)}
+  else if(k==='thud'){thud();Stage.flinch(.3)}else if(k==='flinch')Stage.flinch(.25);
+  else if(k==='hide'){const el=CEL(a);if(el){el.style.transition='opacity .8s';el.style.opacity=0}}
+  else if(k==='show'){const el=CEL(a);if(el){el.style.transition='opacity .8s';el.style.opacity=1}}
+  else if(k==='leave'){const el=CEL(a);if(el){el.style.transition='left 4.2s ease-in-out,opacity 1.4s 2.8s';el.style.left=(a==='P'?'-12%':'112%');el.style.opacity=0;yawTo(a,a==='P'?-60:60);let s=0;const w=setInterval(()=>{if(dead||++s>7){clearInterval(w);return}thud2()},520)}}
+  else if(k==='fadeout'){cover.style.opacity=1}else if(k==='fadein'){cover.style.opacity=0}}
+ function thud2(){beep(95,.1,.05)}
+ function body(st){
+  if(st.nite!=null)$('nite').classList.toggle('on',!!st.nite);
+  const sp=st.s&&st.s!=='N'?st.s:null;
+  if(st.cam){Stage.look(VCAM,st.cam);if(st.cam2)setTimeout(()=>{if(!dead)Stage.look(VCAM,st.cam2)},st.cam2d||1600)}
+  (st.fx||[]).forEach(f=>fxdo(f));
+  if(st.also)for(const k in st.also){if(BUST[k]&&BUST[k].pose)BUST[k].pose(st.also[k],{rate:7});}
+  if(sp){Stage.face(sp);if(st.expr||st.e)applyExprOne(sp,st.expr||st.e);runCombo(sp,st.pose||({J:'j_main',P:'p_main',L:'l_smug'}[sp]))}
+  $('tagin').textContent=sp?NAMES[sp]:'—';$('txt').textContent='';$('arrow').style.visibility='hidden';
+  const t=st.t,hold=st.hold!=null?st.hold:Math.min(3600,1300+(t||'').length*26);
+  const go=()=>{if(!t){tmo=setTimeout(next,st.hold||1800);return}
+   window.__fl=()=>{tmo=setTimeout(next,hold)};
+   if(sp)setTalk(sp);else setTalk(null);
+   type(t,{m:(st.tempo||1.15)*(TEMPO0[sp]?TEMPO0[sp].m:1),p:1.2,gap:0})};
+  tmo=setTimeout(go,st.wait!=null?st.wait:700)}
+ function applyExprOne(c,e){const B=BUST[c];if(B&&B.setExpr){B.setExpr(e);if(B.redraw)B.redraw()}}
+ function run(st){
+  if(st.ch){cover.style.opacity=1;$('nite').classList.toggle('on',!!st.nite);$('fct').textContent=st.ch;$('fcs').textContent=st.sub||'';const fc=$('fcard');fc.classList.remove('on');void fc.offsetWidth;fc.classList.add('on');
+   $('fct').style.animation='none';$('fcs').style.animation='none';void fc.offsetWidth;$('fct').style.animation='';$('fcs').style.animation='';
+   $('txt').textContent='';if(st.cam0&&VCAM)VCAM.set(Stage.LOOK[st.cam0]);
+   (st.setup||[]).forEach(f=>{if(f==='reset'){['J','P','L'].forEach(c=>{const el=CEL(c);if(el){el.style.transition='none';el.style.left='';el.style.opacity=1}});}else fxdo(f)});
+   tmo=setTimeout(()=>{fc.classList.remove('on');cover.style.opacity=0;tmo=setTimeout(()=>body(st),900)},3000)}
+  else body(st)}
+ next()}
 function show(n){const st=D.steps[n],c=CAM[st.s]||'J';busy=true;$('phase').textContent=(D.phase||'')+' · '+(n+1)+'/'+D.steps.length;const changed=c!==curCam;curCam=c;scene.dataset.cam=c;const lk=Stage.look(VCAM,st.cam||c);Stage.face(c);applyExpr(c,st);scene.classList.toggle('rv',!!st.rv);{const v=$('vig');if(v&&!(D.ls&&evDone)){v.style.transition='opacity .9s';v.style.opacity=st.rv?.4:0}}clearCH();for(const k in BASEP){if(k!==c&&BUST[k]&&BUST[k].pose&&!(k==='J'&&BUST.J.poseName==='sleep'))BUST[k].pose(BASEP[k],{rate:5})}const pk=chooseCombo(st,n);if(st.k==='act2'){hit();Stage.actTitle('제 2 막','변명 공방 & 최후 심문')}$('tagin').textContent=NAMES[c];$('txt').textContent='';$('arrow').style.visibility='hidden';
  const tp=tempoFor(c,pk,st),speak=()=>{busy=false;setTalk(c);if(st.gv!=null&&D.mode==='debate')ggStep(st.gv);Stage.emote(document.querySelector('#pst .char[data-c="'+c+'"]'),(EXPR[exprFor(st)]||{}).icon);type(st.t,tp)};
  const pv=n>0?(D.steps[n-1].t||''):'',slow=/…\s*$/.test(pv)?1.5:1,gap=Math.round(tp.gap*slow);
@@ -519,7 +575,7 @@ function adv(){if(paused||!started||busy||ended)return;if(typing){stopType();ret
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
 ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{const a=ac();if(a&&a.state==='suspended')a.resume()}));
-$('start').addEventListener('click',e=>{e.stopPropagation();ac();beep(880,.12);$('start').style.display='none';const go0=()=>{started=true;i=0;show(0)};if(D.intro&&D.mode==='debate')Stage.intro(VCAM,go0);else go0()});
+$('start').addEventListener('click',e=>{e.stopPropagation();ac();beep(880,.12);$('start').style.display='none';const go0=()=>{if(D.mode==='flash'){runFlash();return}started=true;i=0;show(0)};if(D.intro&&D.mode==='debate')Stage.intro(VCAM,go0);else go0()});
 if(!D.opening)setTimeout(()=>$('start').click(),350);   /* PRESS START 화면 없이 바로 시작 */
 if(D.opening){$('start').style.display='none';started=true;i=0;setTimeout(()=>show(0),450)}   /* 막 사이 연결: 시작 화면 없이 바로 이어짐 */
 
@@ -624,15 +680,19 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 .bed{position:absolute;left:5%;right:5%;bottom:30%;height:22%;background:#8a5a34;border:5px solid var(--ink);box-shadow:0 8px 0 #0008}
 .pillow{position:absolute;left:3%;top:-30%;width:24%;height:62%;background:#fff;border:4px solid var(--ink);box-shadow:inset 0 -6px 0 #cfd6ee}
 .blanket{position:absolute;left:22%;right:-2%;top:-34%;bottom:-6%;border:4px solid var(--ink);background:repeating-linear-gradient(90deg,#4aa8ff 0 22px,#3b8fe6 22px 44px);transform-origin:left bottom}
-.blanket.kick{animation:flap .3s infinite}
-@keyframes flap{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg) translateY(-10px)}}
-.feet{position:absolute;right:-12px;top:-64%;font-size:46px;transform-origin:left bottom}
-.feet.kick{animation:legk .3s infinite}
+.blanket.kick{animation:heave .42s ease-in-out infinite}
+@keyframes heave{0%,100%{transform:rotate(0) translateY(0)}30%{transform:rotate(-4deg) translateY(-12px) scaleY(1.05)}60%{transform:rotate(1.5deg) translateY(3px)}}
+.lump{position:absolute;bottom:34%;width:30%;height:34%;border:4px solid var(--ink);border-radius:46% 46% 8% 8%;background:repeating-linear-gradient(90deg,#5db4ff 0 22px,#4a9cf0 22px 44px);box-shadow:inset 0 5px 0 #ffffff40;transform-origin:50% 100%;display:none}
+.lump.a{left:18%}.lump.b{left:56%;height:28%}
+.blanket.kick .lump{display:block}.blanket.kick .lump.a{animation:lumpA .42s ease-in-out infinite}.blanket.kick .lump.b{animation:lumpB .42s ease-in-out infinite}
+@keyframes lumpA{0%,100%{transform:translateY(0) scaleY(.7)}50%{transform:translateY(-20px) scaleY(1.15)}}
+@keyframes lumpB{0%,100%{transform:translateY(-14px) scaleY(1.1)}50%{transform:translateY(0) scaleY(.7)}}
 @keyframes legk{0%,100%{transform:rotate(0)}50%{transform:rotate(-40deg)}}
 .think{position:absolute;left:8%;top:40%;max-width:78%;background:#fff;color:var(--ink);border:4px solid var(--ink);padding:8px 12px;font-size:14px;font-weight:700;opacity:0;box-shadow:4px 4px 0 var(--ink)}
 .think.on{animation:thinkpop .5s forwards}
 @keyframes thinkpop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
-.dropcard{position:absolute;left:62%;top:48%;font-size:30px;opacity:0}
+.dropcard{position:absolute;left:62%;top:48%;width:44px;height:28px;opacity:0}
+.dropcard i{display:block;width:100%;height:100%;background:#fffaf0;border:3px solid var(--ink);box-shadow:inset 0 -5px 0 #d9cfae,inset 5px 5px 0 #e8e0c8}
 .dropcard.on{animation:dropc 1.1s ease-in forwards}
 @keyframes dropc{0%{opacity:0;transform:translateY(-30px) rotate(0)}20%{opacity:1}100%{opacity:1;transform:translateY(120px) rotate(300deg)}}
 #v_card{background:radial-gradient(circle at 50% 38%,#3a3f8f,#0a0d28 70%)}
@@ -715,8 +775,8 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
   <div id="stairs"></div>
  </div>
  <div id="v_bed" class="vis on"><div class="stars"></div><div class="win"><div class="moon"></div></div><div class="clock">3:07</div><div class="floorb"></div>
-  <div class="bed"><div class="pillow"></div><div class="blanket" id="blanket"></div><div class="feet" id="feet">🦶</div></div>
-  <div class="think" id="think">😱 그때 내가 왜 그랬지…!!</div><div class="dropcard" id="dropcard">🪪</div></div>
+  <div class="bed"><div class="pillow"></div><div class="blanket" id="blanket"><i class="lump a"></i><i class="lump b"></i></div></div>
+  <div class="think" id="think">😱 그때 내가 왜 그랬지…!!</div><div class="dropcard" id="dropcard"><i></i></div></div>
  <div id="v_card" class="vis"><div class="bcard" id="bcard"><div class="shine"></div>
   <div class="front"><div class="bc-logo">⚖️</div><div class="bc-t">이불킥 법정</div><div class="bc-s">당신의 흑역사,<br>무죄로 만들어 드립니다</div><div class="bc-n" id="bc_n"></div></div>
   <div class="back"><div class="bc-hand">“오늘 새벽,<br>법원 정문 계단 위에서<br>기다리겠습니다.”</div></div></div></div>
@@ -746,11 +806,11 @@ const $=id=>document.getElementById(id);
 const scene=$('scene');
 const NJ=D.cast.JUDGE.name,NP=D.cast.PROSECUTOR.name,NL=D.cast.LAWYER.name,DL=D.cast.LAWYER.display,DP=D.cast.PROSECUTOR.display,DJ=D.cast.JUDGE.display;
 $('nm_pros').textContent=D.cast.PROSECUTOR.display;$('nm_judge').textContent=D.cast.JUDGE.display;$('nm_law').textContent=DL;$('bc_n').textContent='평판 방어 전문 · 변호사 '+NL;
-const S=[
+const S0=[
  {v:'bed',k:'t',x:'새벽 3시 7분. 나는 이불 속에서 도무지 잠들지 못하고 있었다.'},
  {v:'bed',k:'t',fx:'think',x:'눈을 감으면 자꾸 그날의 일이 떠오른다. 그 글, 그 사진, 그 한마디…'},
- {v:'bed',k:'t',fx:'kick',x:'“으아아악!” 나는 이불을 발로 뻥뻥 걷어찼다. 아무리 차도 흑역사는 사라지지 않았다.'},
- {v:'bed',k:'t',fx:'drop',x:'그때, 발끝에 딱딱한 무언가가 걸렸다. 이불 틈에서 종이 한 장이 툭 떨어졌다.'},
+ {v:'bed',k:'t',fx:'kick',x:'“으아아악!” 나는 이불 속에서 온몸을 뒤틀며 몸부림쳤다. 이불이 들썩들썩, 아무리 뒹굴어도 흑역사는 사라지지 않았다.'},
+ {v:'bed',k:'t',fx:'drop',x:'그때, 이불 끝에 딱딱한 무언가가 걸렸다. 이불 틈에서 종이 한 장이 툭 떨어졌다.'},
  {v:'card',k:'t',fx:'paper',x:'…명함이었다. 내 것이 아니다. 누가, 언제, 이걸 내 이불 속에…?'},
  {v:'card',k:'t',x:'〈이불킥 법정 — 당신의 흑역사, 무죄로 만들어 드립니다. 평판 방어 전문 · 변호사 '+NL+'〉'},
  {v:'card',k:'t',fx:'flip',x:'뒷면에는 손글씨가 적혀 있었다. “오늘 새벽, 법원 정문 계단 위에서 기다리겠습니다.”'},
@@ -776,20 +836,17 @@ const S=[
  {v:'law',k:'t',x:'오른쪽에는 '+NL+' 변호사. 나를 보더니 느긋하게 웃으며 한쪽 눈을 찡긋한다. …뭐지?'},
  {v:'law',k:'t',x:'맞다. 그 명함의 주인이 바로 이 사람이었다.'},
  {v:'law',k:'t',w:DL,x:'“기다리고 있었어요~ 당신의 흑역사, 제가 그럴듯하게 포장해서 무죄로 만들어 드릴게요.”'},
- {v:'law',k:'t',x:'…그런데 그 순간, '+NL+' 변호사의 웃음이 아주 잠깐 흔들렸다. 눈빛이 먼 곳을 보는 것 같았다.'},
- {v:'law',k:'t',w:DL,x:'“사실 저도 예전엔 그쪽 자리에 앉아 있었어요. 신입 시절에 단톡방에 잘못 올린 한 줄 때문에, 평판이 바닥까지 떨어졌거든요.”'},
- {v:'law',k:'t',w:DL,x:'“그때 저를 변호해 준 사람은 아무도 없었어요. 그래서 결심했죠. 흑역사에도 변호받을 권리가 있다고.”'},
- {v:'law',k:'t',w:DL,x:'“새벽에 이불 걷어차는 사람은, 전부 예전의 저니까요.”'},
- {v:'pros',k:'t',x:'맞은편에서 서류 넘기는 소리가 뚝 멈췄다. '+NP+' 검사가 시선을 피한다.'},
- {v:'pros',k:'t',x:'나중에 알게 된 사실. 그 재판에서 '+NL+'를 기소했던 검사가 바로 '+NP+'. 법학 동기이자, 법정에선 영원한 라이벌이다.'},
- {v:'pros',k:'t',w:DP,x:'“…감상은 법정 밖에서 하시죠, 변호사님. 저는 오늘도 증거만 봅니다.”'},
- {v:'law',k:'t',w:DL,x:'“어머, 냉정이는 여전하네. 이번엔 안 져요. 그날 못 이긴 한 판을… 오늘 이 분과 함께 갚을 거예요.”'},
- {v:'judge',k:'t',w:DJ,x:'“…누가 이기든 상관없으니 퇴근만 시켜 주십시오.” 그렇게 말하면서도 판사의 서류엔 빼곡한 손글씨가 보였다. 대충 하는 척, 한 줄 한 줄 직접 쓰는 사람인 모양이다.'},
- {v:'gauge',k:'t',x:'나는 안다. 그날의 흑역사 때문에 내 평판과 이불킥 랭크는 이미 바닥을 기고 있다는 것을.'},
- {v:'goal',k:'g',x:'그래서 오늘의 목표는 단 하나! 어떻게든 무죄를 받아내서, 평판과 이불킥 랭크를 지켜내는 것이다!'},
- {v:'crown',k:'g',x:'무죄를 연달아 받아내면… 최고 랭크 👑 [이불킥 청정수]가 될 수도 있다고 한다.'},
- {v:'enter',k:'t',x:'…좋아. 심호흡을 하고 한 발 내디뎠다. 이제, 법정 안으로 들어가 보자.'}
+ {v:'law',k:'fb',x:'…그런데 그 순간, '+NL+' 변호사의 웃음이 아주 잠깐 흔들렸다. 눈빛이 아주 먼 곳, 어느 오래된 법정을 보고 있는 것 같았다.'},
+ {v:'law',p:2,k:'t',x:'회상이 지나가고, '+NL+' 변호사는 다시 아무 일 없다는 듯 웃고 있었다. 하지만 이제는 그 웃음의 무게가 조금 다르게 보인다.'},
+ {v:'law',p:2,k:'t',w:DP,x:'“…감상은 법정 밖에서 하시죠, 변호사님. 저는 오늘도 증거만 봅니다.”'},
+ {v:'law',p:2,k:'t',w:DL,x:'“어머, 냉정이는 여전하네. 이번엔 안 져요. 그날 못 이긴 한 판을… 오늘 이 분과 함께 갚을 거예요.”'},
+ {v:'law',p:2,k:'t',w:DJ,x:'“…누가 이기든 상관없으니 퇴근만 시켜 주십시오.” 그렇게 말하며 판사는 조용히 펜을 들었다. 오늘도 판결문은 손으로 쓸 모양이다.'},
+ {v:'gauge',p:2,k:'t',x:'나는 안다. 그날의 흑역사 때문에 내 평판과 이불킥 랭크는 이미 바닥을 기고 있다는 것을.'},
+ {v:'goal',p:2,k:'g',x:'그래서 오늘의 목표는 단 하나! 어떻게든 무죄를 받아내서, 평판과 이불킥 랭크를 지켜내는 것이다!'},
+ {v:'crown',p:2,k:'g',x:'무죄를 연달아 받아내면… 최고 랭크 👑 [이불킥 청정수]가 될 수도 있다고 한다.'},
+ {v:'enter',p:2,k:'t',x:'…좋아. 심호흡을 하고 한 발 내디뎠다. 이제, 법정 안으로 들어가 보자.'}
 ];
+const PART=D.part||1,S=S0.filter(e=>(e.p||1)===PART);
 const STEPS=S.filter(e=>e.k==='s').length;
 buildBust($('c_judge'),'JUDGE');
 buildBust($('c_pros'),'PROSECUTOR');
@@ -811,7 +868,9 @@ $('auto').onclick=e=>{e.stopPropagation();auto=!auto;$('auto').textContent=auto?
 /* 진행 엔진 */
 let started=false,i=-1,typing=false,tm=null,full='',busy=false,sn=0,at=null,ended=false;
 function setTag(e){$('tagin').textContent=e.w||(e.k==='g'?'다짐':'나')}
+function clickHidden(k){try{const b=window.parent.document.querySelector('.st-key-'+k+' button');if(b)b.click()}catch(e){}}
 function stopType(){clearInterval(tm);typing=false;$('txt').textContent=full;$('dlgin').scrollTop=$('dlgin').scrollHeight;$('arrow').style.visibility='visible';
+ if(S[i]&&S[i].k==='fb'){ended=true;clearTimeout(at);setTimeout(()=>{const f=$('flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');setTimeout(()=>clickHidden('fb_go_hidden'),700)},1900);return}
  if(i===S.length-1){ended=true;$('end').style.display='block';$('replay').style.display='block';$('stepbar').style.display='none'}else queueAuto()}
 function type(t){typing=true;full=t;let k=0;$('txt').textContent='';$('arrow').style.visibility='hidden';tm=setInterval(()=>{k++;$('txt').textContent=t.slice(0,k);$('dlgin').scrollTop=$('dlgin').scrollHeight;if(k%2===0)beep(420+Math.random()*100,.035);if(k>=t.length)stopType()},D.speed||30)}
 function queueAuto(){clearTimeout(at);if(!auto||ended)return;at=setTimeout(()=>{if(!typing&&!busy)adv()},1700)}
@@ -829,8 +888,8 @@ function setScene(v){Object.keys(OV).forEach(k=>$(OV[k]).classList.toggle('on',k
 function paper(){if(muted)return;const a=ac();if(!a)return;const len=Math.floor(a.sampleRate*.12),b=a.createBuffer(1,len,a.sampleRate),c=b.getChannelData(0);for(let i=0;i<len;i++)c[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.5);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=1800;const g=a.createGain();g.gain.value=.35;s.connect(f);f.connect(g);g.connect(a.destination);s.start()}
 function doFx(x){
  if(x==='think'){$('think').classList.add('on');beep(520,.1,.05);setTimeout(()=>beep(390,.14,.05),120)}
- else if(x==='kick'){$('blanket').classList.add('kick');$('feet').classList.add('kick');[0,300,600].forEach((d,j)=>setTimeout(()=>{footstep(j);popText('뻥!',j%2)},d))}
- else if(x==='drop'){$('blanket').classList.remove('kick');$('feet').classList.remove('kick');$('dropcard').classList.add('on');paper()}
+ else if(x==='kick'){$('blanket').classList.add('kick');[0,420,840,1260].forEach((d,j)=>setTimeout(()=>{footstep(j);popText(j%2?'들썩!':'들썩들썩!',j%2)},d))}
+ else if(x==='drop'){$('blanket').classList.remove('kick');$('dropcard').classList.add('on');paper()}
  else if(x==='paper'){$('bcard').classList.remove('flip');paper()}
  else if(x==='flip'){$('bcard').classList.add('flip');paper()}}
 function show(n){const e=S[n];busy=true;clearTimeout(at);setTag(e);$('txt').textContent='';$('arrow').style.visibility='hidden';let wait=250;
@@ -843,16 +902,17 @@ function show(n){const e=S[n];busy=true;clearTimeout(at);setTag(e);$('txt').text
 function adv(){if(!started||busy||ended)return;clearTimeout(at);if(typing){stopType();return}if(i<S.length-1){i++;show(i)}}
 function reset(){clearTimeout(at);clearInterval(tm);sn=0;ended=false;typing=false;busy=false;curV='bed';scene.style.setProperty('--k',0);
  $('door').style.display='none';$('door').classList.remove('open');setScene('bed');rev([]);
- ['blanket','feet'].forEach(id=>$(id).classList.remove('kick'));$('think').classList.remove('on');$('dropcard').classList.remove('on');$('bcard').classList.remove('flip');
+ $('blanket').classList.remove('kick');$('think').classList.remove('on');$('dropcard').classList.remove('on');$('bcard').classList.remove('flip');
  $('end').style.display='none';$('replay').style.display='none';$('stepbar').style.display='none';$('txt').textContent='';i=0;show(0)}
 $('replay').onclick=e=>{e.stopPropagation();reset()};
 scene.addEventListener('click',adv);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();adv()}});
 $('start').addEventListener('click',e=>{e.stopPropagation();started=true;ac();beep(880,.12);$('start').style.display='none';i=0;show(0)});
+if(PART===2){curV=S[0].v;setScene(S[0].v);$('stepbar').style.display='none';{const d=$('door');d.style.display='block';d.style.transition='none';d.classList.add('open');d.querySelectorAll('.dl,.dr').forEach(x=>x.style.transition='none')}setTimeout(()=>$('start').click(),350)}
 </script></body></html>"""
 
-def render_story(mute=False, speed=30, height=640):
-    payload = json.dumps({"mute": mute, "speed": speed, "cast": sprite_payload()}, ensure_ascii=False).replace("</", "<\\/")
+def render_story(mute=False, speed=30, height=640, part=1):
+    payload = json.dumps({"mute": mute, "speed": speed, "part": part, "cast": sprite_payload()}, ensure_ascii=False).replace("</", "<\\/")
     components.html(STORY_TEMPLATE.replace("__DATA__", payload), height=height, scrolling=False)
 
 
@@ -1500,7 +1560,8 @@ const HD_POSES={
   sigh:{docs:1,ty:14,lean:7,tilt:7,turn:-3,doze:.9,la:1,lx:HDX-46,ly:156,ra:1,rx:HDX+20,ry:64},
   sleep:{docs:1,desk:1,ty:22,lean:70,tilt:8,turn:-2,la:1,lx:HDX-30,ly:166,ra:1,rx:HDX+30,ry:166},
   gavUp:{docs:.5,desk:1,ty:0,lean:-3,tilt:-3,turn:-4,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+56,ry:78,gon:1,gv:24},
-  gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1}},
+  gavHit:{docs:.5,desk:1,ty:5,lean:6,tilt:2,turn:-6,la:1,lx:HDX-46,ly:150,ra:1,rx:HDX+36,ry:150,gon:1,gv:-62,burst:1},
+  write:{docs:1,desk:.5,ty:14,lean:12,tilt:10,turn:-3,la:1,lx:HDX-40,ly:152,ra:1,rx:HDX+14,ry:150,jit:.35}},
  PROSECUTOR:{
   main:{desk:.65,ty:3,turn:3,la:1,lx:HDX+22,ly:132,ra:1,rx:HDX-22,ry:136},
   windup:{desk:.65,turn:5,lean:-5,tilt:2,ty:0,la:1,lx:HDX-40,ly:164,ra:1,rx:HDX+40,ry:86},
@@ -1510,7 +1571,10 @@ const HD_POSES={
  LAWYER:{
   smug:{turn:-6,lean:1,tilt:3,la:1,lx:HDX+21,ly:128,ra:1,rx:HDX-20,ry:132},
   cross:{turn:-9,lean:-3,tilt:-5,la:1,lx:HDX+22,ly:122,ra:1,rx:HDX-20,ry:128},
-  panic:{turn:-4,lean:4,tilt:5,ty:2,la:1,lx:HDX-30,ly:176,ra:1,rx:HDX+17,ry:44}}};
+  panic:{turn:-4,lean:4,tilt:5,ty:2,la:1,lx:HDX-30,ly:176,ra:1,rx:HDX+17,ry:44},
+  plead:{turn:-5,lean:-2,tilt:-3,ty:0,la:1,lx:HDX+32,ly:118,ra:1,rx:HDX-30,ry:122},
+  despair:{turn:-3,lean:7,tilt:15,ty:7,la:1,lx:HDX-30,ly:178,ra:1,rx:HDX+30,ry:178},
+  stand:{turn:-6,lean:0,tilt:2,ty:1,la:1,lx:HDX-30,ly:176,ra:1,rx:HDX+30,ry:176}}};
 HD_POSES.LAWYER.main=HD_POSES.LAWYER.smug;
 const HD_BASE_POSE={tilt:0,lean:0,ty:0,turn:0,desk:0,docs:0,gv:0,gon:0,pl:0,pa:0,doze:0,jit:0};
 function hdBust(el,key){const F=hdBuildFigure(key),cvs=document.createElement('canvas');cvs.width=348;cvs.height=400;cvs.className='hdc';el.appendChild(cvs);const ctx=cvs.getContext('2d');
@@ -1570,3 +1634,68 @@ VN_TEMPLATE = (VN_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS + "\n" + STAGE_
                .replace("<!--__WAIT__-->", WAIT_HTML).replace("<!--__SCENE__-->", SCENE_HTML).replace("<!--__OVERLAYS__-->", OVERLAYS))
 STORY_TEMPLATE = STORY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
 LOBBY_TEMPLATE = LOBBY_TEMPLATE.replace("/*__SPRITES__*/", SPRITES_JS)
+
+
+# =================================================================
+# 회상(플래시백) 씬 — 한유리 → 차냉정 → 서판결. 유저는 보기만 한다(자동 진행).
+#   * 필드 설명은 VN_TEMPLATE 의 runFlash 주석 참고.  s: J/P/L/N(내레이션)
+# =================================================================
+FLASH_STEPS = [
+    # ---- 회상 ① 한유리: 혼자 변론하다 끝내 침묵 → 유죄 → 퇴정 ----
+    {"ch": "회상 ①  한유리", "sub": "3년 전, 같은 법정", "cam0": "WIDE", "cam": "WIDE", "s": "N",
+     "t": "그날의 피고인은 신입 변호사 한유리였다. 단톡방에 잘못 올린 단 한 줄 때문에.",
+     "also": {"L": "stand"}},
+    {"s": "P", "cam": "P", "pose": "p_ask", "expr": "neutral",
+     "t": "피고인은 단체 대화방에 부적절한 한 줄을 게시했고, 그 캡처는 이미 업계 전체에 퍼졌습니다."},
+    {"s": "L", "cam": "LDIAG", "pose": "l_plead", "expr": "aggrieved",
+     "t": "그건… 실수였어요! 다른 방인 줄 알고 보낸 거예요. 지우려고 했는데, 이미 읽음이 떠서…!"},
+    {"s": "P", "cam": "PSLAM", "pose": "p_slam", "expr": "angry",
+     "t": "증거 제1호. 삭제 시각은 발송 11분 뒤. 이미 늦었습니다."},
+    {"s": "L", "cam": "LDIAG", "pose": "l_plead", "expr": "aggrieved", "also": {"P": "main"},
+     "t": "저는… 정말 나쁜 뜻은 없었어요. 제발 한 번만… 제 얘기도 들어 주세요…!", "tempo": 1.0},
+    {"s": "N", "cam": "LDIAG", "cam2": "LDIAG2", "cam2d": 2200, "also": {"L": "stand"},
+     "t": "방청석은 조용했다. 피고인석 옆 변호인석은, 비어 있었다.", "hold": 2200},
+    {"s": "L", "cam": "LDIAG2", "cam2": "LDESP", "cam2d": 2600, "pose": "l_plead", "expr": "aggrieved",
+     "t": "…저를 변호해 줄 사람, 정말 아무도 없나요? 단 한 명도…?", "hold": 1800},
+    {"s": "L", "cam": "LDESP", "pose": "l_despair", "expr": "tears",
+     "t": "……", "tempo": 2.6, "hold": 3200},
+    {"s": "J", "cam": "LDESP", "expr": "neutral", "pose": "j_main", "fx": ["gavel"], "wait": 1400,
+     "t": "피고인에게 유죄를 선고합니다.", "hold": 3400},
+    {"s": "N", "cam": "LDESP", "cam2": "LLEAVE", "cam2d": 1500, "also": {"L": "stand"}, "fx": ["leave:L"], "hold": 600,
+     "t": "법정을 나서는 한유리의 뒷모습을, 아무도 붙잡지 않았다."},
+    {"s": "P", "cam": "P", "pose": "p_still", "expr": "wistful",
+     "t": "…나는 법대로 했을 뿐이야. 그래야만 했어.", "hold": 1800},
+    {"s": "J", "cam": "J", "pose": "j_sigh", "expr": "soft",
+     "t": "변호인 없는 재판이라니. 규정상 문제는 없지만… 이게 맞는 건가.", "hold": 1800},
+    {"s": "N", "cam": "WIDE", "t": "그날 한유리는 다짐했다. 흑역사에도 변호받을 권리가 있다고.", "hold": 2000},
+
+    # ---- 회상 ② 차냉정: 그날 밤 검사실 ----
+    {"ch": "회상 ②  차냉정", "sub": "같은 날 밤, 검사실", "nite": 1, "cam0": "P", "cam": "P", "s": "N",
+     "setup": ["reset", "hide:J", "hide:L"],
+     "t": "차냉정은 불 꺼진 검사실에서 혼자 서류를 넘기고 있었다."},
+    {"s": "P", "cam": "P", "pose": "p_still", "expr": "neutral",
+     "t": "증거는 완벽했다. 절차도 완벽했다. …그런데 왜 이렇게 손이 시리지."},
+    {"s": "N", "cam": "PPUSH", "t": "법학 동기. 밤새 스터디하던 한유리가 피고인석에 서 있었다.", "hold": 2000},
+    {"s": "P", "cam": "PPUSH", "pose": "p_panic", "expr": "wistful",
+     "t": "봐줬다면 그건 그 애를 모욕하는 거야. 법은 누구에게나 똑같아야 하니까.", "hold": 1800},
+    {"s": "P", "cam": "P", "pose": "p_still", "expr": "soft",
+     "t": "…대신 다음에 만나면, 정정당당하게 이길 거야. 그게 내 방식의 사과야.", "hold": 2200},
+    {"s": "N", "cam": "P", "t": "차가운 얼굴 뒤에 숨겨 둔 것은, 서랍 속 낡은 스터디 노트 한 권이었다.", "hold": 2200},
+
+    # ---- 회상 ③ 서판결: 판사실, 손으로 쓰는 판결문 ----
+    {"ch": "회상 ③  서판결", "sub": "그날 밤, 판사실", "nite": 1, "cam0": "J", "cam": "J", "s": "N",
+     "setup": ["reset", "show:J", "hide:P", "hide:L"],
+     "t": "서판결 판사는 판결문을 반드시 손으로 쓴다."},
+    {"s": "J", "cam": "J", "pose": "j_write", "expr": "neutral",
+     "t": "타자로 치면 빠르지. 하지만 사람 인생 한 줄을 적기엔, 키보드는 너무 가벼워서 말이야."},
+    {"s": "J", "cam": "JPUSH", "pose": "j_write", "expr": "wistful",
+     "t": "오늘 그 변호인 없는 사건… 기록엔 아무 문제 없다고 쓰겠지. 그래도 손이 자꾸 멈추는군."},
+    {"s": "J", "cam": "J", "pose": "j_sigh", "expr": "soft",
+     "t": "퇴근하고 싶다는 건 거짓말이 아냐. 다만 내일은, 누구든 변호받는 법정이길 바랄 뿐이지.", "hold": 2200},
+    {"s": "N", "cam": "J", "t": "그 바람은 아직 이름도 모르는 어느 피고인을 향해 이어진다.", "hold": 2400},
+]
+
+
+def render_flash(height=580, mute=False, speed=30):
+    """회상 3부작(자동 재생). 끝나면 숨김 버튼(fb_done_hidden)을 눌러 스토리 2부로 넘어간다."""
+    render_vn("flash", FLASH_STEPS, height=height, title="회상", phase="회상", mute=mute, speed=speed)
