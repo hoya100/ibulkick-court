@@ -443,11 +443,9 @@ elif stage == "STORY_ASK":
 # ---------------- STORY (1인칭 법원 계단 스토리) ----------------
 elif stage == "STORY":
     ss["story_asked"] = True  # 스토리를 한 번이라도 열었다면 이후 [시작]에서 다시 묻지 않는다
-    _part = ss.pop("story_part", 1)
-    render_story(height=VN_H, part=_part, **vn_opts())
-    with st.container(key="fb_go_hidden"):  # 1부 끝에서 회상 씬으로 넘어가는 숨김 버튼(연출이 대신 누름)
-        if st.button("회상으로", key="fb_go"):
-            go("FLASH")
+    if not ss.pop("story_part", None):  # 스토리는 항상 한유리의 회상(프롤로그)부터 시작한다
+        go("FLASH")
+    render_story(height=VN_H, part=1, **vn_opts())
     with st.container(key="story_nav"):
         s1, s2 = st.columns([1, 1.4])
         if s1.button("◀ 타이틀", use_container_width=True, key="st_back"):
@@ -456,12 +454,12 @@ elif stage == "STORY":
             ss["story_seen"] = True
             go("LOBBY")
 
-# ---------------- FLASH (회상 3부작: 한유리 → 차냉정 → 서판결, 자동 재생) ----------------
+# ---------------- FLASH (프롤로그 회상: 한유리 → 차냉정 → 서판결 → 한유리의 결심, 한 호흡 자동 재생) ----------------
 elif stage == "FLASH":
     render_flash(height=VN_H, **vn_opts())
     with st.container(key="fb_done_hidden"):
         if st.button("회상 끝", key="fb_done"):
-            ss["story_part"] = 2
+            ss["story_part"] = 1
             go("STORY")
 
 # ---------------- LOBBY ----------------
