@@ -161,6 +161,7 @@ from templates import (
     court_panel_html,
     render_lobby,
     render_story,
+    render_flash,
     render_vn,
     result_panel_html,
 )
@@ -408,7 +409,7 @@ if ss.get("toast"):
     st.toast(ss.pop("toast"))
 # 판결 연출이 끝나기 전에는 HUD를 숨겨서 결과(평판/랭크)가 미리 보이지 않게 한다
 # 재판 중(INPUT·DEBATE·LOADING)에도 숨겨서 몰입을 높인다 → 정보 표시는 로비와 결과 화면에서만
-hud_hidden = stage in ("TITLE", "STORY_ASK", "STORY", "INPUT", "LOADING", "DEBATE1", "DEBATE2", "QUIT") or (stage == "VERDICT" and not ss.get("show_result"))
+hud_hidden = stage in ("TITLE", "STORY_ASK", "STORY", "FLASH", "INPUT", "LOADING", "DEBATE1", "DEBATE2", "QUIT") or (stage == "VERDICT" and not ss.get("show_result"))
 if not hud_hidden:
     render_hud()
 
@@ -442,7 +443,11 @@ elif stage == "STORY_ASK":
 # ---------------- STORY (1인칭 법원 계단 스토리) ----------------
 elif stage == "STORY":
     ss["story_asked"] = True  # 스토리를 한 번이라도 열었다면 이후 [시작]에서 다시 묻지 않는다
-    render_story(height=VN_H, **vn_opts())
+    _part = ss.pop("story_part", 1)
+    render_story(height=VN_H, part=_part, **vn_opts())
+    with st.container(key="fb_go_hidden"):  # 1부 끝에서 회상 씬으로 넘어가는 숨김 버튼(연출이 대신 누름)
+        if st.button("회상으로", key="fb_go"):
+            go("FLASH")
     with st.container(key="story_nav"):
         s1, s2 = st.columns([1, 1.4])
         if s1.button("◀ 타이틀", use_container_width=True, key="st_back"):
@@ -450,6 +455,14 @@ elif stage == "STORY":
         if s2.button("🏛️ 로비로 입장", use_container_width=True, key="st_enter"):
             ss["story_seen"] = True
             go("LOBBY")
+
+# ---------------- FLASH (회상 3부작: 한유리 → 차냉정 → 서판결, 자동 재생) ----------------
+elif stage == "FLASH":
+    render_flash(height=VN_H, **vn_opts())
+    with st.container(key="fb_done_hidden"):
+        if st.button("회상 끝", key="fb_done"):
+            ss["story_part"] = 2
+            go("STORY")
 
 # ---------------- LOBBY ----------------
 elif stage == "LOBBY":
