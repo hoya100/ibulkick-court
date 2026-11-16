@@ -342,6 +342,8 @@ EXPRESSIONS = {
     "panic":     {"label": "당황",   "mouth": "open", "brow": -3, "lid": 0,    "gx": 0, "gy": 1, "fx": ["sweat"], "icon": "drop"},
     "smug":      {"label": "능글",   "mouth": "grin", "brow": -1, "lid": 0.45, "gx": -1, "gy": 0, "fx": ["blush"], "icon": "sparkle"},
     "asleep":    {"label": "졸음",   "mouth": "flat", "brow": 2,  "lid": 1,    "gx": 0, "gy": 0, "fx": []},
+    "soft":      {"label": "흔들림", "mouth": "hmm",  "brow": 1,  "lid": 0.2,  "gx": -1, "gy": 1, "fx": ["blush"]},
+    "wistful":   {"label": "회상",   "mouth": "smile", "brow": 1, "lid": 0.4,  "gx": 0, "gy": 2, "fx": []},
     "angry":     {"label": "분노",   "mouth": "flat", "brow": 3,  "lid": 0.25, "gx": 0, "gy": 0, "fx": ["vein"], "icon": "anger"},
 }
 EXPR_MOUTHS = ("grin", "smile", "open", "flat", "hmm")
@@ -483,6 +485,12 @@ FLAVOR_RULES = """[병맛·맛깔 규칙 — 대사가 밋밋하면 실패]
 - 한유리(변호사): 말도 안 되는 비유로 억지 논리를 그럴듯하게 포장한다. 예) "이불킥은 범죄가 아니라 영혼의 스트레칭이에요. 유연성이 좋아졌다는 증거죠."
 - 같은 비유·유머 패턴을 반복하지 말고 대사마다 새로운 소재로 웃길 것. 욕설·혐오 표현은 금지."""
 
+RIVAL_RULES = """[숨은 관계 — 은근히, 자연스럽게]
+- 한유리는 과거에 이 법정의 '의뢰인'이었다(신입 시절 단톡방 실수로 평판이 바닥). 그때 기소한 검사가 차냉정(법학 동기이자 라이벌). 서판결 판사는 퇴근만 원하는 척하지만 판결문은 직접 쓰는 성실파다.
+- 이 관계는 전체 대사 중 0~1번(많아도 2번)만, 사건 내용과 자연스럽게 엮일 때 '암시'로만 드러낸다. 직접 설명·회상 나열 금지. 예) 한유리: "…예전에도 그런 눈으로 저를 보셨죠." / 차냉정: "감정은 증거가 아닙니다. …적어도 그때는 그랬고요." (말끝 흐림, 시선 회피, 짧은 침묵 느낌)
+- 그런 대사에는 "rival": true 를 넣는다. (시스템이 그 순간 분위기와 두 사람의 표정을 부드럽게 바꾼다.) 그 외 대사는 "rival"을 생략하거나 false.
+- 암시 직후 상대의 반응은 평소 말투(차냉정은 차갑게 수습, 한유리는 능글맞게 넘김)로 바로 이어서 흐름이 끊기지 않게 한다."""
+
 GAUGE_RULES = """[유죄 게이지 연동 — 각 script 줄마다 "gauge" 정수 필드를 넣는다]
 - 이 줄이 재판관의 마음을 '유죄 쪽'으로 기울이면 +, '무죄 쪽'으로 기울이면 −. 범위 −9~+9.
 - PROSECUTOR가 유리한 증거를 대거나 몰아붙이면 +3~+9, LAWYER가 설득력 있게 반론하거나 유리한 발언을 하면 −3~−9, 반론이 억지이거나 변호사가 당황하면 +, 검사가 말문이 막히면 −.
@@ -500,6 +508,7 @@ def phase1_prompt(name):
 {FACT_RULES}
 {EASY_RULES}
 {FLAVOR_RULES}
+{RIVAL_RULES}
 {GAUGE_RULES}
 [임무] 유저의 [흑역사 원문]을 바탕으로 '제1막: 개정과 1차 심문'을 한국어로 씁니다.
 규칙:
@@ -511,7 +520,7 @@ def phase1_prompt(name):
 6. question: 검사 [{NAME_OF['PROSECUTOR']}]이 피고인에게 던지는 1차 팩폭 질문 (1~2문장, 원문 내용을 구체적으로 짚고, 피고인이 직접 변명을 적어 답할 수 있게).
 7. 오직 JSON 객체 하나만 출력. 마크다운, 코드블록, 설명문 금지. 모든 문자열은 큰따옴표.
 형식 예시(형식만 참고):
-{{"facts":["원문 표현 그대로 1","원문 표현 그대로 2"],"script":[{{"speaker":"JUDGE","dialogue":"...","shout":"NONE","gauge":0}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT","gauge":6}},{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD","gauge":-5}}],"question":"..."}}"""
+{{"facts":["원문 표현 그대로 1","원문 표현 그대로 2"],"script":[{{"speaker":"JUDGE","dialogue":"...","shout":"NONE","gauge":0}},{{"speaker":"PROSECUTOR","dialogue":"...","shout":"FACT","gauge":6,"rival":false}},{{"speaker":"LAWYER","dialogue":"...","shout":"SHIELD","gauge":-5}}],"question":"..."}}"""
 
 def phase2_prompt(name):
     return f"""당신은 오리지널 B급 법정 아케이드 게임 '이불킥 법정'의 AI 엔진입니다. 피고인 이름: "{name}".
@@ -519,6 +528,7 @@ def phase2_prompt(name):
 {FACT_RULES}
 {EASY_RULES}
 {FLAVOR_RULES}
+{RIVAL_RULES}
 {GAUGE_RULES}
 [임무] 피고인의 1차 변명을 두고 벌어지는 '제2막: 변명 공방과 최후 심문'을 한국어로 씁니다. 입력으로 [흑역사 원문], [확정 사실], 지금까지의 대화, [피고인의 1차 변명]이 주어집니다.
 규칙:
