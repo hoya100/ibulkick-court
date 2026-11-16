@@ -88,6 +88,7 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:'Galmuri11','J
 #fcard.on{display:flex}#fct{font-size:clamp(20px,6vw,34px);font-weight:900;letter-spacing:3px;opacity:0;transform:translateY(8px);animation:fcin 1.1s .2s forwards}#fcs{margin-top:10px;font-size:clamp(12px,3.3vw,16px);opacity:0;animation:fcin 1s 1s forwards;color:#c9b98e}
 @keyframes fcin{to{opacity:1;transform:none}}
 #skipfb{display:none;position:absolute;right:10px;top:10px;z-index:40;background:#0009;color:#fff;border:2px solid #fff6;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.flashing #dlg{z-index:25}.flashing #txt{color:#fff!important;opacity:1!important}
 .flashing #skipfb{display:block}.flashing #mute{display:none}
 .flashing #tagin{background:linear-gradient(#8a7a5a,#5a4a30)}
 #tag{position:absolute;left:14px;top:-22px;z-index:2;padding:2px;background:#d6eaff;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
