@@ -191,6 +191,9 @@ def parse_script(data):
         sp = to_speaker(it.get("speaker"))
         k = SHOUT_MAP.get(str(it.get("shout", "")).upper().strip())
         st = {"s": sp, "t": text, "c": k[0] if k and k[1] == sp else ""}
+        if str(it.get("rival")).lower() in ("true", "1", "yes") and sp in ("PROSECUTOR", "LAWYER"):
+            st["rv"] = 1                                   # 두 사람의 숨은 관계가 비치는 순간
+            st["e"] = "wistful" if sp == "LAWYER" else "soft"
         g = parse_signed(it.get("gauge"))
         if g is not None:
             st["g"] = max(-9, min(9, g))
@@ -351,6 +354,14 @@ def normalize_verdict(data, ex1="", ex2="", ctx=None):
     ruling = "GUILTY" if final_guilt >= 100 else ("NOT_GUILTY" if final_guilt <= 30 else "MITIGATED")
     for sp, t, ps, ex, c in extra:
         steps.insert(0, {"s": sp, "t": t, "c": c, "pose": ps, "e": ex})
+    if random.random() < 0.6:   # 판결 직후, 두 사람의 오래된 관계가 살짝 비치는 한 컷
+        rv = {
+            "NOT_GUILTY": [("LAWYER", "…이겼네요. 그날 못 이긴 한 판을, 조금은 갚은 기분이에요.", "wistful"), ("PROSECUTOR", "…흥. 법정에서 감상에 젖는 건 규정 위반입니다. 오늘만 눈감아 드리죠.", "soft")],
+            "MITIGATED": [("PROSECUTOR", "…완승은 아니군요. 그날처럼은 안 되던가요, 변호사님.", "soft"), ("LAWYER", "어머, 그날 일은 그만 꺼내요. 오늘은 반쯤 이겼으니까요.", "wistful")],
+            "GUILTY": [("PROSECUTOR", "증거가 이겼습니다. …그날과 똑같이요.", "soft"), ("LAWYER", "…알아요. 그래도 저는 포기 안 해요. 이 분 다음 판에서 또 만나요.", "wistful")],
+        }[ruling]
+        for sp, t, ex in rv:
+            steps.append({"s": sp, "t": t, "c": "", "rv": 1, "e": ex})
     steps.append({"s": "JUDGE", "t": {"NOT_GUILTY": "주문. 피고인은 무죄입니다.", "MITIGATED": "주문. 피고인은 유죄이나 형을 감경합니다.", "GUILTY": "주문. 피고인은 유죄입니다."}[ruling], "c": ""})
     fallback_sentence = {
         "GUILTY": random.choice([f"자필 반성문 {random.randint(3, 30)}장 공개 낭독형", f"{random.randint(30, 500)}일간 감성 글 작성 금지형"]),
