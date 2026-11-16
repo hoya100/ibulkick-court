@@ -443,15 +443,17 @@ elif stage == "STORY_ASK":
 # ---------------- STORY (1인칭 법원 계단 스토리) ----------------
 elif stage == "STORY":
     ss["story_asked"] = True  # 스토리를 한 번이라도 열었다면 이후 [시작]에서 다시 묻지 않는다
-    if not ss.pop("story_part", None):  # 스토리는 항상 한유리의 회상(프롤로그)부터 시작한다
+    if not ss.get("story_part"):  # 스토리는 항상 한유리의 회상(프롤로그)부터 시작한다
         go("FLASH")
     render_story(height=VN_H, part=1, **vn_opts())
     with st.container(key="story_nav"):
         s1, s2 = st.columns([1, 1.4])
         if s1.button("◀ 타이틀", use_container_width=True, key="st_back"):
+            ss.pop("story_part", None)
             go("TITLE")
         if s2.button("🏛️ 로비로 입장", use_container_width=True, key="st_enter"):
             ss["story_seen"] = True
+            ss.pop("story_part", None)
             go("LOBBY")
 
 # ---------------- FLASH (프롤로그 회상: 한유리 → 차냉정 → 서판결 → 한유리의 결심, 한 호흡 자동 재생) ----------------
